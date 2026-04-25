@@ -33,6 +33,18 @@ from erpclaw_lib.response import ok, err, rows_to_list, row_to_dict
 # Constants
 # ---------------------------------------------------------------------------
 MODULES_DIR = os.path.expanduser("~/.openclaw/erpclaw/modules")
+
+# OpenClaw's agent / `openclaw skills list` only discovers skills under
+# `~/.openclaw/workspace/skills/`. Modules installed by this manager
+# also need to be published there so the agent can invoke their actions
+# (otherwise the agent reports "no integration set up" even though the
+# module is installed and working from the CLI). Symlinks are rejected
+# by the openclaw skills subsystem with `reason=symlink-escape`, so we
+# do a plain copy. Confirmed empirically 2026-04-25 against the live
+# agent on the OpenClaw Ubuntu server.
+OPENCLAW_WORKSPACE_SKILLS_DIR = os.path.expanduser(
+    "~/.openclaw/workspace/skills"
+)
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REGISTRY_PATH = os.path.join(SCRIPT_DIR, "module_registry.json")
 REMOTE_REGISTRY_URL = "https://raw.githubusercontent.com/avansaber/erpclaw/main/scripts/module_registry.json"
@@ -691,6 +703,10 @@ def _install_module_inner(args, conn, modules_by_name, depth=0):
     # Regenerate SKILL.md with new module actions
     _regenerate_skill_md(conn)
 
+    # Publish to OpenClaw's workspace skills dir so the agent can find it.
+    # See OPENCLAW_WORKSPACE_SKILLS_DIR comment at the top of this file.
+    workspace_published = _publish_to_openclaw_skills(install_path, module_name)
+
     return {
         "module": module_name,
         "display_name": display_name,
@@ -698,9 +714,36 @@ def _install_module_inner(args, conn, modules_by_name, depth=0):
         "action_count": action_count,
         "tables_created": tables_created,
         "install_path": install_path,
+        "workspace_skill_path": workspace_published,
         "git_commit": git_commit,
         "installed_at": now,
     }
+
+
+def _publish_to_openclaw_skills(install_path, module_name):
+    """Copy an installed module into ~/.openclaw/workspace/skills/<module>/.
+
+    OpenClaw's agent only sees skills under workspace/skills, not under
+    erpclaw/modules. We mirror each install into both so the agent can
+    invoke module actions (e.g., shopify-status). Best-effort: returns
+    the published path on success, None if OpenClaw isn't installed
+    (workspace dir missing) or if the copy fails. We never raise, since
+    the module install itself was already successful.
+    """
+    if not os.path.isdir(os.path.dirname(OPENCLAW_WORKSPACE_SKILLS_DIR)):
+        # OpenClaw not installed on this host. Nothing to do.
+        return None
+    try:
+        os.makedirs(OPENCLAW_WORKSPACE_SKILLS_DIR, exist_ok=True)
+        dest = os.path.join(OPENCLAW_WORKSPACE_SKILLS_DIR, module_name)
+        if os.path.isdir(dest):
+            shutil.rmtree(dest)
+        shutil.copytree(install_path, dest)
+        return dest
+    except (OSError, shutil.Error):
+        # Don't fail the whole install over this. Surface via the
+        # returned None so callers + tests can react if they want.
+        return None
 
 
 def _mark_failed(conn, module_name, error_msg):
@@ -785,6 +828,11 @@ def remove_module(args):
     # Remove directory
     if install_path and os.path.isdir(install_path):
         shutil.rmtree(install_path, ignore_errors=True)
+
+    # Also remove the workspace-skills mirror so OpenClaw stops listing it.
+    workspace_dest = os.path.join(OPENCLAW_WORKSPACE_SKILLS_DIR, module_name)
+    if os.path.isdir(workspace_dest):
+        shutil.rmtree(workspace_dest, ignore_errors=True)
 
     # Regenerate SKILL.md without removed module
     _regenerate_skill_md(conn)
