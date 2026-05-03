@@ -282,7 +282,7 @@
         "erpclaw"
       ],
       "has_init_db": true,
-      "action_count": 25,
+      "action_count": 20,
       "tags": [
         "loans",
         "lending",
@@ -371,7 +371,7 @@
         "erpclaw"
       ],
       "has_init_db": true,
-      "action_count": 34,
+      "action_count": 28,
       "tags": [
         "pos",
         "point-of-sale",
@@ -749,7 +749,7 @@
         "erpclaw"
       ],
       "has_init_db": true,
-      "action_count": 63,
+      "action_count": 57,
       "tags": [
         "nonprofit",
         "donors",
@@ -882,7 +882,7 @@
         "educlaw"
       ],
       "has_init_db": true,
-      "action_count": 122,
+      "action_count": 116,
       "tags": [
         "financial-aid",
         "fafsa",
@@ -1102,7 +1102,9 @@
         "appointments",
         "salon",
         "veterinary"
-      ]
+      ],
+      "status": "preview",
+      "status_note": "Skeleton only. Plan + post-simulation revisions at apps/THREE_VERTICALS_PLAN_2026-04-27.md. Deferred 2026-04-28; no kickoff in 2026 unless inbound demand surfaces."
     },
     "storageclaw": {
       "display_name": "Self-Storage",
@@ -1121,7 +1123,9 @@
         "tenants",
         "leases",
         "facility"
-      ]
+      ],
+      "status": "preview",
+      "status_note": "Skeleton only. Plan + post-simulation revisions at apps/THREE_VERTICALS_PLAN_2026-04-27.md. Deferred 2026-04-28; no kickoff in 2026 unless inbound demand surfaces."
     },
     "tattooclaw": {
       "display_name": "Tattoo Parlor",
@@ -1140,7 +1144,10 @@
         "artists",
         "appointments",
         "body art"
-      ]
+      ],
+      "status": "preview",
+      "status_note": "Skeleton only. Plan + post-simulation revisions at apps/THREE_VERTICALS_PLAN_2026-04-27.md. Deferred 2026-04-28; no kickoff in 2026 unless inbound demand surfaces."
     }
-  }
+  },
+  "total_actions": 3132
 }
