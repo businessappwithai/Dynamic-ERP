@@ -1,0 +1,97 @@
+/**
+ * SysUser DTOs
+ *
+ * Data Transfer Objects for sys_user entity.
+ *
+ * Generated: {{now}}
+ */
+
+import { IsString, IsOptional, IsBoolean, IsEmail } from 'class-validator';
+
+/**
+ * Create SysUser DTO
+ */
+export class CreateSysUserDto {
+  @IsString()
+  name: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  password: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  is_active?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_locked?: boolean;
+}
+
+/**
+ * Update SysUser DTO
+ */
+export class UpdateSysUserDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  password?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  is_active?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_locked?: boolean;
+}
+
+/**
+ * Change Password DTO
+ */
+export class ChangePasswordDto {
+  @IsString()
+  old_password: string;
+
+  @IsString()
+  new_password: string;
+}
+
+/**
+ * SysUser Response DTO
+ */
+export class SysUserResponseDto {
+  sys_user_id: string;
+  name: string;
+  email: string;
+  description?: string;
+  is_active: boolean;
+  is_locked: boolean;
+  last_login?: Date;
+  created_at: Date;
+  updated_at: Date;
+}
+
+/**
+ * SysUser with Roles Response DTO
+ */
+export class SysUserWithRolesResponseDto extends SysUserResponseDto {
+  roles: any[];
+}

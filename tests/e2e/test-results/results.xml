@@ -1,0 +1,1210 @@
+<testsuites id="" name="" tests="55" failures="51" skipped="0" errors="0" time="65.75304100000001">
+<testsuite name="hospital-odata-ui5.e2e-test.ts" timestamp="2026-03-21T07:21:38.320Z" hostname="hospital-odata-ui5" tests="55" failures="51" skipped="0" time="51.323" errors="0">
+<testcase name="OData Service - Metadata &amp; Discovery › GET /odata - should return OData service document" classname="hospital-odata-ui5.e2e-test.ts" time="0.317">
+<failure message="hospital-odata-ui5.e2e-test.ts:54:3 GET /odata - should return OData service document" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:54:3 › OData Service - Metadata & Discovery › GET /odata - should return OData service document 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED ::1:3000
+    Call log:
+      - → GET http://localhost:3000/odata
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: application/json
+        - accept-encoding: gzip,deflate,br
+
+        at apiRequestContext.get: connect ECONNREFUSED ::1:3000
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:55:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData Service - Metadata &amp; Discovery › GET /odata/$metadata - should return valid EDMX" classname="hospital-odata-ui5.e2e-test.ts" time="0.313">
+<failure message="hospital-odata-ui5.e2e-test.ts:61:3 GET /odata/$metadata - should return valid EDMX" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:61:3 › OData Service - Metadata & Discovery › GET /odata/$metadata - should return valid EDMX 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED ::1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/$metadata
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+        at apiRequestContext.get: connect ECONNREFUSED ::1:3000
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:62:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData Service - Metadata &amp; Discovery › $metadata should expose hospital entity types" classname="hospital-odata-ui5.e2e-test.ts" time="0.314">
+<failure message="hospital-odata-ui5.e2e-test.ts:71:3 $metadata should expose hospital entity types" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:71:3 › OData Service - Metadata & Discovery › $metadata should expose hospital entity types 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED ::1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/$metadata
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+        at apiRequestContext.get: connect ECONNREFUSED ::1:3000
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:72:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData Service - Metadata &amp; Discovery › $metadata should expose business (bus_) entity sets" classname="hospital-odata-ui5.e2e-test.ts" time="0.317">
+<failure message="hospital-odata-ui5.e2e-test.ts:82:3 $metadata should expose business (bus_) entity sets" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:82:3 › OData Service - Metadata & Discovery › $metadata should expose business (bus_) entity sets 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED ::1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/$metadata
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+        at apiRequestContext.get: connect ECONNREFUSED ::1:3000
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:83:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Patient Entity › GET /odata/Patients - should return patients collection" classname="hospital-odata-ui5.e2e-test.ts" time="0.315">
+<failure message="hospital-odata-ui5.e2e-test.ts:97:3 GET /odata/Patients - should return patients collection" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:97:3 › OData - Patient Entity › GET /odata/Patients - should return patients collection 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED ::1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/Patients
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+        at apiRequestContext.get: connect ECONNREFUSED ::1:3000
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:98:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Patient Entity › GET /odata/Patients with $top - should limit results" classname="hospital-odata-ui5.e2e-test.ts" time="0.315">
+<failure message="hospital-odata-ui5.e2e-test.ts:106:3 GET /odata/Patients with $top - should limit results" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:106:3 › OData - Patient Entity › GET /odata/Patients with $top - should limit results 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/Patients?$top=5
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      105 |
+      106 |   test('GET /odata/Patients with $top - should limit results', async ({ request }) => {
+    > 107 |     const response = await request.get(`${ODATA_BASE}/Patients?$top=5`);
+          |                                    ^
+      108 |     expect(response.status()).toBe(200);
+      109 |
+      110 |     const data = await response.json();
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:107:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Patient Entity › GET /odata/Patients with $skip - should paginate" classname="hospital-odata-ui5.e2e-test.ts" time="0.314">
+<failure message="hospital-odata-ui5.e2e-test.ts:115:3 GET /odata/Patients with $skip - should paginate" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:115:3 › OData - Patient Entity › GET /odata/Patients with $skip - should paginate 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/Patients?$top=5&$skip=0
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      114 |
+      115 |   test('GET /odata/Patients with $skip - should paginate', async ({ request }) => {
+    > 116 |     const response = await request.get(`${ODATA_BASE}/Patients?$top=5&$skip=0`);
+          |                                    ^
+      117 |     expect(response.status()).toBe(200);
+      118 |
+      119 |     const data = await response.json();
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:116:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Patient Entity › GET /odata/Patients with $count - should include total count" classname="hospital-odata-ui5.e2e-test.ts" time="0.315">
+<failure message="hospital-odata-ui5.e2e-test.ts:123:3 GET /odata/Patients with $count - should include total count" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:123:3 › OData - Patient Entity › GET /odata/Patients with $count - should include total count 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/Patients?$count=true
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      122 |
+      123 |   test('GET /odata/Patients with $count - should include total count', async ({ request }) => {
+    > 124 |     const response = await request.get(`${ODATA_BASE}/Patients?$count=true`);
+          |                                    ^
+      125 |     expect(response.status()).toBe(200);
+      126 |
+      127 |     const data = await response.json();
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:124:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Patient Entity › GET /odata/Patients with $select - should return selected fields" classname="hospital-odata-ui5.e2e-test.ts" time="0.313">
+<failure message="hospital-odata-ui5.e2e-test.ts:135:3 GET /odata/Patients with $select - should return selected fields" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:135:3 › OData - Patient Entity › GET /odata/Patients with $select - should return selected fields 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/Patients?$select=id,first_name,last_name
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      134 |
+      135 |   test('GET /odata/Patients with $select - should return selected fields', async ({ request }) => {
+    > 136 |     const response = await request.get(`${ODATA_BASE}/Patients?$select=id,first_name,last_name`);
+          |                                    ^
+      137 |     expect(response.status()).toBe(200);
+      138 |
+      139 |     const data = await response.json();
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:136:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Patient Entity › POST /odata/Patients - should create a patient" classname="hospital-odata-ui5.e2e-test.ts" time="0.315">
+<failure message="hospital-odata-ui5.e2e-test.ts:143:3 POST /odata/Patients - should create a patient" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:143:3 › OData - Patient Entity › POST /odata/Patients - should create a patient 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → POST http://localhost:3000/odata/Patients
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: application/json
+        - accept-encoding: gzip,deflate,br
+        - Content-Type: application/json
+        - content-length: 154
+
+
+      151 |     };
+      152 |
+    > 153 |     const response = await request.post(`${ODATA_BASE}/Patients`, {
+          |                                    ^
+      154 |       data: newPatient,
+      155 |       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      156 |     });
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:153:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Patient Entity › PATCH /odata/Patients(:id) - should update patient" classname="hospital-odata-ui5.e2e-test.ts" time="0.324">
+<failure message="hospital-odata-ui5.e2e-test.ts:170:3 PATCH /odata/Patients(:id) - should update patient" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:170:3 › OData - Patient Entity › PATCH /odata/Patients(:id) - should update patient 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → POST http://localhost:3000/odata/Patients
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+        - Content-Type: application/json
+        - content-length: 73
+
+
+      170 |   test('PATCH /odata/Patients(:id) - should update patient', async ({ request }) => {
+      171 |     // Create first
+    > 172 |     const createRes = await request.post(`${ODATA_BASE}/Patients`, {
+          |                                     ^
+      173 |       data: { first_name: 'Patch', last_name: 'Patient', date_of_birth: '1985-06-15' },
+      174 |       headers: { 'Content-Type': 'application/json' },
+      175 |     });
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:172:37
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Patient Entity › DELETE /odata/Patients(:id) - should delete patient" classname="hospital-odata-ui5.e2e-test.ts" time="0.316">
+<failure message="hospital-odata-ui5.e2e-test.ts:192:3 DELETE /odata/Patients(:id) - should delete patient" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:192:3 › OData - Patient Entity › DELETE /odata/Patients(:id) - should delete patient 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → POST http://localhost:3000/odata/Patients
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+        - Content-Type: application/json
+        - content-length: 74
+
+
+      191 |
+      192 |   test('DELETE /odata/Patients(:id) - should delete patient', async ({ request }) => {
+    > 193 |     const createRes = await request.post(`${ODATA_BASE}/Patients`, {
+          |                                     ^
+      194 |       data: { first_name: 'Delete', last_name: 'Patient', date_of_birth: '1970-01-01' },
+      195 |       headers: { 'Content-Type': 'application/json' },
+      196 |     });
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:193:37
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Department Entity › GET /odata/DepartmentSet - should return departments collection" classname="hospital-odata-ui5.e2e-test.ts" time="0.317">
+<failure message="hospital-odata-ui5.e2e-test.ts:212:3 GET /odata/DepartmentSet - should return departments collection" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:212:3 › OData - Department Entity › GET /odata/DepartmentSet - should return departments collection 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/DepartmentSet
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      211 | test.describe('OData - Department Entity', () => {
+      212 |   test('GET /odata/DepartmentSet - should return departments collection', async ({ request }) => {
+    > 213 |     const response = await request.get(`${ODATA_BASE}/DepartmentSet`);
+          |                                    ^
+      214 |     expect(response.status()).toBe(200);
+      215 |
+      216 |     const data = await response.json();
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:213:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Department Entity › POST /odata/DepartmentSet - should create a department" classname="hospital-odata-ui5.e2e-test.ts" time="0.317">
+<failure message="hospital-odata-ui5.e2e-test.ts:220:3 POST /odata/DepartmentSet - should create a department" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:220:3 › OData - Department Entity › POST /odata/DepartmentSet - should create a department 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → POST http://localhost:3000/odata/DepartmentSet
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+        - Content-Type: application/json
+        - content-length: 83
+
+
+      225 |     };
+      226 |
+    > 227 |     const response = await request.post(`${ODATA_BASE}/DepartmentSet`, {
+          |                                    ^
+      228 |       data: newDept,
+      229 |       headers: { 'Content-Type': 'application/json' },
+      230 |     });
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:227:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Department Entity › GET /odata/DepartmentSet with $top=3 - should limit" classname="hospital-odata-ui5.e2e-test.ts" time="0.314">
+<failure message="hospital-odata-ui5.e2e-test.ts:243:3 GET /odata/DepartmentSet with $top=3 - should limit" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:243:3 › OData - Department Entity › GET /odata/DepartmentSet with $top=3 - should limit 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/DepartmentSet?$top=3
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      242 |
+      243 |   test('GET /odata/DepartmentSet with $top=3 - should limit', async ({ request }) => {
+    > 244 |     const response = await request.get(`${ODATA_BASE}/DepartmentSet?$top=3`);
+          |                                    ^
+      245 |     expect(response.status()).toBe(200);
+      246 |
+      247 |     const data = await response.json();
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:244:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Staff Entity › GET /odata/StaffSet - should return staff collection" classname="hospital-odata-ui5.e2e-test.ts" time="0.315">
+<failure message="hospital-odata-ui5.e2e-test.ts:257:3 GET /odata/StaffSet - should return staff collection" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:257:3 › OData - Staff Entity › GET /odata/StaffSet - should return staff collection 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/StaffSet
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      256 | test.describe('OData - Staff Entity', () => {
+      257 |   test('GET /odata/StaffSet - should return staff collection', async ({ request }) => {
+    > 258 |     const response = await request.get(`${ODATA_BASE}/StaffSet`);
+          |                                    ^
+      259 |     expect(response.status()).toBe(200);
+      260 |
+      261 |     const data = await response.json();
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:258:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Staff Entity › POST /odata/StaffSet - should create staff member" classname="hospital-odata-ui5.e2e-test.ts" time="0.316">
+<failure message="hospital-odata-ui5.e2e-test.ts:265:3 POST /odata/StaffSet - should create staff member" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:265:3 › OData - Staff Entity › POST /odata/StaffSet - should create staff member 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → POST http://localhost:3000/odata/StaffSet
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+        - Content-Type: application/json
+        - content-length: 153
+
+
+      273 |     };
+      274 |
+    > 275 |     const response = await request.post(`${ODATA_BASE}/StaffSet`, {
+          |                                    ^
+      276 |       data: newStaff,
+      277 |       headers: { 'Content-Type': 'application/json' },
+      278 |     });
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:275:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Appointment Entity › GET /odata/Appointments - should return appointments collection" classname="hospital-odata-ui5.e2e-test.ts" time="0.317">
+<failure message="hospital-odata-ui5.e2e-test.ts:296:3 GET /odata/Appointments - should return appointments collection" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:296:3 › OData - Appointment Entity › GET /odata/Appointments - should return appointments collection 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/Appointments
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      295 | test.describe('OData - Appointment Entity', () => {
+      296 |   test('GET /odata/Appointments - should return appointments collection', async ({ request }) => {
+    > 297 |     const response = await request.get(`${ODATA_BASE}/Appointments`);
+          |                                    ^
+      298 |     expect(response.status()).toBe(200);
+      299 |
+      300 |     const data = await response.json();
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:297:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Appointment Entity › POST /odata/Appointments - should create appointment" classname="hospital-odata-ui5.e2e-test.ts" time="0.315">
+<failure message="hospital-odata-ui5.e2e-test.ts:304:3 POST /odata/Appointments - should create appointment" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:304:3 › OData - Appointment Entity › POST /odata/Appointments - should create appointment 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → POST http://localhost:3000/odata/Patients
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+        - Content-Type: application/json
+        - content-length: 70
+
+
+      304 |   test('POST /odata/Appointments - should create appointment', async ({ request }) => {
+      305 |     // Create patient first
+    > 306 |     const patientRes = await request.post(`${ODATA_BASE}/Patients`, {
+          |                                      ^
+      307 |       data: { first_name: 'Appt', last_name: 'OData', date_of_birth: '1995-05-05' },
+      308 |       headers: { 'Content-Type': 'application/json' },
+      309 |     });
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:306:38
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Appointment Entity › GET /odata/Appointments with $orderby - should sort" classname="hospital-odata-ui5.e2e-test.ts" time="0.316">
+<failure message="hospital-odata-ui5.e2e-test.ts:336:3 GET /odata/Appointments with $orderby - should sort" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:336:3 › OData - Appointment Entity › GET /odata/Appointments with $orderby - should sort 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/Appointments?$orderby=appointment_date%20desc
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      335 |
+      336 |   test('GET /odata/Appointments with $orderby - should sort', async ({ request }) => {
+    > 337 |     const response = await request.get(`${ODATA_BASE}/Appointments?$orderby=appointment_date desc`);
+          |                                    ^
+      338 |     expect(response.status()).toBe(200);
+      339 |   });
+      340 | });
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:337:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Admission Entity › GET /odata/Admissions - should return admissions collection" classname="hospital-odata-ui5.e2e-test.ts" time="0.315">
+<failure message="hospital-odata-ui5.e2e-test.ts:347:3 GET /odata/Admissions - should return admissions collection" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:347:3 › OData - Admission Entity › GET /odata/Admissions - should return admissions collection 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/Admissions
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      346 | test.describe('OData - Admission Entity', () => {
+      347 |   test('GET /odata/Admissions - should return admissions collection', async ({ request }) => {
+    > 348 |     const response = await request.get(`${ODATA_BASE}/Admissions`);
+          |                                    ^
+      349 |     expect(response.status()).toBe(200);
+      350 |
+      351 |     const data = await response.json();
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:348:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Admission Entity › POST /odata/Admissions - should create admission" classname="hospital-odata-ui5.e2e-test.ts" time="0.317">
+<failure message="hospital-odata-ui5.e2e-test.ts:355:3 POST /odata/Admissions - should create admission" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:355:3 › OData - Admission Entity › POST /odata/Admissions - should create admission 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → POST http://localhost:3000/odata/Patients
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+        - Content-Type: application/json
+        - content-length: 74
+
+
+      354 |
+      355 |   test('POST /odata/Admissions - should create admission', async ({ request }) => {
+    > 356 |     const patientRes = await request.post(`${ODATA_BASE}/Patients`, {
+          |                                      ^
+      357 |       data: { first_name: 'Admitted', last_name: 'OData', date_of_birth: '1980-08-08' },
+      358 |       headers: { 'Content-Type': 'application/json' },
+      359 |     });
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:356:38
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Bill Entity › GET /odata/BillSet - should return bills collection" classname="hospital-odata-ui5.e2e-test.ts" time="0.316">
+<failure message="hospital-odata-ui5.e2e-test.ts:391:3 GET /odata/BillSet - should return bills collection" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:391:3 › OData - Bill Entity › GET /odata/BillSet - should return bills collection 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/BillSet
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      390 | test.describe('OData - Bill Entity', () => {
+      391 |   test('GET /odata/BillSet - should return bills collection', async ({ request }) => {
+    > 392 |     const response = await request.get(`${ODATA_BASE}/BillSet`);
+          |                                    ^
+      393 |     expect(response.status()).toBe(200);
+      394 |
+      395 |     const data = await response.json();
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:392:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Bill Entity › POST /odata/BillSet - should create bill" classname="hospital-odata-ui5.e2e-test.ts" time="0.316">
+<failure message="hospital-odata-ui5.e2e-test.ts:399:3 POST /odata/BillSet - should create bill" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:399:3 › OData - Bill Entity › POST /odata/BillSet - should create bill 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → POST http://localhost:3000/odata/Patients
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+        - Content-Type: application/json
+        - content-length: 73
+
+
+      398 |
+      399 |   test('POST /odata/BillSet - should create bill', async ({ request }) => {
+    > 400 |     const patientRes = await request.post(`${ODATA_BASE}/Patients`, {
+          |                                      ^
+      401 |       data: { first_name: 'Billing', last_name: 'OData', date_of_birth: '1972-12-12' },
+      402 |       headers: { 'Content-Type': 'application/json' },
+      403 |     });
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:400:38
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Diagnosis Entity › GET /odata/DiagnosisSet - should return diagnoses collection" classname="hospital-odata-ui5.e2e-test.ts" time="0.316">
+<failure message="hospital-odata-ui5.e2e-test.ts:434:3 GET /odata/DiagnosisSet - should return diagnoses collection" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:434:3 › OData - Diagnosis Entity › GET /odata/DiagnosisSet - should return diagnoses collection 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/DiagnosisSet
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      433 | test.describe('OData - Diagnosis Entity', () => {
+      434 |   test('GET /odata/DiagnosisSet - should return diagnoses collection', async ({ request }) => {
+    > 435 |     const response = await request.get(`${ODATA_BASE}/DiagnosisSet`);
+          |                                    ^
+      436 |     expect(response.status()).toBe(200);
+      437 |
+      438 |     const data = await response.json();
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:435:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Diagnosis Entity › POST /odata/DiagnosisSet - should create diagnosis" classname="hospital-odata-ui5.e2e-test.ts" time="0.314">
+<failure message="hospital-odata-ui5.e2e-test.ts:442:3 POST /odata/DiagnosisSet - should create diagnosis" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:442:3 › OData - Diagnosis Entity › POST /odata/DiagnosisSet - should create diagnosis 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → POST http://localhost:3000/odata/DiagnosisSet
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+        - Content-Type: application/json
+        - content-length: 119
+
+
+      448 |     };
+      449 |
+    > 450 |     const response = await request.post(`${ODATA_BASE}/DiagnosisSet`, {
+          |                                    ^
+      451 |       data: newDiag,
+      452 |       headers: { 'Content-Type': 'application/json' },
+      453 |     });
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:450:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Encounter Entity › GET /odata/EncounterSet - should return encounters collection" classname="hospital-odata-ui5.e2e-test.ts" time="0.314">
+<failure message="hospital-odata-ui5.e2e-test.ts:465:3 GET /odata/EncounterSet - should return encounters collection" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:465:3 › OData - Encounter Entity › GET /odata/EncounterSet - should return encounters collection 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/EncounterSet
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      464 | test.describe('OData - Encounter Entity', () => {
+      465 |   test('GET /odata/EncounterSet - should return encounters collection', async ({ request }) => {
+    > 466 |     const response = await request.get(`${ODATA_BASE}/EncounterSet`);
+          |                                    ^
+      467 |     expect(response.status()).toBe(200);
+      468 |
+      469 |     const data = await response.json();
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:466:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Encounter Entity › POST /odata/EncounterSet - should create encounter" classname="hospital-odata-ui5.e2e-test.ts" time="0.316">
+<failure message="hospital-odata-ui5.e2e-test.ts:473:3 POST /odata/EncounterSet - should create encounter" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:473:3 › OData - Encounter Entity › POST /odata/EncounterSet - should create encounter 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → POST http://localhost:3000/odata/Patients
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+        - Content-Type: application/json
+        - content-length: 75
+
+
+      472 |
+      473 |   test('POST /odata/EncounterSet - should create encounter', async ({ request }) => {
+    > 474 |     const patientRes = await request.post(`${ODATA_BASE}/Patients`, {
+          |                                      ^
+      475 |       data: { first_name: 'Encounter', last_name: 'OData', date_of_birth: '1993-07-20' },
+      476 |       headers: { 'Content-Type': 'application/json' },
+      477 |     });
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:474:38
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Lab Order Entity › GET /odata/LabOrderSet - should return lab orders collection" classname="hospital-odata-ui5.e2e-test.ts" time="0.315">
+<failure message="hospital-odata-ui5.e2e-test.ts:508:3 GET /odata/LabOrderSet - should return lab orders collection" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:508:3 › OData - Lab Order Entity › GET /odata/LabOrderSet - should return lab orders collection 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/LabOrderSet
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      507 | test.describe('OData - Lab Order Entity', () => {
+      508 |   test('GET /odata/LabOrderSet - should return lab orders collection', async ({ request }) => {
+    > 509 |     const response = await request.get(`${ODATA_BASE}/LabOrderSet`);
+          |                                    ^
+      510 |     expect(response.status()).toBe(200);
+      511 |
+      512 |     const data = await response.json();
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:509:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Lab Order Entity › POST /odata/LabOrderSet - should create lab order" classname="hospital-odata-ui5.e2e-test.ts" time="0.316">
+<failure message="hospital-odata-ui5.e2e-test.ts:516:3 POST /odata/LabOrderSet - should create lab order" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:516:3 › OData - Lab Order Entity › POST /odata/LabOrderSet - should create lab order 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → POST http://localhost:3000/odata/Patients
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+        - Content-Type: application/json
+        - content-length: 69
+
+
+      515 |
+      516 |   test('POST /odata/LabOrderSet - should create lab order', async ({ request }) => {
+    > 517 |     const patientRes = await request.post(`${ODATA_BASE}/Patients`, {
+          |                                      ^
+      518 |       data: { first_name: 'Lab', last_name: 'OData', date_of_birth: '1999-04-15' },
+      519 |       headers: { 'Content-Type': 'application/json' },
+      520 |     });
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:517:38
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Lab Result Entity › GET /odata/LabResultSet - should return lab results collection" classname="hospital-odata-ui5.e2e-test.ts" time="0.314">
+<failure message="hospital-odata-ui5.e2e-test.ts:547:3 GET /odata/LabResultSet - should return lab results collection" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:547:3 › OData - Lab Result Entity › GET /odata/LabResultSet - should return lab results collection 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/LabResultSet
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      546 | test.describe('OData - Lab Result Entity', () => {
+      547 |   test('GET /odata/LabResultSet - should return lab results collection', async ({ request }) => {
+    > 548 |     const response = await request.get(`${ODATA_BASE}/LabResultSet`);
+          |                                    ^
+      549 |     expect(response.status()).toBe(200);
+      550 |
+      551 |     const data = await response.json();
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:548:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Prescription Entity › GET /odata/PrescriptionSet - should return prescriptions collection" classname="hospital-odata-ui5.e2e-test.ts" time="0.317">
+<failure message="hospital-odata-ui5.e2e-test.ts:561:3 GET /odata/PrescriptionSet - should return prescriptions collection" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:561:3 › OData - Prescription Entity › GET /odata/PrescriptionSet - should return prescriptions collection 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/PrescriptionSet
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      560 | test.describe('OData - Prescription Entity', () => {
+      561 |   test('GET /odata/PrescriptionSet - should return prescriptions collection', async ({ request }) => {
+    > 562 |     const response = await request.get(`${ODATA_BASE}/PrescriptionSet`);
+          |                                    ^
+      563 |     expect(response.status()).toBe(200);
+      564 |
+      565 |     const data = await response.json();
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:562:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Prescription Entity › POST /odata/PrescriptionSet - should create prescription" classname="hospital-odata-ui5.e2e-test.ts" time="0.318">
+<failure message="hospital-odata-ui5.e2e-test.ts:569:3 POST /odata/PrescriptionSet - should create prescription" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:569:3 › OData - Prescription Entity › POST /odata/PrescriptionSet - should create prescription 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → POST http://localhost:3000/odata/Patients
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+        - Content-Type: application/json
+        - content-length: 68
+
+
+      568 |
+      569 |   test('POST /odata/PrescriptionSet - should create prescription', async ({ request }) => {
+    > 570 |     const patientRes = await request.post(`${ODATA_BASE}/Patients`, {
+          |                                      ^
+      571 |       data: { first_name: 'Rx', last_name: 'OData', date_of_birth: '2001-02-28' },
+      572 |       headers: { 'Content-Type': 'application/json' },
+      573 |     });
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:570:38
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Vital Sign Entity › GET /odata/VitalSignSet - should return vital signs collection" classname="hospital-odata-ui5.e2e-test.ts" time="0.313">
+<failure message="hospital-odata-ui5.e2e-test.ts:599:3 GET /odata/VitalSignSet - should return vital signs collection" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:599:3 › OData - Vital Sign Entity › GET /odata/VitalSignSet - should return vital signs collection 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/VitalSignSet
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      598 | test.describe('OData - Vital Sign Entity', () => {
+      599 |   test('GET /odata/VitalSignSet - should return vital signs collection', async ({ request }) => {
+    > 600 |     const response = await request.get(`${ODATA_BASE}/VitalSignSet`);
+          |                                    ^
+      601 |     expect(response.status()).toBe(200);
+      602 |
+      603 |     const data = await response.json();
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:600:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Vital Sign Entity › POST /odata/VitalSignSet - should create vital sign record" classname="hospital-odata-ui5.e2e-test.ts" time="0.315">
+<failure message="hospital-odata-ui5.e2e-test.ts:607:3 POST /odata/VitalSignSet - should create vital sign record" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:607:3 › OData - Vital Sign Entity › POST /odata/VitalSignSet - should create vital sign record 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → POST http://localhost:3000/odata/Patients
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+        - Content-Type: application/json
+        - content-length: 72
+
+
+      606 |
+      607 |   test('POST /odata/VitalSignSet - should create vital sign record', async ({ request }) => {
+    > 608 |     const patientRes = await request.post(`${ODATA_BASE}/Patients`, {
+          |                                      ^
+      609 |       data: { first_name: 'Vitals', last_name: 'OData', date_of_birth: '1988-10-10' },
+      610 |       headers: { 'Content-Type': 'application/json' },
+      611 |     });
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:608:38
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Insurance Provider Entity › GET /odata/InsuranceProviderSet - should return insurance providers" classname="hospital-odata-ui5.e2e-test.ts" time="0.315">
+<failure message="hospital-odata-ui5.e2e-test.ts:646:3 GET /odata/InsuranceProviderSet - should return insurance providers" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:646:3 › OData - Insurance Provider Entity › GET /odata/InsuranceProviderSet - should return insurance providers 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/InsuranceProviderSet
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      645 | test.describe('OData - Insurance Provider Entity', () => {
+      646 |   test('GET /odata/InsuranceProviderSet - should return insurance providers', async ({ request }) => {
+    > 647 |     const response = await request.get(`${ODATA_BASE}/InsuranceProviderSet`);
+          |                                    ^
+      648 |     expect(response.status()).toBe(200);
+      649 |
+      650 |     const data = await response.json();
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:647:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData - Insurance Provider Entity › POST /odata/InsuranceProviderSet - should create insurance provider" classname="hospital-odata-ui5.e2e-test.ts" time="0.315">
+<failure message="hospital-odata-ui5.e2e-test.ts:654:3 POST /odata/InsuranceProviderSet - should create insurance provider" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:654:3 › OData - Insurance Provider Entity › POST /odata/InsuranceProviderSet - should create insurance provider 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → POST http://localhost:3000/odata/InsuranceProviderSet
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+        - Content-Type: application/json
+        - content-length: 133
+
+
+      662 |     };
+      663 |
+    > 664 |     const response = await request.post(`${ODATA_BASE}/InsuranceProviderSet`, {
+          |                                    ^
+      665 |       data: newProvider,
+      666 |       headers: { 'Content-Type': 'application/json' },
+      667 |     });
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:664:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData Query Options - Patients › $filter eq - should filter by exact value" classname="hospital-odata-ui5.e2e-test.ts" time="0.312">
+<failure message="hospital-odata-ui5.e2e-test.ts:686:3 $filter eq - should filter by exact value" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:686:3 › OData Query Options - Patients › $filter eq - should filter by exact value 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/Patients?$filter=gender%20eq%20%27MALE%27
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      685 | test.describe('OData Query Options - Patients', () => {
+      686 |   test('$filter eq - should filter by exact value', async ({ request }) => {
+    > 687 |     const response = await request.get(`${ODATA_BASE}/Patients?$filter=gender eq 'MALE'`);
+          |                                    ^
+      688 |     expect(response.status()).toBe(200);
+      689 |   });
+      690 |
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:687:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData Query Options - Patients › $filter contains - should filter with contains" classname="hospital-odata-ui5.e2e-test.ts" time="0.315">
+<failure message="hospital-odata-ui5.e2e-test.ts:691:3 $filter contains - should filter with contains" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:691:3 › OData Query Options - Patients › $filter contains - should filter with contains 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/Patients?$filter=contains(first_name,%27Test%27)
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      690 |
+      691 |   test('$filter contains - should filter with contains', async ({ request }) => {
+    > 692 |     const response = await request.get(`${ODATA_BASE}/Patients?$filter=contains(first_name,'Test')`);
+          |                                    ^
+      693 |     expect(response.status()).toBe(200);
+      694 |   });
+      695 |
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:692:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData Query Options - Patients › $orderby asc - should sort ascending" classname="hospital-odata-ui5.e2e-test.ts" time="0.315">
+<failure message="hospital-odata-ui5.e2e-test.ts:696:3 $orderby asc - should sort ascending" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:696:3 › OData Query Options - Patients › $orderby asc - should sort ascending 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/Patients?$orderby=last_name%20asc
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      695 |
+      696 |   test('$orderby asc - should sort ascending', async ({ request }) => {
+    > 697 |     const response = await request.get(`${ODATA_BASE}/Patients?$orderby=last_name asc`);
+          |                                    ^
+      698 |     expect(response.status()).toBe(200);
+      699 |   });
+      700 |
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:697:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData Query Options - Patients › $orderby desc - should sort descending" classname="hospital-odata-ui5.e2e-test.ts" time="0.314">
+<failure message="hospital-odata-ui5.e2e-test.ts:701:3 $orderby desc - should sort descending" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:701:3 › OData Query Options - Patients › $orderby desc - should sort descending 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/Patients?$orderby=last_name%20desc
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      700 |
+      701 |   test('$orderby desc - should sort descending', async ({ request }) => {
+    > 702 |     const response = await request.get(`${ODATA_BASE}/Patients?$orderby=last_name desc`);
+          |                                    ^
+      703 |     expect(response.status()).toBe(200);
+      704 |   });
+      705 |
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:702:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData Query Options - Patients › $top and $skip combined - should paginate" classname="hospital-odata-ui5.e2e-test.ts" time="0.313">
+<failure message="hospital-odata-ui5.e2e-test.ts:706:3 $top and $skip combined - should paginate" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:706:3 › OData Query Options - Patients › $top and $skip combined - should paginate 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/Patients?$top=10&$skip=0
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      705 |
+      706 |   test('$top and $skip combined - should paginate', async ({ request }) => {
+    > 707 |     const response = await request.get(`${ODATA_BASE}/Patients?$top=10&$skip=0`);
+          |                                    ^
+      708 |     expect(response.status()).toBe(200);
+      709 |   });
+      710 |
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:707:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData Query Options - Patients › $select specific fields - should return subset" classname="hospital-odata-ui5.e2e-test.ts" time="0.314">
+<failure message="hospital-odata-ui5.e2e-test.ts:711:3 $select specific fields - should return subset" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:711:3 › OData Query Options - Patients › $select specific fields - should return subset 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED 127.0.0.1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/Patients?$select=id,first_name,last_name
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+
+      710 |
+      711 |   test('$select specific fields - should return subset', async ({ request }) => {
+    > 712 |     const response = await request.get(`${ODATA_BASE}/Patients?$select=id,first_name,last_name`);
+          |                                    ^
+      713 |     expect(response.status()).toBe(200);
+      714 |   });
+      715 | });
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:712:36
+]]>
+</failure>
+</testcase>
+<testcase name="OpenUI5 Frontend - Hospital App › should load the main page" classname="hospital-odata-ui5.e2e-test.ts" time="3.902">
+</testcase>
+<testcase name="OpenUI5 Frontend - Hospital App › should have SAP UI5 framework loaded" classname="hospital-odata-ui5.e2e-test.ts" time="3.696">
+</testcase>
+<testcase name="OpenUI5 Frontend - Hospital App › should display master list or navigation" classname="hospital-odata-ui5.e2e-test.ts" time="3.678">
+</testcase>
+<testcase name="OpenUI5 Frontend - Hospital App › should display entity navigation menu" classname="hospital-odata-ui5.e2e-test.ts" time="13.86">
+<failure message="hospital-odata-ui5.e2e-test.ts:759:3 should display entity navigation menu" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:759:3 › OpenUI5 Frontend - Hospital App › should display entity navigation menu 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: locator('.sapMNavContainer, .sapMSplitContainer, nav, [role="navigation"]').first()
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for locator('.sapMNavContainer, .sapMSplitContainer, nav, [role="navigation"]').first()
+
+
+      769 |       // Navigation panel with entity list
+      770 |       const navPanel = page.locator('.sapMNavContainer, .sapMSplitContainer, nav, [role="navigation"]').first();
+    > 771 |       await expect(navPanel).toBeVisible({ timeout: 10000 });
+          |                              ^
+      772 |     }
+      773 |   });
+      774 |
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:771:30
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../test-results/hospital-odata-ui5.e2e-tes-27b29-play-entity-navigation-menu-hospital-odata-ui5/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../../test-results/hospital-odata-ui5.e2e-tes-27b29-play-entity-navigation-menu-hospital-odata-ui5/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/hospital-odata-ui5.e2e-tes-27b29-play-entity-navigation-menu-hospital-odata-ui5/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../test-results/hospital-odata-ui5.e2e-tes-27b29-play-entity-navigation-menu-hospital-odata-ui5/test-failed-1.png]]
+
+[[ATTACHMENT|../../../test-results/hospital-odata-ui5.e2e-tes-27b29-play-entity-navigation-menu-hospital-odata-ui5/video.webm]]
+
+[[ATTACHMENT|../../../test-results/hospital-odata-ui5.e2e-tes-27b29-play-entity-navigation-menu-hospital-odata-ui5/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="OpenUI5 Frontend - Hospital App › should navigate to patients entity list" classname="hospital-odata-ui5.e2e-test.ts" time="3.698">
+<failure message="hospital-odata-ui5.e2e-test.ts:775:3 should navigate to patients entity list" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:775:3 › OpenUI5 Frontend - Hospital App › should navigate to patients entity list 
+
+    Error: locator.isVisible: SyntaxError: Invalid flags supplied to RegExp constructor 'i, a[href*="Patient"], .sapMLIB:has-text("Patient")'
+        at new RegExp (<anonymous>)
+        at createTextMatcher (<anonymous>:7912:16)
+        at Object.queryAll (<anonymous>:6816:33)
+        at InjectedScript._queryEngineAll (<anonymous>:6789:49)
+        at InjectedScript.querySelectorAll (<anonymous>:6776:30)
+        at InjectedScript.querySelector (<anonymous>:6689:25)
+        at eval (eval at evaluate (:290:30), <anonymous>:2:34)
+        at UtilityScript.evaluate (<anonymous>:292:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+    Call log:
+        - checking visibility of locator('text=/patient/i, a[href*="Patient"], .sapMLIB:has-text("Patient")').first()
+
+        at createTextMatcher (<anonymous>:7912:16)
+        at Object.queryAll (<anonymous>:6816:33)
+        at InjectedScript._queryEngineAll (<anonymous>:6789:49)
+        at InjectedScript.querySelectorAll (<anonymous>:6776:30)
+        at InjectedScript.querySelector (<anonymous>:6689:25)
+        at eval (eval at evaluate (:290:30), <anonymous>:2:34)
+        at UtilityScript.evaluate (<anonymous>:292:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:783:27
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../test-results/hospital-odata-ui5.e2e-tes-fcd6a-ate-to-patients-entity-list-hospital-odata-ui5/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../../test-results/hospital-odata-ui5.e2e-tes-fcd6a-ate-to-patients-entity-list-hospital-odata-ui5/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/hospital-odata-ui5.e2e-tes-fcd6a-ate-to-patients-entity-list-hospital-odata-ui5/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../test-results/hospital-odata-ui5.e2e-tes-fcd6a-ate-to-patients-entity-list-hospital-odata-ui5/test-failed-1.png]]
+
+[[ATTACHMENT|../../../test-results/hospital-odata-ui5.e2e-tes-fcd6a-ate-to-patients-entity-list-hospital-odata-ui5/video.webm]]
+
+[[ATTACHMENT|../../../test-results/hospital-odata-ui5.e2e-tes-fcd6a-ate-to-patients-entity-list-hospital-odata-ui5/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="OpenUI5 Frontend - Hospital App › should handle navigation between entity panels" classname="hospital-odata-ui5.e2e-test.ts" time="3.695">
+</testcase>
+<testcase name="OpenUI5 Frontend - Hospital App › should show patient table with columns" classname="hospital-odata-ui5.e2e-test.ts" time="3.666">
+<failure message="hospital-odata-ui5.e2e-test.ts:810:3 should show patient table with columns" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:810:3 › OpenUI5 Frontend - Hospital App › should show patient table with columns 
+
+    Error: expect(received).toBeTruthy()
+
+    Received: false
+
+      823 |     const columnHeader = page.locator('.sapMColumnHeader, th, [role="columnheader"]').first();
+      824 |     const hasHeader = await columnHeader.isVisible().catch(() => false);
+    > 825 |     expect(hasHeader).toBeTruthy();
+          |                       ^
+      826 |   });
+      827 | });
+      828 |
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:825:23
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../test-results/hospital-odata-ui5.e2e-tes-eedc0--patient-table-with-columns-hospital-odata-ui5/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../../test-results/hospital-odata-ui5.e2e-tes-eedc0--patient-table-with-columns-hospital-odata-ui5/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../test-results/hospital-odata-ui5.e2e-tes-eedc0--patient-table-with-columns-hospital-odata-ui5/error-context.md
+]]>
+</failure>
+<system-out>
+<![CDATA[
+[[ATTACHMENT|../../../test-results/hospital-odata-ui5.e2e-tes-eedc0--patient-table-with-columns-hospital-odata-ui5/test-failed-1.png]]
+
+[[ATTACHMENT|../../../test-results/hospital-odata-ui5.e2e-tes-eedc0--patient-table-with-columns-hospital-odata-ui5/video.webm]]
+
+[[ATTACHMENT|../../../test-results/hospital-odata-ui5.e2e-tes-eedc0--patient-table-with-columns-hospital-odata-ui5/error-context.md]]
+]]>
+</system-out>
+</testcase>
+<testcase name="OData Error Handling › should return 404 for non-existent entity set" classname="hospital-odata-ui5.e2e-test.ts" time="0.314">
+<failure message="hospital-odata-ui5.e2e-test.ts:834:3 should return 404 for non-existent entity set" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:834:3 › OData Error Handling › should return 404 for non-existent entity set 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED ::1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/NonExistentEntitySet
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+        at apiRequestContext.get: connect ECONNREFUSED ::1:3000
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:835:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData Error Handling › should return 404 for non-existent patient ID" classname="hospital-odata-ui5.e2e-test.ts" time="0.313">
+<failure message="hospital-odata-ui5.e2e-test.ts:839:3 should return 404 for non-existent patient ID" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:839:3 › OData Error Handling › should return 404 for non-existent patient ID 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED ::1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/Patients(00000000-0000-0000-0000-000000000000)
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+        at apiRequestContext.get: connect ECONNREFUSED ::1:3000
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:840:36
+]]>
+</failure>
+</testcase>
+<testcase name="OData Error Handling › should handle invalid $filter gracefully" classname="hospital-odata-ui5.e2e-test.ts" time="0.313">
+<failure message="hospital-odata-ui5.e2e-test.ts:844:3 should handle invalid $filter gracefully" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:844:3 › OData Error Handling › should handle invalid $filter gracefully 
+
+    Error: apiRequestContext.get: connect ECONNREFUSED ::1:3000
+    Call log:
+      - → GET http://localhost:3000/odata/Patients?$filter=invalid_syntax
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+
+        at apiRequestContext.get: connect ECONNREFUSED ::1:3000
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:845:36
+]]>
+</failure>
+</testcase>
+<testcase name="Hospital OData - Patient Journey Workflow › should register patient and schedule appointment via OData" classname="hospital-odata-ui5.e2e-test.ts" time="0.314">
+<failure message="hospital-odata-ui5.e2e-test.ts:856:3 should register patient and schedule appointment via OData" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:856:3 › Hospital OData - Patient Journey Workflow › should register patient and schedule appointment via OData 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED ::1:3000
+    Call log:
+      - → POST http://localhost:3000/odata/Patients
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+        - Content-Type: application/json
+        - content-length: 155
+
+        at apiRequestContext.post: connect ECONNREFUSED ::1:3000
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:858:38
+]]>
+</failure>
+</testcase>
+<testcase name="Hospital OData - Patient Journey Workflow › should record vitals and lab order for patient" classname="hospital-odata-ui5.e2e-test.ts" time="0.314">
+<failure message="hospital-odata-ui5.e2e-test.ts:898:3 should record vitals and lab order for patient" type="FAILURE">
+<![CDATA[  [hospital-odata-ui5] › hospital-odata-ui5.e2e-test.ts:898:3 › Hospital OData - Patient Journey Workflow › should record vitals and lab order for patient 
+
+    Error: apiRequestContext.post: connect ECONNREFUSED ::1:3000
+    Call log:
+      - → POST http://localhost:3000/odata/Patients
+        - user-agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.4 Safari/537.36
+        - accept: */*
+        - accept-encoding: gzip,deflate,br
+        - Content-Type: application/json
+        - content-length: 78
+
+        at apiRequestContext.post: connect ECONNREFUSED ::1:3000
+        at /Users/pramodkoshy/projects/dynamic/test/app-with-ai/tests/e2e/complete-tests/hospital-odata-ui5.e2e-test.ts:900:38
+]]>
+</failure>
+</testcase>
+</testsuite>
+</testsuites>

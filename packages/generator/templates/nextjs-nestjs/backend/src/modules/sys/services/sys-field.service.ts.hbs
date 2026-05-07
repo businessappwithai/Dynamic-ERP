@@ -1,0 +1,198 @@
+/**
+ * SysField Service
+ *
+ * Manages sys_field entities - controls field placement, visibility, and ordering in forms.
+ * THIS IS THE CRITICAL SERVICE for runtime UI configuration.
+ * Changes to seq_no, is_displayed, etc. immediately affect the UI without code changes.
+ *
+ * Generated: {{now}}
+ */
+
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { DatabaseService } from '../../database/database.service';
+
+@Injectable()
+export class SysFieldService {
+  constructor(private readonly db: DatabaseService) {}
+
+  /**
+   * Find all sys_field records with pagination and filtering
+   */
+  async findAll(options: {
+    page?: number;
+    limit?: number;
+    tabId?: string;
+    tableId?: string;
+    view?: 'form' | 'grid';
+    isActive?: boolean;
+  } = {}) {
+    const { page = 1, limit = 100, tabId, tableId, view, isActive = true } = options;
+    const offset = (page - 1) * limit;
+
+    let query = this.db.knex('sys_field')
+      .select(
+        'sys_field.*',
+        'sys_column.column_name',
+        'sys_column.name as column_display_name',
+        'sys_column.data_type',
+        'sys_reference.name as reference_name',
+        'sys_reference.validation_type',
+      )
+      .leftJoin('sys_column', 'sys_field.sys_column_id', 'sys_column.sys_column_id')
+      .leftJoin('sys_reference', 'sys_column.sys_reference_id', 'sys_reference.sys_reference_id')
+      .where('sys_field.is_active', isActive);
+
+    if (tabId) {
+      query = query.where('sys_field.sys_tab_id', tabId);
+    }
+
+    if (tableId) {
+      query = query.where('sys_column.sys_table_id', tableId);
+    }
+
+    // Filter by visibility based on view type
+    if (view === 'form') {
+      query = query.where('sys_field.is_displayed', true);
+    } else if (view === 'grid') {
+      query = query.where('sys_field.is_displayed_grid', true);
+    }
+
+    // Order by appropriate seq_no
+    const orderBy = view === 'grid' ? 'sys_field.seq_no_grid' : 'sys_field.seq_no';
+
+    const [data, countResult] = await Promise.all([
+      query.clone().orderBy(orderBy).limit(limit).offset(offset),
+      query.clone().count('* as count').first(),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total: Number(countResult?.count || 0),
+        page,
+        pageSize: limit,
+        totalPages: Math.ceil((countResult?.count || 0) / limit),
+      },
+    };
+  }
+
+  /**
+   * Find sys_field by ID
+   */
+  async findById(id: string) {
+    const field = await this.db.knex('sys_field')
+      .select('sys_field.*', 'sys_column.column_name', 'sys_column.name as column_display_name')
+      .leftJoin('sys_column', 'sys_field.sys_column_id', 'sys_column.sys_column_id')
+      .where('sys_field.sys_field_id', id)
+      .first();
+
+    if (!field) {
+      throw new NotFoundException(`SysField with ID ${id} not found`);
+    }
+    return field;
+  }
+
+  /**
+   * Create new sys_field
+   */
+  async create(data: {
+    sys_tab_id: string;
+    sys_column_id: string;
+    name?: string;
+    description?: string;
+    is_displayed?: boolean;
+    is_displayed_grid?: boolean;
+    is_read_only?: boolean;
+    is_mandatory?: boolean;
+    seq_no?: number;
+    seq_no_grid?: number;
+    display_length?: number;
+    field_group?: string;
+  }) {
+    const now = new Date();
+    const id = this.db.knex.raw('UUID()');
+
+    const newRecord = {
+      sys_field_id: id,
+      ...data,
+      is_displayed: data.is_displayed !== false,
+      is_displayed_grid: data.is_displayed_grid !== false,
+      is_read_only: data.is_read_only === true,
+      is_mandatory: data.is_mandatory === true,
+      seq_no: data.seq_no || 0,
+      seq_no_grid: data.seq_no_grid || data.seq_no || 0,
+      is_active: true,
+      created_at: now,
+      updated_at: now,
+      created_by: '',
+      updated_by: '',
+    };
+
+    await this.db.knex('sys_field').insert(newRecord);
+    return this.findById((newRecord.sys_field_id as any).toString());
+  }
+
+  /**
+   * Update sys_field
+   * This is the key method for runtime UI modification!
+   */
+  async update(id: string, data: {
+    name?: string;
+    description?: string;
+    is_displayed?: boolean;
+    is_displayed_grid?: boolean;
+    is_read_only?: boolean;
+    is_mandatory?: boolean;
+    seq_no?: number;
+    seq_no_grid?: number;
+    display_length?: number;
+    field_group?: string;
+  }, version?: number) {
+    const field = await this.findById(id);
+
+    // Optimistic locking check
+    if (version !== undefined && field.version !== version) {
+      throw new ConflictException('Field was modified by another user');
+    }
+
+    const updated = {
+      ...data,
+      version: (field.version || 0) + 1,
+      updated_at: new Date(),
+      updated_by: '',
+    };
+
+    await this.db.knex('sys_field').where('sys_field_id', id).update(updated);
+    return this.findById(id);
+  }
+
+  /**
+   * Batch reorder fields
+   * Called by the admin interface drag-drop field editor
+   */
+  async batchReorder(fields: Array<{ id: string; seq_no: number; seq_no_grid?: number }>) {
+    await this.db.knex.transaction(async (trx) => {
+      for (const { id, seq_no, seq_no_grid } of fields) {
+        const updateData: any = { seq_no, updated_at: new Date(), updated_by: '' };
+        if (seq_no_grid !== undefined) {
+          updateData.seq_no_grid = seq_no_grid;
+        }
+        await trx('sys_field').where('sys_field_id', id).update(updateData);
+      }
+    });
+
+    return { success: true, updated: fields.length };
+  }
+
+  /**
+   * Delete (soft delete) sys_field
+   */
+  async delete(id: string) {
+    await this.findById(id);
+    await this.db.knex('sys_field').where('sys_field_id', id).update({
+      is_active: false,
+      deleted_at: new Date(),
+    });
+    return { deleted: true };
+  }
+}

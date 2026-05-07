@@ -1,0 +1,218 @@
+/**
+ * SysField DTOs
+ *
+ * Data Transfer Objects for sys_field entity.
+ *
+ * Generated: {{now}}
+ */
+
+import { IsString, IsOptional, IsBoolean, IsNumber, IsUUID } from 'class-validator';
+
+/**
+ * Create SysField DTO
+ */
+export class CreateSysFieldDto {
+  @IsString()
+  tab_id: string;
+
+  @IsString()
+  column_id: string;
+
+  @IsString()
+  name: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  is_displayed?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_readonly?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_mandatory?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_updateable?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_insertable?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  seq_no?: number;
+
+  @IsOptional()
+  @IsNumber()
+  seq_no_grid?: number;
+
+  @IsOptional()
+  @IsNumber()
+  display_length?: number;
+
+  @IsOptional()
+  @IsString()
+  field_type?: string;
+
+  @IsOptional()
+  @IsString()
+  reference_id?: string;
+
+  @IsOptional()
+  @IsString()
+  validation_rule_id?: string;
+
+  @IsOptional()
+  @IsString()
+  default_value?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  is_key?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_parent?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_active?: boolean;
+}
+
+/**
+ * Update SysField DTO
+ */
+export class UpdateSysFieldDto {
+  @IsOptional()
+  @IsString()
+  tab_id?: string;
+
+  @IsOptional()
+  @IsString()
+  column_id?: string;
+
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  is_displayed?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_readonly?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_mandatory?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_updateable?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_insertable?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  seq_no?: number;
+
+  @IsOptional()
+  @IsNumber()
+  seq_no_grid?: number;
+
+  @IsOptional()
+  @IsNumber()
+  display_length?: number;
+
+  @IsOptional()
+  @IsString()
+  field_type?: string;
+
+  @IsOptional()
+  @IsString()
+  reference_id?: string;
+
+  @IsOptional()
+  @IsString()
+  validation_rule_id?: string;
+
+  @IsOptional()
+  @IsString()
+  default_value?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  is_key?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_parent?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_active?: boolean;
+}
+
+/**
+ * Batch Reorder Fields DTO
+ * Used for drag-drop field reordering in admin interface
+ */
+export class BatchReorderFieldsDto {
+  fields: Array<{
+    id: string;
+    seq_no: number;
+    seq_no_grid?: number;
+  }>;
+}
+
+/**
+ * SysField Response DTO
+ */
+export class SysFieldResponseDto {
+  sys_field_id: string;
+  tab_id: string;
+  column_id: string;
+  name: string;
+  description?: string;
+  is_displayed: boolean;
+  is_readonly: boolean;
+  is_mandatory: boolean;
+  is_updateable: boolean;
+  is_insertable: boolean;
+  seq_no: number;
+  seq_no_grid: number;
+  display_length: number;
+  field_type?: string;
+  reference_id?: string;
+  validation_rule_id?: string;
+  default_value?: string;
+  is_key: boolean;
+  is_parent: boolean;
+  is_active: boolean;
+  created_at: Date;
+  updated_at: Date;
+}
+
+/**
+ * SysField with Details Response DTO
+ * Includes column and reference information
+ */
+export class SysFieldWithDetailsResponseDto extends SysFieldResponseDto {
+  column?: any;
+  reference?: any;
+  validation_rule?: any;
+}

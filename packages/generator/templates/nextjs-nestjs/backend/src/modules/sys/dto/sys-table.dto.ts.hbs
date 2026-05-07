@@ -1,0 +1,96 @@
+/**
+ * SysTable DTOs
+ *
+ * Data Transfer Objects for sys_table entity.
+ *
+ * Generated: {{now}}
+ */
+
+import { IsString, IsOptional, IsBoolean, IsNumber, IsObject } from 'class-validator';
+
+/**
+ * Create SysTable DTO
+ */
+export class CreateSysTableDto {
+  @IsString()
+  table_name: string;
+
+  @IsString()
+  name: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  entity_type?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  is_view?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_active?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  access_level?: number;
+}
+
+/**
+ * Update SysTable DTO
+ */
+export class UpdateSysTableDto {
+  @IsOptional()
+  @IsString()
+  table_name?: string;
+
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  entity_type?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  is_view?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_active?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  access_level?: number;
+}
+
+/**
+ * SysTable Response DTO
+ */
+export class SysTableResponseDto {
+  sys_table_id: string;
+  table_name: string;
+  name: string;
+  description?: string;
+  entity_type?: string;
+  is_view: boolean;
+  is_active: boolean;
+  access_level: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+/**
+ * SysTable with Columns Response DTO
+ */
+export class SysTableWithColumnsResponseDto extends SysTableResponseDto {
+  columns: any[];
+}

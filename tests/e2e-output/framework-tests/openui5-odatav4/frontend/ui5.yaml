@@ -1,0 +1,41 @@
+# UI5 Tooling Configuration
+# Generated: 2026-02-09T13:00:27.000Z
+
+specVersion: "3.0"
+metadata:
+  name: openui5-odatav4-test-app
+type: application
+
+framework:
+  name: OpenUI5
+  version: "1.136.0"
+  libraries:
+    - name: sap.m
+    - name: sap.ui.core
+    - name: sap.f
+    - name: sap.uxap
+    - name: sap.ui.layout
+    - name: themelib_sap_horizon
+
+server:
+  customMiddleware:
+    # Proxy to backend OData service
+    - name: fiori-tools-proxy
+      afterMiddleware: compression
+      configuration:
+        ignoreCertError: true
+        backend:
+          - path: /odata
+            url: http://localhost:3020
+            destination: backend
+
+builder:
+  customTasks:
+    - name: ui5-task-cachebuster
+      afterTask: generateCachebusterInfo
+      configuration:
+        hashType: md5
+
+resources:
+  configuration:
+    propertiesFileSourceEncoding: UTF-8

@@ -1,0 +1,53 @@
+/**
+ * JWT Strategy
+ *
+ * Passport strategy for JWT authentication.
+ *
+ * Generated: {{now}}
+ */
+
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { ConfigService } from '@nestjs/config';
+import { DatabaseService } from '../../database/database.service';
+
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor(
+    private configService: ConfigService,
+    private databaseService: DatabaseService,
+  ) {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: configService.get<string>('JWT_SECRET', 'your-secret-key-change-in-production'),
+    });
+  }
+
+  async validate(payload: any) {
+    // Find user by ID from JWT payload
+    const user = await this.databaseService.knex('sys_user')
+      .where('sys_user_id', payload.sub)
+      .where('is_active', true)
+      .first();
+
+    if (!user) {
+      throw new UnauthorizedException('User not found or inactive');
+    }
+
+    // Get user roles
+    const roles = await this.databaseService.knex('sys_user_roles')
+      .join('sys_role', 'sys_user_roles.role_id', 'sys_role.sys_role_id')
+      .where('sys_user_roles.user_id', payload.sub)
+      .where('sys_role.is_active', true)
+      .pluck('sys_role.name');
+
+    return {
+      sys_user_id: user.sys_user_id,
+      email: user.email,
+      name: user.name,
+      roles,
+    };
+  }
+}

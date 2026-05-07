@@ -1,0 +1,82 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { DatabaseService } from '../../database/service';
+
+@Injectable()
+export class SysAccessService {
+  constructor(private readonly db: DatabaseService) {}
+
+  async findAll(options: { page?: number; limit?: number; roleId?: string; tableId?: string } = {}) {
+    const { page = 1, limit = 100, roleId, tableId } = options;
+    const offset = (page - 1) * limit;
+
+    let query = this.db.knex('sys_access').where('is_active', true);
+
+    if (roleId) {
+      query = query.where('sys_role_id', roleId);
+    }
+
+    if (tableId) {
+      query = query.where('sys_table_id', tableId);
+    }
+
+    const [data, countResult] = await Promise.all([
+      query.clone().orderBy('sys_role_id').limit(limit).offset(offset),
+      query.clone().count('* as count').first(),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total: Number(countResult?.count || 0),
+        page,
+        pageSize: limit,
+        totalPages: Math.ceil((countResult?.count || 0) / limit),
+      },
+    };
+  }
+
+  async findById(id: string) {
+    const access = await this.db.knex('sys_access').where('sys_access_id', id).first();
+    if (!access) {
+      throw new NotFoundException(`SysAccess with ID ${id} not found`);
+    }
+    return access;
+  }
+
+  async create(data: any) {
+    const now = new Date();
+    const id = this.db.knex.raw('UUID()');
+
+    const newRecord = {
+      sys_access_id: id,
+      ...data,
+      access_type_table: data.access_type_table || 'R',
+      is_read_only: data.is_read_only === true,
+      is_exclude: data.is_exclude === true,
+      entity_type: data.entity_type || 'D',
+      is_active: data.is_active !== false,
+      created_at: now,
+      updated_at: now,
+      created_by: '',
+      updated_by: '',
+    };
+
+    await this.db.knex('sys_access').insert(newRecord);
+    return this.findById((newRecord.sys_access_id as any).toString());
+  }
+
+  async update(id: string, data: any) {
+    const updated = { ...data, updated_at: new Date(), updated_by: '' };
+    await this.db.knex('sys_access').where('sys_access_id', id).update(updated);
+    return this.findById(id);
+  }
+
+  async delete(id: string) {
+    await this.findById(id);
+    await this.db.knex('sys_access').where('sys_access_id', id).update({
+      is_active: false,
+      deleted_at: new Date(),
+    });
+    return { deleted: true };
+  }
+}

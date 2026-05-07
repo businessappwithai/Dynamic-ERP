@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+  <title>openui5-odatav4-test-app</title>
+
+  <!-- SAP UI5 Bootstrap -->
+  <script
+    id="sap-ui-bootstrap"
+    src="https://ui5.sap.com/resources/sap-ui-core.js"
+    data-sap-ui-theme="sap_horizon"
+    data-sap-ui-compat-version="edge"
+    data-sap-ui-async="true"
+    data-sap-ui-resource-roots='{"openui5-odatav4-test-app": "./"}'
+    data-sap-ui-on-init="module:sap/ui/core/ComponentSupport"
+    data-sap-ui-frame-options="allow">
+  </script>
+
+  <!-- Application Styles -->
+  <style>
+    /* Initial loading styles */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "72", Arial, Helvetica, sans-serif;
+    }
+
+    /* Busy indicator during initial load */
+    #content {
+      height: 100%;
+    }
+  </style>
+</head>
+<body class="sapUiBody" id="content">
+  <!-- UI5 Component Container -->
+  <div
+    data-sap-ui-component
+    data-name="openui5-odatav4-test-app"
+    data-id="container"
+    data-settings='{"id": "openui5-odatav4-test-app"}'
+    style="height: 100%">
+  </div>
+
+  <noscript>
+    <div style="padding: 20px; text-align: center;">
+      <h1>JavaScript Required</h1>
+      <p>This application requires JavaScript to be enabled. Please enable JavaScript in your browser settings.</p>
+    </div>
+  </noscript>
+</body>
+</html>

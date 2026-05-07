@@ -1,0 +1,95 @@
+/**
+ * Business Tables Migration
+ * Creates all business entity tables
+ *
+ * Generated: {{now}}
+ */
+
+import type { Knex } from 'knex';
+
+export async function up(knex: Knex): Promise<void> {
+  {{#each entities}}
+  // ==========================================================================
+  // {{displayName}} ({{tableName}})
+  // ==========================================================================
+  await knex.schema.createTable('{{tableName}}', (table) => {
+    // Primary Key
+    table.uuid('{{primaryKey}}').primary();
+
+    {{#each attributes}}
+    {{#unless (or (eq name ../primaryKey) (eq name 'created_at') (eq name 'updated_at') (eq name 'deleted_at'))}}
+    // {{name}}: {{type}}{{#if required}} (required){{/if}}{{#if unique}} (unique){{/if}}
+    {{#switch (typeToReferenceId type)}}
+      {{#case 10}}
+    table.string('{{name}}'{{#if maxLength}}, {{maxLength}}{{else}}, 255{{/if}}){{#if required}}.notNullable(){{/if}}{{#if unique}}.unique(){{/if}}{{#if default}}.defaultTo('{{default}}'){{/if}};
+      {{/case}}
+      {{#case 11}}
+    table.integer('{{name}}'){{#if required}}.notNullable(){{/if}}{{#if default}}.defaultTo({{default}}){{/if}};
+      {{/case}}
+      {{#case 12}}
+    table.decimal('{{name}}', 18, 6){{#if required}}.notNullable(){{/if}}{{#if default}}.defaultTo({{default}}){{/if}};
+      {{/case}}
+      {{#case 13}}
+    table.uuid('{{name}}'){{#if required}}.notNullable(){{/if}};
+      {{/case}}
+      {{#case 14}}
+    table.text('{{name}}'){{#if required}}.notNullable(){{/if}};
+      {{/case}}
+      {{#case 15}}
+    table.date('{{name}}'){{#if required}}.notNullable(){{/if}};
+      {{/case}}
+      {{#case 16}}
+    table.timestamp('{{name}}'){{#if required}}.notNullable(){{/if}};
+      {{/case}}
+      {{#case 20}}
+    table.boolean('{{name}}'){{#if required}}.notNullable(){{/if}}{{#if default}}.defaultTo({{default}}){{/if}};
+      {{/case}}
+      {{#case 30}}
+    table.string('{{name}}', 255){{#if required}}.notNullable(){{/if}};
+      {{/case}}
+      {{#case 31}}
+    table.string('{{name}}', 40){{#if required}}.notNullable(){{/if}};
+      {{/case}}
+      {{#default}}
+    table.string('{{name}}', 255){{#if required}}.notNullable(){{/if}};
+      {{/default}}
+    {{/switch}}
+    {{/unless}}
+    {{/each}}
+
+    // Timestamps
+    table.timestamps(true, true);
+
+    // Soft delete support
+    table.timestamp('deleted_at');
+
+    // Optimistic concurrency control (ETag)
+    table.integer('version').notNullable().defaultTo(1);
+
+    {{#each relationships}}
+    {{#if (eq cardinality 'manyToOne')}}
+    // Foreign Key: {{name}} -> {{targetTableName}}
+    table.uuid('{{foreignKey}}')
+      .references('{{targetTablePrimaryKey}}')
+      .inTable('{{targetTableName}}')
+      .onDelete('{{#if onDelete}}{{onDelete}}{{else}}SET NULL{{/if}}')
+      .onUpdate('{{#if onUpdate}}{{onUpdate}}{{else}}CASCADE{{/if}}');
+    {{/if}}
+    {{/each}}
+
+    // Indexes for commonly queried columns
+    {{#each attributes}}
+    {{#if (or (eq name 'name') unique)}}
+    table.index(['{{name}}']);
+    {{/if}}
+    {{/each}}
+  });
+
+  {{/each}}
+}
+
+export async function down(knex: Knex): Promise<void> {
+  {{#each entities}}
+  await knex.schema.dropTableIfExists('{{tableName}}');
+  {{/each}}
+}

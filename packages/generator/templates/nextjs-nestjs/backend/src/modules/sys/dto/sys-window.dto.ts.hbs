@@ -1,0 +1,88 @@
+/**
+ * SysWindow DTOs
+ *
+ * Data Transfer Objects for sys_window entity.
+ *
+ * Generated: {{now}}
+ */
+
+import { IsString, IsOptional, IsBoolean, IsNumber } from 'class-validator';
+
+/**
+ * Create SysWindow DTO
+ */
+export class CreateSysWindowDto {
+  @IsString()
+  name: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  window_type?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  is_active?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  win_height?: number;
+
+  @IsOptional()
+  @IsNumber()
+  win_width?: number;
+}
+
+/**
+ * Update SysWindow DTO
+ */
+export class UpdateSysWindowDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  window_type?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  is_active?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  win_height?: number;
+
+  @IsOptional()
+  @IsNumber()
+  win_width?: number;
+}
+
+/**
+ * SysWindow Response DTO
+ */
+export class SysWindowResponseDto {
+  sys_window_id: string;
+  name: string;
+  description?: string;
+  window_type?: string;
+  is_active: boolean;
+  win_height: number;
+  win_width: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+/**
+ * SysWindow with Tabs Response DTO
+ */
+export class SysWindowWithTabsResponseDto extends SysWindowResponseDto {
+  tabs: any[];
+}

@@ -1,0 +1,76 @@
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { DatabaseService } from '../../database/service';
+
+@Injectable()
+export class SysReferenceService {
+  constructor(private readonly db: DatabaseService) {}
+
+  async findAll(options: { page?: number; limit?: number } = {}) {
+    const { page = 1, limit = 100 } = options;
+    const offset = (page - 1) * limit;
+
+    const [data, countResult] = await Promise.all([
+      this.db.knex('sys_reference').where('is_active', true).orderBy('name').limit(limit).offset(offset),
+      this.db.knex('sys_reference').where('is_active', true).count('* as count').first(),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total: Number(countResult?.count || 0),
+        page,
+        pageSize: limit,
+        totalPages: Math.ceil((countResult?.count || 0) / limit),
+      },
+    };
+  }
+
+  async findById(id: string) {
+    const ref = await this.db.knex('sys_reference').where('sys_reference_id', id).first();
+    if (!ref) {
+      throw new NotFoundException(`SysReference with ID ${id} not found`);
+    }
+    return ref;
+  }
+
+  async create(data: any) {
+    const now = new Date();
+    const id = this.db.knex.raw('UUID()');
+
+    const newRecord = {
+      sys_reference_id: id,
+      ...data,
+      entity_type: data.entity_type || 'D',
+      is_active: data.is_active !== false,
+      created_at: now,
+      updated_at: now,
+      created_by: '',
+      updated_by: '',
+    };
+
+    await this.db.knex('sys_reference').insert(newRecord);
+    return this.findById((newRecord.sys_reference_id as any).toString());
+  }
+
+  async update(id: string, data: any) {
+    const updated = { ...data, updated_at: new Date(), updated_by: '' };
+    await this.db.knex('sys_reference').where('sys_reference_id', id).update(updated);
+    return this.findById(id);
+  }
+
+  async delete(id: string) {
+    await this.findById(id);
+    await this.db.knex('sys_reference').where('sys_reference_id', id).update({
+      is_active: false,
+      deleted_at: new Date(),
+    });
+    return { deleted: true };
+  }
+
+  async getRefList(referenceId: string) {
+    return this.db.knex('sys_ref_list')
+      .where('sys_reference_id', referenceId)
+      .where('is_active', true)
+      .orderBy('value');
+  }
+}

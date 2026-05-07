@@ -1,0 +1,79 @@
+/**
+ * SysRole DTOs
+ *
+ * Data Transfer Objects for sys_role entity.
+ *
+ * Generated: {{now}}
+ */
+
+import { IsString, IsOptional, IsBoolean } from 'class-validator';
+
+/**
+ * Create SysRole DTO
+ */
+export class CreateSysRoleDto {
+  @IsString()
+  name: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  is_active?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_admin?: boolean;
+
+  @IsOptional()
+  @IsString()
+  user_level?: string;
+}
+
+/**
+ * Update SysRole DTO
+ */
+export class UpdateSysRoleDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  is_active?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  is_admin?: boolean;
+
+  @IsOptional()
+  @IsString()
+  user_level?: string;
+}
+
+/**
+ * SysRole Response DTO
+ */
+export class SysRoleResponseDto {
+  sys_role_id: string;
+  name: string;
+  description?: string;
+  is_active: boolean;
+  is_admin: boolean;
+  user_level?: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+/**
+ * SysRole with Access Response DTO
+ */
+export class SysRoleWithAccessResponseDto extends SysRoleResponseDto {
+  access_permissions: any[];
+}
