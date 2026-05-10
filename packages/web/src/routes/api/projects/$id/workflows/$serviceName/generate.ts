@@ -1,4 +1,3 @@
-import { createAPIFileRoute } from "@tanstack/start/api";
 import { mkdir, writeFile } from "fs/promises";
 import { join } from "path";
 
@@ -50,9 +49,9 @@ function generateHookCode(
 
   if (code && code.trim()) {
     const indentedCode = code
-      .split("\n")
-      .map((line: string) => "  " + line)
-      .join("\n");
+    .split("\n")
+    .map((line: string) => "  " + line)
+    .join("\n");
     hookCode += indentedCode + "\n";
   } else {
     hookCode += `  // TODO: Implement ${name} logic for ${entity}
@@ -75,60 +74,59 @@ function generateHookCode(
   return hookCode;
 }
 
-export const Route = createAPIFileRoute("/api/projects/$id/workflows/$serviceName/generate")({
-  POST: async ({ request, params }) => {
+export async function POST(request: Request) {
     try {
-      const projectId = params.id;
-      const serviceName = params.serviceName;
+    const projectId = params.id;
+    const serviceName = params.serviceName;
 
-      const body = await request.json();
-      const { hooks } = body;
+    const body = await request.json();
+    const { hooks } = body;
 
-      if (!hooks || !Array.isArray(hooks) || hooks.length === 0) {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: "No hooks found to generate code",
-          }),
-          {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-          }
-        );
-      }
+    if (!hooks || !Array.isArray(hooks) || hooks.length === 0) {
+  return new Response(
+        JSON.stringify({
+          success: false,
+          error: "No hooks found to generate code",
+        }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json" },
+        }
+  );
+    }
 
-      const entityName = serviceName.replace("Service", "");
-      const hooksDir = join(
-        GENERATED_HOOKS_BASE_PATH,
-        projectId,
-        "src",
-        "modules",
-        entityName.toLowerCase(),
-        "hooks"
-      );
+    const entityName = serviceName.replace("Service", "");
+    const hooksDir = join(
+  GENERATED_HOOKS_BASE_PATH,
+  projectId,
+  "src",
+  "modules",
+  entityName.toLowerCase(),
+  "hooks"
+    );
 
-      await mkdir(hooksDir, { recursive: true });
+    await mkdir(hooksDir, { recursive: true });
 
-      const generatedFiles = await Promise.all(
-        hooks.map(
-          async (hook: { type: string; name: string; entity: string; code: string }) => {
-            const code = generateHookCode(hook, entityName);
-            const fileName = `${hook.type}.${hook.name}.ts`;
-            const filePath = join(hooksDir, fileName);
+    const generatedFiles = await Promise.all(
+  hooks.map(
+        async (hook: { type: string; name: string; entity: string; code: string }) => {
+          const code = generateHookCode(hook, entityName);
+          const fileName = `${hook.type}.${hook.name}.ts`;
+          const filePath = join(hooksDir, fileName);
 
-            await writeFile(filePath, code, "utf-8");
+          await writeFile(filePath, code, "utf-8");
 
-            return {
-              fileName,
-              hookType: hook.type,
-              hookName: hook.name,
-              code,
-            };
-          }
-        )
-      );
+          return {
+            fileName,
+            hookType: hook.type,
+            hookName: hook.name,
+            code,
+          };
+        }
+  )
+    );
 
-      let indexCode = `/**
+    let indexCode = `/**
  * Hook Exports for ${entityName}
  *
  * This file exports all hook functions for ${entityName}.
@@ -139,83 +137,83 @@ export const Route = createAPIFileRoute("/api/projects/$id/workflows/$serviceNam
 
 `;
 
-      hooks.forEach((hook: { name: string; type: string }) => {
-        indexCode += `export { ${hook.name}${entityName} as ${hook.name} } from './${hook.type}.${hook.name}';\n`;
-      });
+    hooks.forEach((hook: { name: string; type: string }) => {
+  indexCode += `export { ${hook.name}${entityName} as ${hook.name} } from './${hook.type}.${hook.name}';\n`;
+    });
 
-      const indexFilePath = join(hooksDir, "index.ts");
-      await writeFile(indexFilePath, indexCode, "utf-8");
+    const indexFilePath = join(hooksDir, "index.ts");
+    await writeFile(indexFilePath, indexCode, "utf-8");
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          files: generatedFiles,
-          hooksCount: hooks.length,
-          message: `Generated ${hooks.length} hook files`,
-        }),
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+    return new Response(
+  JSON.stringify({
+        success: true,
+        files: generatedFiles,
+        hooksCount: hooks.length,
+        message: `Generated ${hooks.length} hook files`,
+  }),
+  {
+        headers: { "Content-Type": "application/json" },
+  }
+    );
     } catch (error) {
-      console.error("Code generation error:", error);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: error instanceof Error ? error.message : "Failed to generate code",
-        }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+    console.error("Code generation error:", error);
+    return new Response(
+  JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to generate code",
+  }),
+  {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+  }
+    );
     }
-  },
+  
+}
 
-  GET: async ({ params }) => {
+export async function GET(request: Request, params: Record<string, unknown>) {
     try {
-      const serviceName = params.serviceName;
-      const entityName = serviceName.replace("Service", "");
+    const serviceName = params.serviceName;
+    const entityName = serviceName.replace("Service", "");
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          serviceName,
-          entityName,
-          supportedHooks: [
-            "beforeCreate",
-            "afterCreate",
-            "beforeUpdate",
-            "afterUpdate",
-            "beforeDelete",
-            "afterDelete",
-            "beforeQuery",
-            "afterQuery",
-            "customValidate",
-            "beforeRead",
-            "afterRead",
-            "beforeList",
-            "afterList",
-          ],
-          outputFormat: "typescript",
-          fileStructure: `${entityName.toLowerCase()}/hooks/{hookType}.{hookName}.ts`,
-        }),
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+    return new Response(
+  JSON.stringify({
+        success: true,
+        serviceName,
+        entityName,
+        supportedHooks: [
+          "beforeCreate",
+          "afterCreate",
+          "beforeUpdate",
+          "afterUpdate",
+          "beforeDelete",
+          "afterDelete",
+          "beforeQuery",
+          "afterQuery",
+          "customValidate",
+          "beforeRead",
+          "afterRead",
+          "beforeList",
+          "afterList",
+        ],
+        outputFormat: "typescript",
+        fileStructure: `${entityName.toLowerCase()}/hooks/{hookType}.{hookName}.ts`,
+  }),
+  {
+        headers: { "Content-Type": "application/json" },
+  }
+    );
     } catch (error) {
-      console.error("Error getting generation info:", error);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: error instanceof Error ? error.message : "Failed to get generation info",
-        }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+    console.error("Error getting generation info:", error);
+    return new Response(
+  JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : "Failed to get generation info",
+  }),
+  {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+  }
+    );
     }
-  },
-});
+}

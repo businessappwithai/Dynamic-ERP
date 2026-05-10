@@ -1,8 +1,6 @@
-import { createAPIFileRoute } from "@tanstack/start/api";
 import { getDatabase } from "@erdwithai/core/services";
 
-export const Route = createAPIFileRoute("/api/rules/$ruleId")({
-  GET: async ({ params }) => {
+export async function GET(request: Request, params: Record<string, unknown>) {
     try {
       const db = getDatabase();
 
@@ -25,5 +23,4 @@ export const Route = createAPIFileRoute("/api/rules/$ruleId")({
         headers: { "Content-Type": "application/json" },
       });
     }
-  },
-});
+}
