@@ -3,7 +3,7 @@
  * Handles deployment operations for a project
  */
 
-import { createAPIFileRoute } from "@tanstack/start/api";
+import { createAPIFileRoute } from "@tanstack/react-start/api";
 import { deploymentApi } from "@/lib/api/deployment";
 
 export const Route = createAPIFileRoute("/api/projects/$id/deployment")({

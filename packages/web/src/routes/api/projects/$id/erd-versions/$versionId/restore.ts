@@ -3,7 +3,7 @@
  * Sets a specific version as the current version
  */
 
-import { createAPIFileRoute } from "@tanstack/start/api";
+import { createAPIFileRoute } from "@tanstack/react-start/api";
 import { erdVersionDb } from "@erdwithai/core/services";
 
 export const Route = createAPIFileRoute("/api/projects/$id/erd-versions/$versionId/restore")({

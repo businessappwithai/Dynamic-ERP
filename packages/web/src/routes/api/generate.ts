@@ -1,4 +1,4 @@
-import { createAPIFileRoute } from "@tanstack/start/api";
+import { createAPIFileRoute } from "@tanstack/react-start/api";
 import { generationHistoryDb, projectDb } from "@erdwithai/core/services";
 import { FullStackGenerator, MermaidParser } from "@erdwithai/generator";
 import fs from "fs/promises";

@@ -3,7 +3,7 @@
  * Handles GET, PATCH, DELETE for a specific project
  */
 
-import { createAPIFileRoute } from "@tanstack/start/api";
+import { createAPIFileRoute } from "@tanstack/react-start/api";
 import { projectDb } from "@erdwithai/core/services";
 
 export const Route = createAPIFileRoute("/api/projects/$id")({

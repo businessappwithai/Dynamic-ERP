@@ -3,7 +3,7 @@
  * Handles workflow operations for a project
  */
 
-import { createAPIFileRoute } from "@tanstack/start/api";
+import { createAPIFileRoute } from "@tanstack/react-start/api";
 import { workflowDb } from "@erdwithai/core/services";
 
 export const Route = createAPIFileRoute("/api/projects/$id/workflows")({

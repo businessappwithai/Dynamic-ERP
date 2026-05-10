@@ -1,4 +1,4 @@
-import { createAPIFileRoute } from "@tanstack/start/api";
+import { createAPIFileRoute } from "@tanstack/react-start/api";
 
 export const Route = createAPIFileRoute("/api/workflows/$workflowId/status")({
   GET: async ({ request, params }) => {
