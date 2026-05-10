@@ -84,11 +84,6 @@ export default function AdminDashboardPage() {
     queryFn: () => apiClient.get<PaginatedResponse<SysWindow>>('/api/sys/windows', { limit: 1 }),
   });
 
-  const { data: referencesResponse } = useQuery({
-    queryKey: ['admin', 'references-count'],
-    queryFn: () => apiClient.get<PaginatedResponse<SysReference>>('/api/sys/references', { limit: 1 }),
-  });
-
   // Fetch all fields to compute per-entity field counts
   const { data: allFieldsResponse } = useQuery({
     queryKey: ['admin', 'all-fields'],

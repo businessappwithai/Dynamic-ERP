@@ -39,7 +39,6 @@ import {
   RefreshCw,
   ArrowUp,
   ArrowDown,
-  Check,
 } from 'lucide-react';
 import { FieldLayoutEditor } from '@/components/admin/field-layout-editor';
 import { FieldGroupManager } from '@/components/admin/field-group-manager';
@@ -118,9 +117,6 @@ function DraggableFieldItem({
   const seqNo = mode === 'form' ? field.tempSeqNo : field.tempSeqNoGrid;
   const originalSeqNo = mode === 'form' ? field.seq_no : field.seq_no_grid;
   const isDragging = dragIndex === index;
-  const hasChanged = seqNo !== originalSeqNo ||
-    (mode === 'form' ? field.is_displayed : field.is_displayed_grid) !==
-    (mode === 'form' ? field.is_displayed : field.is_displayed_grid);
 
   return (
     <div
@@ -220,7 +216,7 @@ function FieldLayoutPageContent() {
   const dragOverIndex = useRef<number | null>(null);
 
   // Fetch sys_table entries for the entity selector
-  const { data: tablesResponse, isLoading: tablesLoading } = useQuery({
+  const { data: tablesResponse } = useQuery({
     queryKey: ['admin', 'sys-tables'],
     queryFn: () => apiClient.get<PaginatedResponse<SysTable>>('/api/sys/tables', { limit: 200 }),
   });
@@ -229,7 +225,6 @@ function FieldLayoutPageContent() {
   const {
     data: fieldsResponse,
     isLoading: fieldsLoading,
-    refetch: refetchFields,
   } = useQuery({
     queryKey: ['admin', 'fields', selectedTable],
     queryFn: () =>
@@ -380,7 +375,7 @@ function FieldLayoutPageContent() {
         return (aSeq || 0) - (bSeq || 0);
       });
       setFields(
-        sortedFields.map((f, i) => ({
+        sortedFields.map((f) => ({
           ...f,
           tempSeqNo: f.seq_no,
           tempSeqNoGrid: f.seq_no_grid,
