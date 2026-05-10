@@ -1,4 +1,3 @@
-import { createAPIFileRoute } from "@tanstack/react-start/api";
 import Anthropic from "@anthropic-ai/sdk";
 import {
   AnthropicAdapter,
@@ -8,12 +7,11 @@ import {
 
 const runtime = new CopilotRuntime();
 
-export const Route = createAPIFileRoute("/api/copilotkit")({
-  POST: async ({ request }) => {
+export async function POST(request: Request) {
+  try {
     const serviceAdapter = new AnthropicAdapter({
       anthropic: new Anthropic({
         apiKey: process.env.ANTHROPIC_API_KEY || "",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- CopilotKit requires Anthropic client type cast
       }) as any,
       model: "claude-3-5-sonnet-20241022",
     });
@@ -25,5 +23,13 @@ export const Route = createAPIFileRoute("/api/copilotkit")({
     });
 
     return handler(request);
-  },
-});
+  } catch (error) {
+    console.error("CopilotKit error:", error);
+    return new Response(
+      JSON.stringify({
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}

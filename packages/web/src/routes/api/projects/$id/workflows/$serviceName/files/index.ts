@@ -1,13 +1,9 @@
-import { createAPIFileRoute } from "@tanstack/react-start/api";
 import { readdir, readFile } from "fs/promises";
 import { join } from "path";
 
 const GENERATED_HOOKS_BASE_PATH = join(process.cwd(), "generated-projects");
 
-export const Route = createAPIFileRoute(
-  "/api/projects/$id/workflows/$serviceName/files"
-)({
-  GET: async ({ params }) => {
+export async function GET(request: Request, params: Record<string, unknown>) {
     try {
       const projectId = params.id;
       const serviceName = params.serviceName;
@@ -79,5 +75,4 @@ export const Route = createAPIFileRoute(
         }
       );
     }
-  },
-});
+}
