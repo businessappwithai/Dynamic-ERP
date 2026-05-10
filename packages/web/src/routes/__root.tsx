@@ -1,6 +1,4 @@
 import { createRootRoute, Outlet } from "@tanstack/react-router";
-import { Providers } from "../providers";
-import "../app/globals.css";
 
 export const Route = createRootRoute({
   component: RootLayout,
@@ -16,9 +14,7 @@ function RootLayout() {
         <meta name="description" content="AI-Powered ERD Design Platform" />
       </head>
       <body className="font-sans antialiased" suppressHydrationWarning>
-        <Providers>
-          <Outlet />
-        </Providers>
+        <Outlet />
       </body>
     </html>
   );
