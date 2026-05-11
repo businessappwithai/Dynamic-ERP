@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from '../../database/service';
+import { v4 as uuidv4 } from 'uuid';
+import { DatabaseService } from '../../database/database.service';
 
 @Injectable()
 export class SysTabService {
@@ -9,15 +10,22 @@ export class SysTabService {
     const { page = 1, limit = 100, windowId } = options;
     const offset = (page - 1) * limit;
 
-    let query = this.db.knex('sys_tab').where('is_active', true);
-
-    if (windowId) {
-      query = query.where('sys_window_id', windowId);
-    }
-
     const [data, countResult] = await Promise.all([
-      query.clone().orderBy('seq_no').limit(limit).offset(offset),
-      query.clone().count('* as count').first(),
+      this.db.kysely
+        .selectFrom('sys_tab')
+        .selectAll()
+        .where('is_active', '=', true)
+        .$if(!!windowId, (qb) => qb.where('sys_window_id', '=', windowId!))
+        .orderBy('seq_no', 'asc')
+        .limit(limit)
+        .offset(offset)
+        .execute(),
+      this.db.kysely
+        .selectFrom('sys_tab')
+        .select((eb) => eb.fn.countAll().as('count'))
+        .where('is_active', '=', true)
+        .$if(!!windowId, (qb) => qb.where('sys_window_id', '=', windowId!))
+        .executeTakeFirst(),
     ]);
 
     return {
@@ -26,13 +34,17 @@ export class SysTabService {
         total: Number(countResult?.count || 0),
         page,
         pageSize: limit,
-        totalPages: Math.ceil((countResult?.count || 0) / limit),
+        totalPages: Math.ceil(Number(countResult?.count || 0) / limit),
       },
     };
   }
 
   async findById(id: string) {
-    const tab = await this.db.knex('sys_tab').where('sys_tab_id', id).first();
+    const tab = await this.db.kysely
+      .selectFrom('sys_tab')
+      .selectAll()
+      .where('sys_tab_id', '=', id)
+      .executeTakeFirst();
     if (!tab) {
       throw new NotFoundException(`SysTab with ID ${id} not found`);
     }
@@ -41,7 +53,7 @@ export class SysTabService {
 
   async create(data: any) {
     const now = new Date();
-    const id = this.db.knex.raw('UUID()');
+    const id = uuidv4();
 
     const newRecord = {
       sys_tab_id: id,
@@ -63,32 +75,48 @@ export class SysTabService {
       updated_by: '',
     };
 
-    await this.db.knex('sys_tab').insert(newRecord);
-    return this.findById((newRecord.sys_tab_id as any).toString());
+    await this.db.kysely.insertInto('sys_tab').values(newRecord).execute();
+    return this.findById(id);
   }
 
   async update(id: string, data: any) {
     const updated = { ...data, updated_at: new Date(), updated_by: '' };
-    await this.db.knex('sys_tab').where('sys_tab_id', id).update(updated);
+    await this.db.kysely
+      .updateTable('sys_tab')
+      .set(updated)
+      .where('sys_tab_id', '=', id)
+      .execute();
     return this.findById(id);
   }
 
   async delete(id: string) {
     await this.findById(id);
-    await this.db.knex('sys_tab').where('sys_tab_id', id).update({
-      is_active: false,
-      deleted_at: new Date(),
-    });
+    await this.db.kysely
+      .updateTable('sys_tab')
+      .set({ is_active: false, deleted_at: new Date() })
+      .where('sys_tab_id', '=', id)
+      .execute();
     return { deleted: true };
   }
 
   async getFields(tabId: string, view?: 'form' | 'grid') {
-    return this.db.knex('sys_field')
-      .select('sys_field.*', 'sys_column.column_name')
-      .leftJoin('sys_column', 'sys_field.sys_column_id', 'sys_column.sys_column_id')
-      .where('sys_field.sys_tab_id', tabId)
-      .where('sys_field.is_active', true)
-      .where(view === 'grid' ? 'sys_field.is_displayed_grid' : 'sys_field.is_displayed', true)
-      .orderBy(view === 'grid' ? 'sys_field.seq_no_grid' : 'sys_field.seq_no');
+    let query = this.db.kysely
+      .selectFrom('sys_field')
+      .leftJoin('sys_column', 'sys_column.sys_column_id', 'sys_field.sys_column_id')
+      .selectAll('sys_field')
+      .select('sys_column.column_name')
+      .where('sys_field.sys_tab_id', '=', tabId)
+      .where('sys_field.is_active', '=', true);
+
+    if (view === 'grid') {
+      return query
+        .where('sys_field.is_displayed_grid', '=', true)
+        .orderBy('sys_field.seq_no_grid', 'asc')
+        .execute();
+    }
+    return query
+      .where('sys_field.is_displayed', '=', true)
+      .orderBy('sys_field.seq_no', 'asc')
+      .execute();
   }
 }

@@ -8,6 +8,7 @@
  */
 
 import { Injectable } from '@nestjs/common';
+import { v4 as uuidv4 } from 'uuid';
 import { DatabaseService } from '../../database/database.service';
 
 @Injectable()
@@ -21,23 +22,38 @@ export class SysTableService {
     const { page = 1, limit = 100, search, isActive = true } = options;
     const offset = (page - 1) * limit;
 
-    let query = this.db.knex('sys_table').select('*');
-
-    if (isActive !== undefined) {
-      query = query.where('is_active', isActive);
-    }
-
-    if (search) {
-      query = query.where(function() {
-        this.where('name', 'like', `%${search}%`)
-          .orWhere('table_name', 'like', `%${search}%`)
-          .orWhere('description', 'like', `%${search}%`);
-      });
-    }
-
     const [data, countResult] = await Promise.all([
-      query.clone().orderBy('name').limit(limit).offset(offset),
-      query.clone().count('* as count').first(),
+      this.db.kysely
+        .selectFrom('sys_table')
+        .selectAll()
+        .where('is_active', '=', isActive)
+        .$if(!!search, (qb) =>
+          qb.where((eb) =>
+            eb.or([
+              eb('name', 'like', `%${search}%`),
+              eb('table_name', 'like', `%${search}%`),
+              eb('description', 'like', `%${search}%`),
+            ]),
+          ),
+        )
+        .orderBy('name', 'asc')
+        .limit(limit)
+        .offset(offset)
+        .execute(),
+      this.db.kysely
+        .selectFrom('sys_table')
+        .select((eb) => eb.fn.countAll().as('count'))
+        .where('is_active', '=', isActive)
+        .$if(!!search, (qb) =>
+          qb.where((eb) =>
+            eb.or([
+              eb('name', 'like', `%${search}%`),
+              eb('table_name', 'like', `%${search}%`),
+              eb('description', 'like', `%${search}%`),
+            ]),
+          ),
+        )
+        .executeTakeFirst(),
     ]);
 
     return {
@@ -46,7 +62,7 @@ export class SysTableService {
         total: Number(countResult?.count || 0),
         page,
         pageSize: limit,
-        totalPages: Math.ceil((countResult?.count || 0) / limit),
+        totalPages: Math.ceil(Number(countResult?.count || 0) / limit),
       },
     };
   }
@@ -55,7 +71,11 @@ export class SysTableService {
    * Find sys_table by ID
    */
   async findById(id: string) {
-    const table = await this.db.knex('sys_table').where('sys_table_id', id).first();
+    const table = await this.db.kysely
+      .selectFrom('sys_table')
+      .selectAll()
+      .where('sys_table_id', '=', id)
+      .executeTakeFirst();
     if (!table) {
       throw new Error(`SysTable with ID ${id} not found`);
     }
@@ -66,7 +86,11 @@ export class SysTableService {
    * Find sys_table by table_name
    */
   async findByTableName(tableName: string) {
-    const table = await this.db.knex('sys_table').where('table_name', tableName).first();
+    const table = await this.db.kysely
+      .selectFrom('sys_table')
+      .selectAll()
+      .where('table_name', '=', tableName)
+      .executeTakeFirst();
     if (!table) {
       throw new Error(`Table ${tableName} not found in sys_table`);
     }
@@ -86,7 +110,7 @@ export class SysTableService {
     windowId?: string;
   }) {
     const now = new Date();
-    const id = this.db.knex.raw('UUID()');
+    const id = uuidv4();
 
     const newRecord = {
       sys_table_id: id,
@@ -99,8 +123,8 @@ export class SysTableService {
       updated_by: '',
     };
 
-    await this.db.knex('sys_table').insert(newRecord);
-    return this.findById((newRecord.sys_table_id as any).toString());
+    await this.db.kysely.insertInto('sys_table').values(newRecord).execute();
+    return this.findById(id);
   }
 
   /**
@@ -112,14 +136,18 @@ export class SysTableService {
     is_active?: boolean;
     access_level?: string;
   }) {
-    const existing = await this.findById(id);
+    await this.findById(id);
 
     const updated = {
       ...data,
       updated_at: new Date(),
     };
 
-    await this.db.knex('sys_table').where('sys_table_id', id).update(updated);
+    await this.db.kysely
+      .updateTable('sys_table')
+      .set(updated)
+      .where('sys_table_id', '=', id)
+      .execute();
     return this.findById(id);
   }
 
@@ -128,10 +156,11 @@ export class SysTableService {
    */
   async delete(id: string) {
     await this.findById(id);
-    await this.db.knex('sys_table').where('sys_table_id', id).update({
-      is_active: false,
-      deleted_at: new Date(),
-    });
+    await this.db.kysely
+      .updateTable('sys_table')
+      .set({ is_active: false, deleted_at: new Date() })
+      .where('sys_table_id', '=', id)
+      .execute();
     return { deleted: true };
   }
 
@@ -139,9 +168,12 @@ export class SysTableService {
    * Get columns for a table
    */
   async getColumns(tableId: string) {
-    return this.db.knex('sys_column')
-      .where('sys_table_id', tableId)
-      .where('is_active', true)
-      .orderBy('seq_no');
+    return this.db.kysely
+      .selectFrom('sys_column')
+      .selectAll()
+      .where('sys_table_id', '=', tableId)
+      .where('is_active', '=', true)
+      .orderBy('seq_no', 'asc')
+      .execute();
   }
 }

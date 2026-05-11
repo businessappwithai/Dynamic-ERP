@@ -13,7 +13,7 @@ The generator package is responsible for:
 
 - **Mermaid Parsing**: Converting Mermaid ERD syntax into structured Entity objects
 - **Template Loading**: Loading and compiling Handlebars templates with custom helpers
-- **Code Generation**: Producing application code for multiple stacks (Next.js, NestJS, OData, OpenUI5)
+- **Code Generation**: Producing application code for multiple stacks (TanStack Start, NestJS, OData, OpenUI5)
 - **CLI Tool**: Command-line interface for code generation
 
 ## Directory Structure
@@ -25,7 +25,7 @@ packages/generator/
 │   │   └── generate.ts          # CLI entry point
 │   ├── generators/
 │   │   ├── base.generator.ts    # Abstract base generator
-│   │   ├── nextjs.generator.ts  # Next.js + NestJS generator
+│   │   ├── tanstack.generator.ts # TanStack Start + NestJS generator
 │   │   ├── odata.generator.ts   # OData v4 generator
 │   │   └── ui5.generator.ts     # OpenUI5 + FCL generator
 │   ├── parsers/
@@ -34,7 +34,7 @@ packages/generator/
 │   │   └── loader.ts            # Handlebars template loader
 │   └── index.ts
 ├── templates/                    # Handlebars templates
-│   ├── nextjs/
+│   ├── tanstackjs-nestjs/
 │   ├── odata/
 │   └── ui5/
 └── package.json
@@ -79,7 +79,7 @@ Loads Handlebars templates with pre-registered helpers:
 ```typescript
 import { TemplateLoader } from '@erdwithai/generator';
 
-const loader = new TemplateLoader('./templates/nextjs');
+const loader = new TemplateLoader('./templates/tanstackjs-nestjs');
 const template = await loader.load('page.tsx.hbs');
 
 const output = template({
@@ -122,8 +122,8 @@ class CustomGenerator extends BaseGenerator {
 ## CLI Usage
 
 ```bash
-# Generate Next.js application
-bun --filter @erdwithai/generator generate -- --stack nextjs --input schema.erd --output ./generated
+# Generate TanStack Start application
+bun --filter @erdwithai/generator generate -- --stack tanstack --input schema.erd --output ./generated
 
 # Generate OData service
 bun --filter @erdwithai/generator generate -- --stack odata --input schema.erd --output ./generated
@@ -147,7 +147,7 @@ bun run build:core && bun run build:generator
 - **@erdwithai/core**: workspace:* - Core types and utilities
 - **handlebars**: ^4.7.8 - Template engine
 - **commander**: ^11.1.0 - CLI framework
-- **knex**: ^3.1.0 - Database query builder (for migrations)
+- **kysely**: ^0.27.0 - Type-safe SQL query builder (for database operations)
 - **prettier**: ^3.1.1 - Code formatting
 
 ## Common Tasks
@@ -174,7 +174,7 @@ bun run build:core && bun run build:generator
 Templates use Handlebars syntax:
 
 ```handlebars
-// templates/nextjs/page.tsx.hbs
+// templates/tanstackjs-nestjs/page.tsx.hbs
 import { {{pascalCase entity.name}}List } from '@/components';
 
 export default function {{pascalCase entity.name}}Page() {

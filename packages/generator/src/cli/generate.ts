@@ -310,7 +310,7 @@ program
       const outputDir = resolvePath(options.output);
       await fs.mkdir(outputDir, { recursive: true });
 
-      if (options.stack === "tanstack" || options.stack === "nextjs") {
+      if (options.stack === "tanstack") {
         const generator = new TanStackStartFrontendGenerator({
           projectName: options.name,
           projectVersion: "1.0.0",

@@ -1,169 +1,37 @@
 /**
- * Create Sample Business Entity Tables (bus_*)
+ * Create Business Entity Tables (bus_*)
  *
- * Migration showing the pattern for business entity tables.
- * All business tables follow this structure with:
- * - UUID primary key named 'id'
- * - Standard audit fields (created_at, updated_at, created_by, updated_by, deleted_at, deleted_by)
- * - Version field for optimistic locking
- *
- * Generated: {{now}}
+ * Generated from ERD entities: {{now}}
  */
 
-import { Knex } from 'knex';
+import { Kysely, sql } from 'kysely';
 
-export async function up(knex: Knex): Promise<void> {
-  // ========================================
-  // Sample Business Entity: Customer
-  // ========================================
-
-  await knex.raw(`
-    CREATE TABLE IF NOT EXISTS bus_customer (
-      id UUID PRIMARY KEY DEFAULT UUID(),
-      name VARCHAR(255) NOT NULL,
-      code VARCHAR(50),
-      email VARCHAR(255),
-      phone VARCHAR(50),
-      address TEXT,
-      city VARCHAR(100),
-      postal_code VARCHAR(20),
-      country VARCHAR(100),
-      is_active BOOLEAN DEFAULT true,
-      credit_limit DECIMAL(18,2) DEFAULT 0,
-      notes TEXT,
+export async function up(db: Kysely<any>): Promise<void> {
+  {{#each entities}}
+  await sql`
+    CREATE TABLE IF NOT EXISTS bus_{{snakeCase name}} (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      {{#each attributes}}
+      {{snakeCase name}} {{#if (eq type 'string')}}VARCHAR(255){{else if (eq type 'text')}}TEXT{{else if (eq type 'number')}}DECIMAL(18,2){{else if (eq type 'integer')}}INTEGER{{else if (eq type 'boolean')}}BOOLEAN DEFAULT false{{else if (eq type 'date')}}DATE{{else if (eq type 'datetime')}}TIMESTAMPTZ{{else if (eq type 'uuid')}}UUID{{else}}VARCHAR(255){{/if}}{{#if required}} NOT NULL{{/if}},
+      {{/each}}
       version INTEGER DEFAULT 1,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
       created_by UUID,
       updated_by UUID,
-      deleted_at TIMESTAMP,
+      deleted_at TIMESTAMPTZ,
       deleted_by UUID
     )
-  `);
+  `.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_bus_{{snakeCase name}}_deleted ON bus_{{snakeCase name}}(deleted_at)`.execute(db);
+  {{/each}}
 
-  // ========================================
-  // Sample Business Entity: Product
-  // ========================================
-
-  await knex.raw(`
-    CREATE TABLE IF NOT EXISTS bus_product (
-      id UUID PRIMARY KEY DEFAULT UUID(),
-      name VARCHAR(255) NOT NULL,
-      code VARCHAR(50) UNIQUE,
-      description TEXT,
-      product_category VARCHAR(100),
-      unit_of_measure VARCHAR(20) DEFAULT 'EA',
-      list_price DECIMAL(18,2) DEFAULT 0,
-      cost_price DECIMAL(18,2) DEFAULT 0,
-      is_active BOOLEAN DEFAULT true,
-      is_sold BOOLEAN DEFAULT true,
-      is_purchased BOOLEAN DEFAULT true,
-      stock_qty DECIMAL(18,2) DEFAULT 0,
-      weight DECIMAL(18,2),
-      image_url VARCHAR(500),
-      notes TEXT,
-      version INTEGER DEFAULT 1,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      created_by UUID,
-      updated_by UUID,
-      deleted_at TIMESTAMP,
-      deleted_by UUID
-    )
-  `);
-
-  // ========================================
-  // Sample Business Entity: Sales Order
-  // ========================================
-
-  await knex.raw(`
-    CREATE TABLE IF NOT EXISTS bus_sales_order (
-      id UUID PRIMARY KEY DEFAULT UUID(),
-      order_no VARCHAR(50) UNIQUE NOT NULL,
-      order_date DATE NOT NULL,
-      customer_id UUID NOT NULL,
-      total_amount DECIMAL(18,2) DEFAULT 0,
-      tax_amount DECIMAL(18,2) DEFAULT 0,
-      grand_total DECIMAL(18,2) DEFAULT 0,
-      status VARCHAR(20) DEFAULT 'DRAFT',
-      notes TEXT,
-      version INTEGER DEFAULT 1,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      created_by UUID,
-      updated_by UUID,
-      deleted_at TIMESTAMP,
-      deleted_by UUID,
-      FOREIGN KEY (customer_id) REFERENCES bus_customer(id)
-    )
-  `);
-
-  // ========================================
-  // Sample Business Entity: Sales Order Line
-  // ========================================
-
-  await knex.raw(`
-    CREATE TABLE IF NOT EXISTS bus_sales_order_line (
-      id UUID PRIMARY KEY DEFAULT UUID(),
-      order_id UUID NOT NULL,
-      line_no INTEGER DEFAULT 0,
-      product_id UUID,
-      description TEXT,
-      qty DECIMAL(18,2) DEFAULT 1,
-      unit_price DECIMAL(18,2) DEFAULT 0,
-      line_total DECIMAL(18,2) DEFAULT 0,
-      tax_amount DECIMAL(18,2) DEFAULT 0,
-      line_total_net DECIMAL(18,2) DEFAULT 0,
-      notes TEXT,
-      version INTEGER DEFAULT 1,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      created_by UUID,
-      updated_by UUID,
-      deleted_at TIMESTAMP,
-      deleted_by UUID,
-      FOREIGN KEY (order_id) REFERENCES bus_sales_order(id) ON DELETE CASCADE,
-      FOREIGN KEY (product_id) REFERENCES bus_product(id)
-    )
-  `);
-
-  // ========================================
-  // Indexes for Performance
-  // ========================================
-
-  // bus_customer indexes
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_bus_customer_name ON bus_customer(name)');
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_bus_customer_code ON bus_customer(code)');
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_bus_customer_active ON bus_customer(is_active)');
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_bus_customer_deleted ON bus_customer(deleted_at)');
-
-  // bus_product indexes
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_bus_product_name ON bus_product(name)');
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_bus_product_code ON bus_product(code)');
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_bus_product_category ON bus_product(product_category)');
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_bus_product_active ON bus_product(is_active)');
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_bus_product_deleted ON bus_product(deleted_at)');
-
-  // bus_sales_order indexes
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_bus_sales_order_no ON bus_sales_order(order_no)');
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_bus_sales_order_date ON bus_sales_order(order_date)');
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_bus_sales_order_customer ON bus_sales_order(customer_id)');
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_bus_sales_order_status ON bus_sales_order(status)');
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_bus_sales_order_deleted ON bus_sales_order(deleted_at)');
-
-  // bus_sales_order_line indexes
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_bus_sales_order_line_order ON bus_sales_order_line(order_id)');
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_bus_sales_order_line_product ON bus_sales_order_line(product_id)');
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_bus_sales_order_line_deleted ON bus_sales_order_line(deleted_at)');
-
-  console.log('✓ Sample business entity tables created successfully');
+  console.log('✓ Business entity tables created');
 }
 
-export async function down(knex: Knex): Promise<void> {
-  await knex.raw('DROP TABLE IF EXISTS bus_sales_order_line CASCADE');
-  await knex.raw('DROP TABLE IF EXISTS bus_sales_order CASCADE');
-  await knex.raw('DROP TABLE IF EXISTS bus_product CASCADE');
-  await knex.raw('DROP TABLE IF EXISTS bus_customer CASCADE');
-
-  console.log('✓ Sample business entity tables dropped successfully');
+export async function down(db: Kysely<any>): Promise<void> {
+  {{#each entities}}
+  await sql`DROP TABLE IF EXISTS bus_{{snakeCase name}} CASCADE`.execute(db);
+  {{/each}}
+  console.log('✓ Business entity tables dropped');
 }

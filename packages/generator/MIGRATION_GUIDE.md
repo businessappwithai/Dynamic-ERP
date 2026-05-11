@@ -32,7 +32,7 @@ Complete Generated Application
 
 ### File Structure Changes
 
-#### Backend (`packages/generator/src/generators/nextjs-nestjs/nestjs-backend.generator.ts`)
+#### Backend (`packages/generator/src/generators/tanstackjs-nestjs/nestjs-backend.generator.ts`)
 
 **Key Method Changes:**
 - ❌ Removed: `createDirectoryStructure()` - Manual directory creation
@@ -60,7 +60,7 @@ async generate() {
 }
 ```
 
-#### Frontend (`packages/generator/src/generators/nextjs-nestjs/nextjs-frontend.generator.ts`)
+#### Frontend (`packages/generator/src/generators/tanstackjs-nestjs/nextjs-frontend.generator.ts`)
 
 **Key Method Changes:**
 - ❌ Removed: `createDirectoryStructure()` - Manual directory creation
@@ -191,15 +191,15 @@ The generator now **enhances** the CLI scaffold's package.json instead of replac
     "@nestjs/common": "^10.0.0",          // From Phase 1 (NestJS CLI)
     "@nestjs/core": "^10.0.0",            // From Phase 1
     "@nestjs/fastify": "^10.0.0",         // Added by Phase 2
-    "knex": "^3.1.0",                     // Added by Phase 2
+    "kysely": "^0.27.0",                   // Added by Phase 2
     "better-auth": "^0.21.0"              // Added by Phase 2
   },
   "scripts": {
     "start": "node dist/main",             // From Phase 1
     "start:dev": "nest start --watch",     // From Phase 1
     "build": "nest build",                 // From Phase 1
-    "migrate": "knex migrate:latest",      // Added by Phase 2
-    "seed": "knex seed:run"                // Added by Phase 2
+    "migrate": "bun run migrate",          // Added by Phase 2
+    "seed": "bun run seed"                 // Added by Phase 2
   }
 }
 ```

@@ -748,7 +748,7 @@ await db.deleteFrom('projects').where('id', '=', id).execute();
 | `packages/ai/src/workflows/erd-design-workflow.ts` | HITL ERD design workflow |
 | `packages/generator/src/parsers/mermaid.parser.ts` | Mermaid ERD parser |
 | `packages/generator/src/generators/orchestrator.ts` | Generation orchestrator |
-| `packages/generator/templates/tanstackjs-nestjs/` | TanStack Start/NestJS templates |
+| `packages/generator/templates/tanstack-start-nestjs/` | TanStack Start/NestJS templates |
 | `packages/generator/templates/openui5-odatav4/` | OpenUI5/OData templates |
 | `packages/web/src/routes/__root.tsx` | Root layout (replaces Next.js layout.tsx) |
 | `packages/web/src/routes/api/copilotkit.ts` | CopilotKit runtime endpoint |

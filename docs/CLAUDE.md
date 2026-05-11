@@ -176,7 +176,7 @@ src/
 │   ├── dictionary.generator.ts
 │   ├── full-stack.generator.ts
 │   ├── orchestrator.ts        # Coordinates multi-stack generation
-│   ├── nextjs-nestjs/         # TanStack Start frontend + NestJS backend stack
+    │   ├── tanstack-start-nestjs/ # TanStack Start frontend + NestJS backend stack
 │   ├── openui5-odatav4/       # OpenUI5 frontend + OData V4 backend stack
 │   └── tests/                 # E2E test generators per stack
 ├── parsers/
@@ -185,7 +185,7 @@ src/
     └── loader.ts              # Handlebars template loader
 templates/
 ├── common/            # Shared: migrations, seeds, AI agents, services
-├── nextjs-nestjs/     # Full-stack: NestJS backend + TanStack Start frontend
+├── tanstack-start-nestjs/ # Full-stack: NestJS backend + TanStack Start frontend
 │   ├── backend/       # Controllers, DTOs, Services, Guards, Auth, DB, Tests
 │   └── frontend/      # Routes, Components (Admin/Forms/Tables/UI), Hooks, i18n
 └── openui5-odatav4/   # OpenUI5 + OData V4 stack
@@ -519,7 +519,7 @@ bun run packages/generator/migrations/migrate.ts
 | `packages/ai/src/workflows/erd-design-workflow.ts` | HITL ERD design workflow |
 | `packages/generator/src/parsers/mermaid.parser.ts` | Mermaid ERD parser |
 | `packages/generator/src/generators/orchestrator.ts` | Generation orchestrator |
-| `packages/generator/templates/nextjs-nestjs/` | TanStack Start/NestJS templates |
+| `packages/generator/templates/tanstack-start-nestjs/` | TanStack Start/NestJS templates |
 | `packages/generator/templates/openui5-odatav4/` | OpenUI5/OData templates |
 | `packages/web/src/routes/__root.tsx` | Root layout (replaces app/layout.tsx) |
 | `packages/web/src/routes/api/copilotkit.ts` | CopilotKit runtime endpoint |

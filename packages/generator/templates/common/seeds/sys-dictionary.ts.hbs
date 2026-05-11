@@ -12,10 +12,10 @@
  * - sys_field entries with randomized seq_no for runtime modification demo
  */
 
-import type { Knex } from 'knex';
+import { Kysely } from 'kysely';
 import { v4 as uuidv4 } from 'uuid';
 
-export async function seed(knex: Knex): Promise<void> {
+export async function seed(db: Kysely<any>): Promise<void> {
   const now = new Date();
   const createdBy = '{{config.createdBy}}';
 
@@ -60,7 +60,7 @@ export async function seed(knex: Knex): Promise<void> {
   const adminRoleId = uuidv4();
   const userRoleId = uuidv4();
 
-  await knex('sys_role').insert([
+  await db.insertInto('sys_role').values([
     {
       sys_role_id: adminRoleId,
       name: 'Administrator',
@@ -99,14 +99,14 @@ export async function seed(knex: Knex): Promise<void> {
       created_at: now,
       updated_at: now,
     },
-  ]);
+  ]).execute();
 
   // ============================================================================
   // Create Default Admin User
   // ============================================================================
   const adminUserId = uuidv4();
 
-  await knex('sys_user').insert({
+  await db.insertInto('sys_user').values({
     sys_user_id: adminUserId,
     name: 'System Administrator',
     email: 'admin@localhost',
@@ -124,10 +124,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Assign admin role to admin user
-  await knex('sys_user_roles').insert({
+  await db.insertInto('sys_user_roles').values({
     sys_user_roles_id: uuidv4(),
     sys_user_id: adminUserId,
     sys_role_id: adminRoleId,
@@ -137,7 +137,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // ============================================================================
   // Create Default Field Groups
@@ -146,7 +146,7 @@ export async function seed(knex: Knex): Promise<void> {
   const fieldGroupDetails = uuidv4();
   const fieldGroupSystem = uuidv4();
 
-  await knex('sys_field_group').insert([
+  await db.insertInto('sys_field_group').values([
     {
       sys_field_group_id: fieldGroupGeneral,
       name: 'General',
@@ -186,7 +186,7 @@ export async function seed(knex: Knex): Promise<void> {
       created_at: now,
       updated_at: now,
     },
-  ]);
+  ]).execute();
 
   // ============================================================================
   // Business Entities Dictionary Entries
@@ -201,7 +201,7 @@ export async function seed(knex: Knex): Promise<void> {
   const {{camelCase name}}TabId = uuidv4();
 
   // Create sys_window entry FIRST (sys_table references it)
-  await knex('sys_window').insert({
+  await db.insertInto('sys_window').values({
     sys_window_id: {{camelCase name}}WindowId,
     name: '{{displayName}}',
     description: 'Maintain {{displayName}} records',
@@ -214,10 +214,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_table entry AFTER sys_window
-  await knex('sys_table').insert({
+  await db.insertInto('sys_table').values({
     sys_table_id: {{camelCase name}}TableId,
     table_name: '{{tableName}}',
     name: '{{displayName}}',
@@ -234,10 +234,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_tab entry
-  await knex('sys_tab').insert({
+  await db.insertInto('sys_tab').values({
     sys_tab_id: {{camelCase name}}TabId,
     sys_window_id: {{camelCase name}}WindowId,
     sys_table_id: {{camelCase name}}TableId,
@@ -257,7 +257,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_column entries
   const {{camelCase name}}Columns: Array<{ id: string; name: string; displayName: string }> = [];
@@ -271,7 +271,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: '{{displayName}}',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: {{camelCase ../name}}_{{camelCase name}}_columnId,
     sys_table_id: {{camelCase ../name}}TableId,
     column_name: '{{columnName}}',
@@ -296,7 +296,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   {{camelCase ../name}}ColumnSeqNo += 10;
   {{/each}}
 
@@ -306,7 +306,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   for (let i = 0; i < {{camelCase name}}Columns.length; i++) {
     const col = {{camelCase name}}Columns[i];
-    await knex('sys_field').insert({
+    await db.insertInto('sys_field').values({
       sys_field_id: uuidv4(),
       sys_tab_id: {{camelCase name}}TabId,
       sys_column_id: col.id,
@@ -327,11 +327,11 @@ export async function seed(knex: Knex): Promise<void> {
       updated_by: createdBy,
       created_at: now,
       updated_at: now,
-    });
+    }).execute();
   }
 
   // Grant access to admin role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: adminRoleId,
     sys_table_id: {{camelCase name}}TableId,
@@ -345,10 +345,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Grant read access to user role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: userRoleId,
     sys_table_id: {{camelCase name}}TableId,
@@ -362,7 +362,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   console.log('✓ Created dictionary entries for {{displayName}}');
 

@@ -27,21 +27,27 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
     // Find user by ID from JWT payload
-    const user = await this.databaseService.knex('sys_user')
-      .where('sys_user_id', payload.sub)
-      .where('is_active', true)
-      .first();
+    const user = await this.databaseService.kysely
+      .selectFrom('sys_user')
+      .selectAll()
+      .where('sys_user_id', '=', payload.sub)
+      .where('is_active', '=', true)
+      .executeTakeFirst();
 
     if (!user) {
       throw new UnauthorizedException('User not found or inactive');
     }
 
     // Get user roles
-    const roles = await this.databaseService.knex('sys_user_roles')
-      .join('sys_role', 'sys_user_roles.role_id', 'sys_role.sys_role_id')
-      .where('sys_user_roles.user_id', payload.sub)
-      .where('sys_role.is_active', true)
-      .pluck('sys_role.name');
+    const roleRows = await this.databaseService.kysely
+      .selectFrom('sys_user_roles')
+      .innerJoin('sys_role', 'sys_user_roles.role_id', 'sys_role.sys_role_id')
+      .select('sys_role.name')
+      .where('sys_user_roles.user_id', '=', payload.sub)
+      .where('sys_role.is_active', '=', true)
+      .execute();
+
+    const roles = roleRows.map((r: any) => r.name);
 
     return {
       sys_user_id: user.sys_user_id,

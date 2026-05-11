@@ -81,7 +81,7 @@ src/
 
 **Configuration Files**
 ```
-├── knexfile.ts        # Database migrations config
+├── migrate.ts         # Kysely migration runner
 ├── .env.example       # Environment template
 ├── .env               # Development environment
 ├── package.json       # Updated dependencies (merged)
@@ -110,7 +110,7 @@ backend/
 ├── test/                          # [NestJS CLI] + [Template]
 ├── package.json                   # [Merged]
 ├── tsconfig.json                  # [Template]
-├── knexfile.ts                    # [Template]
+├── migrate.ts                     # [Template] Kysely migration runner
 ├── vitest.config.ts               # [Template]
 └── ...
 ```
@@ -263,15 +263,15 @@ When a config file exists from the CLI scaffold, the template version:
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/fastify": "^10.0.0",
-    "knex": "^3.0.0",
+    "kysely": "^0.27.0",
     "better-auth": "^0.21.0"
   },
   "scripts": {
     "start": "node dist/main",
     "start:dev": "nest start --watch",
     "build": "nest build",
-    "migrate": "knex migrate:latest",
-    "seed": "knex seed:run"
+    "migrate": "bun run migrate",
+    "seed": "bun run seed"
   }
 }
 ```
@@ -286,15 +286,15 @@ When a config file exists from the CLI scaffold, the template version:
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/fastify": "^10.0.0",
-    "knex": "^3.0.0",
+    "kysely": "^0.27.0",
     "better-auth": "^0.21.0"
   },
   "scripts": {
     "start": "node dist/main",
     "start:dev": "nest start --watch",
     "build": "nest build",
-    "migrate": "knex migrate:latest",
-    "seed": "knex seed:run"
+    "migrate": "bun run migrate",
+    "seed": "bun run seed"
   }
 }
 ```
@@ -332,7 +332,7 @@ When a config file exists from the CLI scaffold, the template version:
 
 ### Before Phase 1
 1. Modify `NestJsBackendGenerator.scaffoldNestJsProject()` for NestJS options
-2. Modify `NextJsFrontendGenerator.scaffoldTanStackProject()` for TanStack options
+2. Modify `TanStackFrontendGenerator.scaffoldTanStackProject()` for TanStack options
 3. Pass custom CLI arguments
 
 ### During Phase 2

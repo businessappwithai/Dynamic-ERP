@@ -244,8 +244,8 @@ Error output:
 
 ## Related Files
 
-- `packages/generator/src/generators/nextjs-nestjs/nestjs-backend.generator.ts` - Uses CLI Executor for NestJS scaffolding
-- `packages/generator/src/generators/nextjs-nestjs/nextjs-frontend.generator.ts` - Uses CLI Executor for TanStack Start scaffolding
+- `packages/generator/src/generators/tanstack-start-nestjs/nestjs-backend.generator.ts` - Uses CLI Executor for NestJS scaffolding
+- `packages/generator/src/generators/tanstack-start-nestjs/tanstack-frontend.generator.ts` - Uses CLI Executor for TanStack Start scaffolding
 - `packages/generator/TWO_PHASE_GENERATION.md` - Architecture documentation
 
 ## Future Enhancements

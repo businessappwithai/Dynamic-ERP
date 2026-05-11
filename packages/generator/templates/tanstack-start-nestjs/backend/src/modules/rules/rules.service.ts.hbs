@@ -9,7 +9,7 @@
  */
 
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import type { Knex } from 'knex';
+import { Kysely } from 'kysely';
 import { InjectDatabase } from '../../database/database.service.decorator';
 import { RulesEngine, RuleEvaluationResult } from './rules-engine.service';
 import { readFileSync } from 'fs';
@@ -47,7 +47,7 @@ export class RulesService {
 
   constructor(
     private readonly rulesEngine: RulesEngine,
-    @InjectDatabase() private readonly db: Knex,
+    @InjectDatabase() private readonly db: Kysely<any>,
   ) {}
 
   /**
@@ -58,25 +58,25 @@ export class RulesService {
     operation?: string;
     isActive?: boolean;
   }): Promise<Rule[]> {
-    let query = this.db('sys_rule_definitions').select('*');
+    let query = this.db.selectFrom('sys_rule_definitions').selectAll();
 
     if (filters?.entityName) {
-      query = query.where('entity_name', filters.entityName);
+      query = query.where('entity_name', '=', filters.entityName);
     }
 
     if (filters?.operation) {
-      query = query.where('operation', filters.operation.toUpperCase());
+      query = query.where('operation', '=', filters.operation.toUpperCase());
     }
 
     if (filters?.isActive !== undefined) {
-      query = query.where('is_active', filters.isActive);
+      query = query.where('is_active', '=', filters.isActive);
     }
 
-    const rules = await query.orderBy([
-      { column: 'entity_name' },
-      { column: 'operation' },
-      { column: 'rule_name' },
-    ]);
+    const rules = await query
+      .orderBy('entity_name', 'asc')
+      .orderBy('operation', 'asc')
+      .orderBy('rule_name', 'asc')
+      .execute();
 
     return rules.map((rule) => this.mapDbRuleToRule(rule));
   }
@@ -85,7 +85,11 @@ export class RulesService {
    * Get rule by ID
    */
   async findById(id: string): Promise<Rule> {
-    const rule = await this.db('sys_rule_definitions').where('id', id).first();
+    const rule = await this.db
+      .selectFrom('sys_rule_definitions')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
 
     if (!rule) {
       throw new NotFoundException(`Rule with ID ${id} not found`);
@@ -98,13 +102,13 @@ export class RulesService {
    * Create a new rule
    */
   async create(dto: CreateRuleDto, userId: string): Promise<Rule> {
-    const existing = await this.db('sys_rule_definitions')
-      .where({
-        entity_name: dto.entityName,
-        operation: dto.operation,
-        rule_name: dto.ruleName,
-      })
-      .first();
+    const existing = await this.db
+      .selectFrom('sys_rule_definitions')
+      .selectAll()
+      .where('entity_name', '=', dto.entityName)
+      .where('operation', '=', dto.operation)
+      .where('rule_name', '=', dto.ruleName)
+      .executeTakeFirst();
 
     if (existing) {
       throw new Error(
@@ -117,8 +121,9 @@ export class RulesService {
       throw new Error(`Invalid JDM content: ${validation.errors.join(', ')}`);
     }
 
-    const [rule] = await this.db('sys_rule_definitions')
-      .insert({
+    const rule = await this.db
+      .insertInto('sys_rule_definitions')
+      .values({
         entity_name: dto.entityName,
         rule_name: dto.ruleName,
         operation: dto.operation.toUpperCase(),
@@ -128,8 +133,9 @@ export class RulesService {
         created_by: userId,
         created_at: new Date(),
         updated_at: new Date(),
-      })
-      .returning('*');
+      } as any)
+      .returningAll()
+      .executeTakeFirst();
 
     this.logger.log(`Created rule ${rule.rule_name} for ${rule.entity_name}:${rule.operation}`);
 
@@ -163,10 +169,12 @@ export class RulesService {
       updateData.is_active = dto.isActive;
     }
 
-    const [updated] = await this.db('sys_rule_definitions')
-      .where('id', id)
-      .update(updateData)
-      .returning('*');
+    const updated = await this.db
+      .updateTable('sys_rule_definitions')
+      .set(updateData)
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirst();
 
     this.logger.log(`Updated rule ${updated.rule_name} (version ${updated.version})`);
 
@@ -179,12 +187,14 @@ export class RulesService {
   async delete(id: string): Promise<void> {
     const rule = await this.findById(id);
 
-    await this.db('sys_rule_definitions')
-      .where('id', id)
-      .update({
+    await this.db
+      .updateTable('sys_rule_definitions')
+      .set({
         is_active: false,
         updated_at: new Date(),
-      });
+      })
+      .where('id', '=', id)
+      .execute();
 
     this.logger.log(`Deactivated rule ${rule.ruleName}`);
   }
@@ -270,13 +280,13 @@ export class RulesService {
         const parsed = JSON.parse(jdmContent);
         const ruleName = parsed.name || `${entityName}_${operation.toLowerCase()}_rule`;
 
-        const existing = await this.db('sys_rule_definitions')
-          .where({
-            entity_name: entityName,
-            operation,
-            rule_name: ruleName,
-          })
-          .first();
+        const existing = await this.db
+          .selectFrom('sys_rule_definitions')
+          .selectAll()
+          .where('entity_name', '=', entityName)
+          .where('operation', '=', operation)
+          .where('rule_name', '=', ruleName)
+          .executeTakeFirst();
 
         if (existing) {
           this.logger.log(`Rule ${ruleName} already exists, skipping migration`);
@@ -313,13 +323,13 @@ export class RulesService {
     data: Record<string, unknown>,
     action: 'create' | 'update' | 'delete' = 'create',
   ): Promise<{ valid: boolean; errors: string[]; warnings: string[] }> {
-    const rule = await this.db('sys_rule_definitions')
-      .where({
-        entity_name: entityType,
-        operation: action.toUpperCase(),
-        is_active: true,
-      })
-      .first();
+    const rule = await this.db
+      .selectFrom('sys_rule_definitions')
+      .selectAll()
+      .where('entity_name', '=', entityType)
+      .where('operation', '=', action.toUpperCase())
+      .where('is_active', '=', true)
+      .executeTakeFirst();
 
     if (!rule) {
       return { valid: true, errors: [], warnings: [] };
@@ -366,13 +376,13 @@ export class RulesService {
     data: Record<string, unknown>,
     action: 'create' | 'update' | 'delete' = 'create',
   ): Promise<RuleEvaluationResult[]> {
-    const rule = await this.db('sys_rule_definitions')
-      .where({
-        entity_name: entityType,
-        operation: action.toUpperCase(),
-        is_active: true,
-      })
-      .first();
+    const rule = await this.db
+      .selectFrom('sys_rule_definitions')
+      .selectAll()
+      .where('entity_name', '=', entityType)
+      .where('operation', '=', action.toUpperCase())
+      .where('is_active', '=', true)
+      .executeTakeFirst();
 
     if (!rule) {
       return [];

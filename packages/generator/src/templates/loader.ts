@@ -227,35 +227,33 @@ export class TemplateLoader {
     });
 
     // ========================================================================
-    // Knex.js Type Mapping
+    // Kysely Type Mapping
     // ========================================================================
-    Handlebars.registerHelper("knexType", (referenceId: number, fieldLength?: number) => {
+    Handlebars.registerHelper("kyselyType", (referenceId: number, fieldLength?: number) => {
       // Handlebars passes options object as last arg, so check if fieldLength is actually a number
       const length = typeof fieldLength === "number" ? fieldLength : undefined;
       const mapping: Record<number, string> = {
-        [ReferenceType.STRING]: length
-          ? `string('{{column_name}}', ${length})`
-          : "string('{{column_name}}', 255)",
-        [ReferenceType.INTEGER]: "integer('{{column_name}}')",
-        [ReferenceType.AMOUNT]: "decimal('{{column_name}}', 18, 6)",
-        [ReferenceType.ID]: "uuid('{{column_name}}')",
-        [ReferenceType.TEXT]: "text('{{column_name}}')",
-        [ReferenceType.DATE]: "date('{{column_name}}')",
-        [ReferenceType.DATETIME]: "timestamp('{{column_name}}')",
-        [ReferenceType.LIST]: "string('{{column_name}}', 40)",
-        [ReferenceType.TABLE]: "uuid('{{column_name}}')",
-        [ReferenceType.TABLE_DIRECT]: "uuid('{{column_name}}')",
-        [ReferenceType.YES_NO]: "boolean('{{column_name}}')",
-        [ReferenceType.JSON]: "jsonb('{{column_name}}')",
-        [ReferenceType.URL]: "string('{{column_name}}', 500)",
-        [ReferenceType.IMAGE]: "string('{{column_name}}', 500)",
-        [ReferenceType.FILE]: "string('{{column_name}}', 500)",
-        [ReferenceType.EMAIL]: "string('{{column_name}}', 255)",
-        [ReferenceType.PHONE]: "string('{{column_name}}', 40)",
-        [ReferenceType.PASSWORD]: "string('{{column_name}}', 255)",
-        [ReferenceType.COLOR]: "string('{{column_name}}', 20)",
+        [ReferenceType.STRING]: length ? `varchar(${length})` : "varchar(255)",
+        [ReferenceType.INTEGER]: "integer",
+        [ReferenceType.AMOUNT]: "decimal(18, 6)",
+        [ReferenceType.ID]: "uuid",
+        [ReferenceType.TEXT]: "text",
+        [ReferenceType.DATE]: "date",
+        [ReferenceType.DATETIME]: "timestamp",
+        [ReferenceType.LIST]: "varchar(40)",
+        [ReferenceType.TABLE]: "uuid",
+        [ReferenceType.TABLE_DIRECT]: "uuid",
+        [ReferenceType.YES_NO]: "boolean",
+        [ReferenceType.JSON]: "jsonb",
+        [ReferenceType.URL]: "varchar(500)",
+        [ReferenceType.IMAGE]: "varchar(500)",
+        [ReferenceType.FILE]: "varchar(500)",
+        [ReferenceType.EMAIL]: "varchar(255)",
+        [ReferenceType.PHONE]: "varchar(40)",
+        [ReferenceType.PASSWORD]: "varchar(255)",
+        [ReferenceType.COLOR]: "varchar(20)",
       };
-      return mapping[referenceId] || "string('{{column_name}}', 255)";
+      return mapping[referenceId] || "varchar(255)";
     });
 
     // ========================================================================
@@ -463,6 +461,11 @@ export class TemplateLoader {
     Handlebars.registerHelper("includes", (array, value) => array?.includes(value));
     Handlebars.registerHelper("join", (array, separator = ", ") => array?.join(separator) || "");
     Handlebars.registerHelper("slice", (array, start, end) => array?.slice(start, end));
+    Handlebars.registerHelper("range", (start: number, end: number) => {
+      const result: number[] = [];
+      for (let i = start; i <= end; i++) result.push(i);
+      return result;
+    });
 
     // Index helpers for loops
     Handlebars.registerHelper("indexPlusOne", (index: number) => index + 1);

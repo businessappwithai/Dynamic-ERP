@@ -1,228 +1,52 @@
 /**
  * Business Data Seed
- * Populates business tables with sample data for E2E testing
+ * Sample records for each business entity for E2E testing
  *
  * Generated: {{now}}
- *
- * This seed creates sample records for each business entity to enable
- * proper E2E testing of CRUD operations.
  */
 
-import type { Knex } from 'knex';
+import { Kysely } from 'kysely';
 import { v4 as uuidv4 } from 'uuid';
 
-export async function seed(knex: Knex): Promise<void> {
+export async function seed(db: Kysely<any>): Promise<void> {
   const now = new Date();
 
   {{#each entities}}
-  // ==========================================================================
   // {{displayName}} ({{tableName}})
-  // ==========================================================================
+  await db.deleteFrom('{{tableName}}').execute();
 
-  await knex('{{tableName}}').del();
-
-  const {{camelCase name}}Data = [
-    // Record 1
+  const {{camelCase name}}Records = [
+    {{#each (range 1 4)}}
     {
       id: uuidv4(),
-      {{#each attributes}}
-      {{#unless (eq name ../primaryKey)}}
+      {{#each ../attributes}}
+      {{#unless (eq name ../../primaryKey)}}
       {{#unless (eq name 'created_at')}}
       {{#unless (eq name 'updated_at')}}
       {{#unless (eq name 'deleted_at')}}
       {{#switch (typeToReferenceId type)}}
-        {{#case 10}}
-      {{name}}: '{{#if (eq name "email")}}test1@example.com{{else}}{{#if (eq name "name")}}Test {{../../displayName}} 1{{else}}Sample {{name}} 1{{/if}}{{/if}}',
-        {{/case}}
-        {{#case 11}}
-      {{name}}: 1,
-        {{/case}}
-        {{#case 12}}
-      {{name}}: 1.50,
-        {{/case}}
-        {{#case 15}}
-      {{name}}: new Date('2024-01-15'),
-        {{/case}}
-        {{#case 16}}
-      {{name}}: now,
-        {{/case}}
-        {{#case 20}}
-      {{name}}: true,
-        {{/case}}
-        {{#default}}
-      {{name}}: 'Sample {{name}} 1',
-        {{/default}}
+        {{#case 10}}{{name}}: '{{#if (eq name "email")}}test{{@../index}}@example.com{{else}}{{#if (eq name "name")}}Test {{../../displayName}} {{@../index}}{{else}}Sample {{name}} {{@../index}}{{/if}}{{/if}}',{{/case}}
+        {{#case 11}}{{name}}: {{@../index}},{{/case}}
+        {{#case 12}}{{name}}: {{@../index}}.50,{{/case}}
+        {{#case 20}}{{name}}: {{#if (eq @../index 2)}}false{{else}}true{{/if}},{{/case}}
+        {{#default}}{{name}}: 'value-{{@../index}}',{{/default}}
       {{/switch}}
       {{/unless}}
       {{/unless}}
       {{/unless}}
       {{/unless}}
       {{/each}}
+      version: 1,
       created_at: now,
       updated_at: now,
+      deleted_at: null,
     },
-    // Record 2
-    {
-      id: uuidv4(),
-      {{#each attributes}}
-      {{#unless (eq name ../primaryKey)}}
-      {{#unless (eq name 'created_at')}}
-      {{#unless (eq name 'updated_at')}}
-      {{#unless (eq name 'deleted_at')}}
-      {{#switch (typeToReferenceId type)}}
-        {{#case 10}}
-      {{name}}: '{{#if (eq name "email")}}test2@example.com{{else}}{{#if (eq name "name")}}Test {{../../displayName}} 2{{else}}Sample {{name}} 2{{/if}}{{/if}}',
-        {{/case}}
-        {{#case 11}}
-      {{name}}: 2,
-        {{/case}}
-        {{#case 12}}
-      {{name}}: 2.50,
-        {{/case}}
-        {{#case 15}}
-      {{name}}: new Date('2024-02-15'),
-        {{/case}}
-        {{#case 16}}
-      {{name}}: now,
-        {{/case}}
-        {{#case 20}}
-      {{name}}: false,
-        {{/case}}
-        {{#default}}
-      {{name}}: 'Sample {{name}} 2',
-        {{/default}}
-      {{/switch}}
-      {{/unless}}
-      {{/unless}}
-      {{/unless}}
-      {{/unless}}
-      {{/each}}
-      created_at: now,
-      updated_at: now,
-    },
-    // Record 3
-    {
-      id: uuidv4(),
-      {{#each attributes}}
-      {{#unless (eq name ../primaryKey)}}
-      {{#unless (eq name 'created_at')}}
-      {{#unless (eq name 'updated_at')}}
-      {{#unless (eq name 'deleted_at')}}
-      {{#switch (typeToReferenceId type)}}
-        {{#case 10}}
-      {{name}}: '{{#if (eq name "email")}}test3@example.com{{else}}{{#if (eq name "name")}}Test {{../../displayName}} 3{{else}}Sample {{name}} 3{{/if}}{{/if}}',
-        {{/case}}
-        {{#case 11}}
-      {{name}}: 3,
-        {{/case}}
-        {{#case 12}}
-      {{name}}: 3.50,
-        {{/case}}
-        {{#case 15}}
-      {{name}}: new Date('2024-03-15'),
-        {{/case}}
-        {{#case 16}}
-      {{name}}: now,
-        {{/case}}
-        {{#case 20}}
-      {{name}}: true,
-        {{/case}}
-        {{#default}}
-      {{name}}: 'Sample {{name}} 3',
-        {{/default}}
-      {{/switch}}
-      {{/unless}}
-      {{/unless}}
-      {{/unless}}
-      {{/unless}}
-      {{/each}}
-      created_at: now,
-      updated_at: now,
-    },
+    {{/each}}
   ];
 
-  await knex('{{tableName}}').insert({{camelCase name}}Data);
+  await db.insertInto('{{tableName}}').values({{camelCase name}}Records).execute();
 
   {{/each}}
 
-  // ==========================================================================
-  // Field Groups - For demo/testing field grouping features
-  // ==========================================================================
-
-  // Insert sample field groups for each entity
-  {{#each entities}}
-  // Get the sys_tab_id for {{tableName}}
-  const {{camelCase name}}Tab = await knex('sys_tab')
-    .where('sys_table_id', function(this: any) {
-      this.select('sys_table_id').from('sys_table').where('table_name', '{{tableName}}');
-    })
-    .first();
-
-  if ({{camelCase name}}Tab) {
-    // Insert field groups with UUIDs
-    const {{camelCase name}}PersonalGroupId = uuidv4();
-    const {{camelCase name}}SystemGroupId = uuidv4();
-
-    await knex('sys_field_group').insert([
-      {
-        sys_field_group_id: {{camelCase name}}PersonalGroupId,
-        sys_tab_id: {{camelCase name}}Tab.sys_tab_id,
-        name: 'Personal Information',
-        description: '{{displayName}} personal details',
-        seq_no: 10,
-        columns: 2,
-        layout_type: 'two-column',
-        created_by: 'system',
-        updated_by: 'system',
-      },
-      {
-        sys_field_group_id: {{camelCase name}}SystemGroupId,
-        sys_tab_id: {{camelCase name}}Tab.sys_tab_id,
-        name: 'System Information',
-        description: 'System maintained fields',
-        seq_no: 20,
-        columns: 1,
-        layout_type: 'single',
-        created_by: 'system',
-        updated_by: 'system',
-      },
-    ]);
-
-    // Assign some fields to groups (example - using first few fields)
-    const {{camelCase name}}Fields = await knex('sys_column as sc')
-      .innerJoin('sys_tab as st', 'st.sys_table_id', 'sc.sys_table_id')
-      .innerJoin('sys_field as sf', function(this: any) {
-        this.on('sf.sys_column_id', '=', 'sc.sys_column_id')
-          .andOn('sf.sys_tab_id', '=', 'st.sys_tab_id');
-      })
-      .where('st.sys_tab_id', {{camelCase name}}Tab.sys_tab_id)
-      .limit(6)
-      .select('sf.sys_field_id', 'sc.column_name')
-      .orderBy('sf.seq_no');
-
-    if ({{camelCase name}}Fields.length > 0) {
-      // First 4 fields to Personal Information
-      for (let i = 0; i < Math.min(4, {{camelCase name}}Fields.length); i++) {
-        await knex('sys_field')
-          .where('sys_field_id', {{camelCase name}}Fields[i].sys_field_id)
-          .update({
-            sys_field_group_id: {{camelCase name}}PersonalGroupId,
-            column_span: i < 2 ? 6 : 12, // First 2 fields half width, rest full width
-            updated_at: now,
-          });
-      }
-
-      // Remaining fields to System Information
-      for (let i = 4; i < {{camelCase name}}Fields.length; i++) {
-        await knex('sys_field')
-          .where('sys_field_id', {{camelCase name}}Fields[i].sys_field_id)
-          .update({
-            sys_field_group_id: {{camelCase name}}SystemGroupId,
-            column_span: 6,
-            updated_at: now,
-          });
-      }
-    }
-  }
-  {{/each}}
+  console.log('✓ Business sample data seeded');
 }

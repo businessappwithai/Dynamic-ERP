@@ -290,7 +290,7 @@ function InitPage() {
                       />
                       <div className="flex-1">
                         <p className="font-semibold text-foreground">
-                          Full Stack: Next.js + NestJS
+                          Full Stack: TanStack Start + NestJS
                         </p>
                         <p className="text-sm text-muted-foreground">
                           Modern web framework with React, TypeScript, and PostgreSQL
@@ -315,7 +315,7 @@ function InitPage() {
                   </div>
                 ) : (
                   <div className="bg-muted border border-border text-foreground rounded-xl px-4 py-3">
-                    Full Stack: Next.js + NestJS + Knex.js
+                    Full Stack: TanStack Start + NestJS + Knex.js
                   </div>
                 )}
                 {!isNewProject && (

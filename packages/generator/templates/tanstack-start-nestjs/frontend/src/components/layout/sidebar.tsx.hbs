@@ -7,8 +7,7 @@
  */
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { Link, useNavigate, useLocation } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -90,8 +89,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ className }: SidebarProps) {
-  const pathname = usePathname();
-  const router = useRouter();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { isAdmin: checkIsAdmin } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -159,7 +158,7 @@ export function Sidebar({ className }: SidebarProps) {
               )}
               <div className="space-y-1">
                 {adminItems.map((item) => (
-                  <NavItem key={item.href} item={item} isActive={pathname === item.href} isCollapsed={isCollapsed} />
+              <NavItem key={item.href} item={item} isActive={location.pathname === item.href} isCollapsed={isCollapsed} />
                 ))}
               </div>
             </>
@@ -177,11 +176,11 @@ interface NavItemProps {
 }
 
 function NavItem({ item, isActive, isCollapsed }: NavItemProps) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const Icon = item.icon;
 
   const handleClick = () => {
-    router.push(item.href);
+    navigate({ to: item.href });
   };
 
   return (

@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from '../../database/service';
+import { v4 as uuidv4 } from 'uuid';
+import { DatabaseService } from '../../database/database.service';
 
 @Injectable()
 export class SysValRuleService {
@@ -10,8 +11,19 @@ export class SysValRuleService {
     const offset = (page - 1) * limit;
 
     const [data, countResult] = await Promise.all([
-      this.db.knex('sys_val_rule').where('is_active', true).orderBy('name').limit(limit).offset(offset),
-      this.db.knex('sys_val_rule').where('is_active', true).count('* as count').first(),
+      this.db.kysely
+        .selectFrom('sys_val_rule')
+        .selectAll()
+        .where('is_active', '=', true)
+        .orderBy('name', 'asc')
+        .limit(limit)
+        .offset(offset)
+        .execute(),
+      this.db.kysely
+        .selectFrom('sys_val_rule')
+        .select((eb) => eb.fn.countAll().as('count'))
+        .where('is_active', '=', true)
+        .executeTakeFirst(),
     ]);
 
     return {
@@ -20,13 +32,17 @@ export class SysValRuleService {
         total: Number(countResult?.count || 0),
         page,
         pageSize: limit,
-        totalPages: Math.ceil((countResult?.count || 0) / limit),
+        totalPages: Math.ceil(Number(countResult?.count || 0) / limit),
       },
     };
   }
 
   async findById(id: string) {
-    const rule = await this.db.knex('sys_val_rule').where('sys_val_rule_id', id).first();
+    const rule = await this.db.kysely
+      .selectFrom('sys_val_rule')
+      .selectAll()
+      .where('sys_val_rule_id', '=', id)
+      .executeTakeFirst();
     if (!rule) {
       throw new NotFoundException(`SysValRule with ID ${id} not found`);
     }
@@ -35,7 +51,7 @@ export class SysValRuleService {
 
   async create(data: any) {
     const now = new Date();
-    const id = this.db.knex.raw('UUID()');
+    const id = uuidv4();
 
     const newRecord = {
       sys_val_rule_id: id,
@@ -49,22 +65,27 @@ export class SysValRuleService {
       updated_by: '',
     };
 
-    await this.db.knex('sys_val_rule').insert(newRecord);
-    return this.findById((newRecord.sys_val_rule_id as any).toString());
+    await this.db.kysely.insertInto('sys_val_rule').values(newRecord).execute();
+    return this.findById(id);
   }
 
   async update(id: string, data: any) {
     const updated = { ...data, updated_at: new Date(), updated_by: '' };
-    await this.db.knex('sys_val_rule').where('sys_val_rule_id', id).update(updated);
+    await this.db.kysely
+      .updateTable('sys_val_rule')
+      .set(updated)
+      .where('sys_val_rule_id', '=', id)
+      .execute();
     return this.findById(id);
   }
 
   async delete(id: string) {
     await this.findById(id);
-    await this.db.knex('sys_val_rule').where('sys_val_rule_id', id).update({
-      is_active: false,
-      deleted_at: new Date(),
-    });
+    await this.db.kysely
+      .updateTable('sys_val_rule')
+      .set({ is_active: false, deleted_at: new Date() })
+      .where('sys_val_rule_id', '=', id)
+      .execute();
     return { deleted: true };
   }
 }

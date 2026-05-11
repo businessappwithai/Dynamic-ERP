@@ -5,112 +5,100 @@
  * Generated: {{now}}
  */
 
-import type { Knex } from 'knex';
+import { Kysely, sql } from 'kysely';
 
-export async function up(knex: Knex): Promise<void> {
-  await knex.schema.createTable('{{tableName}}', (table) => {
-    // Primary Key
-    table.uuid('{{tableName}}_id').primary();
+export async function up(db: Kysely<any>): Promise<void> {
+  await sql`
+    CREATE TABLE IF NOT EXISTS {{tableName}} (
+      {{tableName}}_id UUID PRIMARY KEY DEFAULT gen_random_uuid()
+      {{#each attributes}}
+      {{#unless (eq name ../primaryKey)}}
+      {{! {{displayName}}{{#if description}} - {{description}}{{/if}} }}
+      {{#switch referenceId}}
+        {{#case 10}}
+      , {{name}} VARCHAR({{#if maxLength}}{{maxLength}}{{else}}255{{/if}}){{#if required}} NOT NULL{{/if}}{{#if unique}} UNIQUE{{/if}}{{#if default}} DEFAULT '{{default}}'{{/if}}
+        {{/case}}
+        {{#case 11}}
+      , {{name}} INTEGER{{#if required}} NOT NULL{{/if}}{{#if default}} DEFAULT {{default}}{{/if}}
+        {{/case}}
+        {{#case 12}}
+      , {{name}} DECIMAL(18,6){{#if required}} NOT NULL{{/if}}{{#if default}} DEFAULT {{default}}{{/if}}
+        {{/case}}
+        {{#case 13}}
+      , {{name}} UUID{{#if required}} NOT NULL{{/if}}
+        {{/case}}
+        {{#case 14}}
+      , {{name}} TEXT{{#if required}} NOT NULL{{/if}}
+        {{/case}}
+        {{#case 15}}
+      , {{name}} DATE{{#if required}} NOT NULL{{/if}}
+        {{/case}}
+        {{#case 16}}
+      , {{name}} TIMESTAMPTZ{{#if required}} NOT NULL{{/if}}
+        {{/case}}
+        {{#case 17}}
+      , {{name}} VARCHAR(40){{#if required}} NOT NULL{{/if}}
+        {{/case}}
+        {{#case 18}}
+      , {{name}} UUID{{#if required}} NOT NULL{{/if}}
+        {{/case}}
+        {{#case 19}}
+      , {{name}} UUID{{#if required}} NOT NULL{{/if}}
+        {{/case}}
+        {{#case 20}}
+      , {{name}} BOOLEAN{{#if required}} NOT NULL{{/if}}{{#if default}} DEFAULT {{default}}{{/if}}
+        {{/case}}
+        {{#case 24}}
+      , {{name}} VARCHAR(500){{#if required}} NOT NULL{{/if}}
+        {{/case}}
+        {{#case 25}}
+      , {{name}} VARCHAR(500){{#if required}} NOT NULL{{/if}}
+        {{/case}}
+        {{#case 26}}
+      , {{name}} VARCHAR(500){{#if required}} NOT NULL{{/if}}
+        {{/case}}
+        {{#case 27}}
+      , {{name}} VARCHAR(20){{#if required}} NOT NULL{{/if}}
+        {{/case}}
+        {{#case 28}}
+      , {{name}} JSONB{{#if required}} NOT NULL{{/if}}
+        {{/case}}
+        {{#case 29}}
+      , {{name}} VARCHAR(255){{#if required}} NOT NULL{{/if}}
+        {{/case}}
+        {{#case 30}}
+      , {{name}} VARCHAR(255){{#if required}} NOT NULL{{/if}}
+        {{/case}}
+        {{#case 31}}
+      , {{name}} VARCHAR(40){{#if required}} NOT NULL{{/if}}
+        {{/case}}
+        {{#default}}
+      , {{name}} VARCHAR(255){{#if required}} NOT NULL{{/if}}
+        {{/default}}
+      {{/switch}}
+      {{/unless}}
+      {{/each}}
+      {{#if timestamps}}
+      , created_at TIMESTAMPTZ DEFAULT NOW()
+      , updated_at TIMESTAMPTZ DEFAULT NOW()
+      {{/if}}
+      , deleted_at TIMESTAMPTZ
+      , version INTEGER NOT NULL DEFAULT 1
+      {{#each relationships}}
+      {{#if (eq cardinality 'manyToOne')}}
+      , {{foreignKey}} UUID REFERENCES {{targetTableName}}({{targetTableName}}_id) ON DELETE {{#if onDelete}}{{onDelete}}{{else}}SET NULL{{/if}} ON UPDATE {{#if onUpdate}}{{onUpdate}}{{else}}CASCADE{{/if}}
+      {{/if}}
+      {{/each}}
+    )
+  `.execute(db);
 
-    {{#each attributes}}
-    {{#unless (eq name ../primaryKey)}}
-    // {{displayName}}{{#if description}} - {{description}}{{/if}}
-    {{#switch referenceId}}
-      {{#case 10}}
-    table.string('{{name}}'{{#if maxLength}}, {{maxLength}}{{else}}, 255{{/if}}){{#if required}}.notNullable(){{/if}}{{#if unique}}.unique(){{/if}}{{#if default}}.defaultTo('{{default}}'){{/if}};
-      {{/case}}
-      {{#case 11}}
-    table.integer('{{name}}'){{#if required}}.notNullable(){{/if}}{{#if default}}.defaultTo({{default}}){{/if}};
-      {{/case}}
-      {{#case 12}}
-    table.decimal('{{name}}', 18, 6){{#if required}}.notNullable(){{/if}}{{#if default}}.defaultTo({{default}}){{/if}};
-      {{/case}}
-      {{#case 13}}
-    table.uuid('{{name}}'){{#if required}}.notNullable(){{/if}};
-      {{/case}}
-      {{#case 14}}
-    table.text('{{name}}'){{#if required}}.notNullable(){{/if}};
-      {{/case}}
-      {{#case 15}}
-    table.date('{{name}}'){{#if required}}.notNullable(){{/if}};
-      {{/case}}
-      {{#case 16}}
-    table.timestamp('{{name}}'){{#if required}}.notNullable(){{/if}};
-      {{/case}}
-      {{#case 17}}
-    table.string('{{name}}', 40){{#if required}}.notNullable(){{/if}};
-      {{/case}}
-      {{#case 18}}
-    table.uuid('{{name}}'){{#if required}}.notNullable(){{/if}};
-      {{/case}}
-      {{#case 19}}
-    table.uuid('{{name}}'){{#if required}}.notNullable(){{/if}};
-      {{/case}}
-      {{#case 20}}
-    table.boolean('{{name}}'){{#if required}}.notNullable(){{/if}}{{#if default}}.defaultTo({{default}}){{/if}};
-      {{/case}}
-      {{#case 24}}
-    table.string('{{name}}', 500){{#if required}}.notNullable(){{/if}};
-      {{/case}}
-      {{#case 25}}
-    table.string('{{name}}', 500){{#if required}}.notNullable(){{/if}};
-      {{/case}}
-      {{#case 26}}
-    table.string('{{name}}', 500){{#if required}}.notNullable(){{/if}};
-      {{/case}}
-      {{#case 27}}
-    table.string('{{name}}', 20){{#if required}}.notNullable(){{/if}};
-      {{/case}}
-      {{#case 28}}
-    table.jsonb('{{name}}'){{#if required}}.notNullable(){{/if}};
-      {{/case}}
-      {{#case 29}}
-    table.string('{{name}}', 255){{#if required}}.notNullable(){{/if}};
-      {{/case}}
-      {{#case 30}}
-    table.string('{{name}}', 255){{#if required}}.notNullable(){{/if}};
-      {{/case}}
-      {{#case 31}}
-    table.string('{{name}}', 40){{#if required}}.notNullable(){{/if}};
-      {{/case}}
-      {{#default}}
-    table.string('{{name}}', 255){{#if required}}.notNullable(){{/if}};
-      {{/default}}
-    {{/switch}}
-    {{/unless}}
-    {{/each}}
-
-    {{#if timestamps}}
-    // Timestamps
-    table.timestamps(true, true);
-    {{/if}}
-
-    // Soft delete support
-    table.timestamp('deleted_at');
-
-    // Optimistic concurrency control (ETag)
-    table.integer('version').notNullable().defaultTo(1);
-
-    {{#each relationships}}
-    {{#if (eq cardinality 'manyToOne')}}
-    // Foreign Key: {{name}} -> {{targetTableName}}
-    table.foreign('{{foreignKey}}')
-      .references('{{targetTableName}}_id')
-      .inTable('{{targetTableName}}')
-      .onDelete('{{#if onDelete}}{{onDelete}}{{else}}SET NULL{{/if}}')
-      .onUpdate('{{#if onUpdate}}{{onUpdate}}{{else}}CASCADE{{/if}}');
-    {{/if}}
-    {{/each}}
-
-    // Indexes for commonly queried columns
-    {{#each attributes}}
-    {{#if (or (eq name 'name') unique isSelectionColumn)}}
-    table.index(['{{name}}']);
-    {{/if}}
-    {{/each}}
-  });
+  {{#each attributes}}
+  {{#if (or (eq name 'name') unique isSelectionColumn)}}
+  await sql`CREATE INDEX IF NOT EXISTS idx_{{../tableName}}_{{name}} ON {{../tableName}} ({{name}})`.execute(db);
+  {{/if}}
+  {{/each}}
 }
 
-export async function down(knex: Knex): Promise<void> {
-  await knex.schema.dropTableIfExists('{{tableName}}');
+export async function down(db: Kysely<any>): Promise<void> {
+  await sql`DROP TABLE IF EXISTS {{tableName}} CASCADE`.execute(db);
 }

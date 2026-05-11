@@ -13,14 +13,14 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     include: ['test/**/*.test.{ts,tsx}'],
-    exclude: ['node_modules', '.next', 'out'],
+    exclude: ['node_modules', '.vinxi', 'out'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
       exclude: [
         'node_modules/',
         'test/',
-        '.next/',
+        '.vinxi/',
         '**/*.config.*',
         '**/*.d.ts',
         '**/types/**',

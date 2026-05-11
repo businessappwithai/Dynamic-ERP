@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from '../../database/service';
+import { v4 as uuidv4 } from 'uuid';
+import { DatabaseService } from '../../database/database.service';
 
 @Injectable()
 export class SysReferenceService {
@@ -10,8 +11,19 @@ export class SysReferenceService {
     const offset = (page - 1) * limit;
 
     const [data, countResult] = await Promise.all([
-      this.db.knex('sys_reference').where('is_active', true).orderBy('name').limit(limit).offset(offset),
-      this.db.knex('sys_reference').where('is_active', true).count('* as count').first(),
+      this.db.kysely
+        .selectFrom('sys_reference')
+        .selectAll()
+        .where('is_active', '=', true)
+        .orderBy('name', 'asc')
+        .limit(limit)
+        .offset(offset)
+        .execute(),
+      this.db.kysely
+        .selectFrom('sys_reference')
+        .select((eb) => eb.fn.countAll().as('count'))
+        .where('is_active', '=', true)
+        .executeTakeFirst(),
     ]);
 
     return {
@@ -20,13 +32,17 @@ export class SysReferenceService {
         total: Number(countResult?.count || 0),
         page,
         pageSize: limit,
-        totalPages: Math.ceil((countResult?.count || 0) / limit),
+        totalPages: Math.ceil(Number(countResult?.count || 0) / limit),
       },
     };
   }
 
   async findById(id: string) {
-    const ref = await this.db.knex('sys_reference').where('sys_reference_id', id).first();
+    const ref = await this.db.kysely
+      .selectFrom('sys_reference')
+      .selectAll()
+      .where('sys_reference_id', '=', id)
+      .executeTakeFirst();
     if (!ref) {
       throw new NotFoundException(`SysReference with ID ${id} not found`);
     }
@@ -35,7 +51,7 @@ export class SysReferenceService {
 
   async create(data: any) {
     const now = new Date();
-    const id = this.db.knex.raw('UUID()');
+    const id = uuidv4();
 
     const newRecord = {
       sys_reference_id: id,
@@ -48,29 +64,37 @@ export class SysReferenceService {
       updated_by: '',
     };
 
-    await this.db.knex('sys_reference').insert(newRecord);
-    return this.findById((newRecord.sys_reference_id as any).toString());
+    await this.db.kysely.insertInto('sys_reference').values(newRecord).execute();
+    return this.findById(id);
   }
 
   async update(id: string, data: any) {
     const updated = { ...data, updated_at: new Date(), updated_by: '' };
-    await this.db.knex('sys_reference').where('sys_reference_id', id).update(updated);
+    await this.db.kysely
+      .updateTable('sys_reference')
+      .set(updated)
+      .where('sys_reference_id', '=', id)
+      .execute();
     return this.findById(id);
   }
 
   async delete(id: string) {
     await this.findById(id);
-    await this.db.knex('sys_reference').where('sys_reference_id', id).update({
-      is_active: false,
-      deleted_at: new Date(),
-    });
+    await this.db.kysely
+      .updateTable('sys_reference')
+      .set({ is_active: false, deleted_at: new Date() })
+      .where('sys_reference_id', '=', id)
+      .execute();
     return { deleted: true };
   }
 
   async getRefList(referenceId: string) {
-    return this.db.knex('sys_ref_list')
-      .where('sys_reference_id', referenceId)
-      .where('is_active', true)
-      .orderBy('value');
+    return this.db.kysely
+      .selectFrom('sys_ref_list')
+      .selectAll()
+      .where('sys_reference_id', '=', referenceId)
+      .where('is_active', '=', true)
+      .orderBy('value', 'asc')
+      .execute();
   }
 }

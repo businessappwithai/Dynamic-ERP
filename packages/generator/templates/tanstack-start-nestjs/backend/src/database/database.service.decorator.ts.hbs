@@ -1,10 +1,10 @@
 /**
  * Database Service Decorator
  *
- * Provides injection decorator for Knex database connection.
+ * Provides injection decorator for Kysely database connection.
  */
 
 import { Inject } from '@nestjs/common';
-import { KNEX_CONNECTION } from './database.constants';
+import { KYSELY_CONNECTION } from './database.constants';
 
-export const InjectDatabase = () => Inject(KNEX_CONNECTION);
+export const InjectDatabase = () => Inject(KYSELY_CONNECTION);

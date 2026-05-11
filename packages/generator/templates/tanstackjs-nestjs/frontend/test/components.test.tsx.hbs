@@ -18,7 +18,7 @@ import { render, createMockFetch, mockApiResponses } from './setup';
 
 // Dynamic imports so vi.mock can be set up before the module is executed
 vi.mock('../src/components/layout/sidebar', async (importOriginal) => {
-  // Use the real implementation but with mocked next/navigation (already done in setup)
+  // Use the real implementation but with mocked TanStack Router (already done in setup)
   return importOriginal();
 });
 

@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from '../../database/service';
+import { v4 as uuidv4 } from 'uuid';
+import { DatabaseService } from '../../database/database.service';
 
 @Injectable()
 export class SysUserService {
@@ -10,8 +11,19 @@ export class SysUserService {
     const offset = (page - 1) * limit;
 
     const [data, countResult] = await Promise.all([
-      this.db.knex('sys_user').where('is_active', true).orderBy('name').limit(limit).offset(offset),
-      this.db.knex('sys_user').where('is_active', true).count('* as count').first(),
+      this.db.kysely
+        .selectFrom('sys_user')
+        .selectAll()
+        .where('is_active', '=', true)
+        .orderBy('name', 'asc')
+        .limit(limit)
+        .offset(offset)
+        .execute(),
+      this.db.kysely
+        .selectFrom('sys_user')
+        .select((eb) => eb.fn.countAll().as('count'))
+        .where('is_active', '=', true)
+        .executeTakeFirst(),
     ]);
 
     return {
@@ -20,13 +32,17 @@ export class SysUserService {
         total: Number(countResult?.count || 0),
         page,
         pageSize: limit,
-        totalPages: Math.ceil((countResult?.count || 0) / limit),
+        totalPages: Math.ceil(Number(countResult?.count || 0) / limit),
       },
     };
   }
 
   async findById(id: string) {
-    const user = await this.db.knex('sys_user').where('sys_user_id', id).first();
+    const user = await this.db.kysely
+      .selectFrom('sys_user')
+      .selectAll()
+      .where('sys_user_id', '=', id)
+      .executeTakeFirst();
     if (!user) {
       throw new NotFoundException(`SysUser with ID ${id} not found`);
     }
@@ -34,7 +50,11 @@ export class SysUserService {
   }
 
   async findByEmail(email: string) {
-    const user = await this.db.knex('sys_user').where('email', email).first();
+    const user = await this.db.kysely
+      .selectFrom('sys_user')
+      .selectAll()
+      .where('email', '=', email)
+      .executeTakeFirst();
     if (!user) {
       throw new NotFoundException(`User with email ${email} not found`);
     }
@@ -43,7 +63,7 @@ export class SysUserService {
 
   async create(data: any) {
     const now = new Date();
-    const id = this.db.knex.raw('UUID()');
+    const id = uuidv4();
 
     const newRecord = {
       sys_user_id: id,
@@ -61,31 +81,38 @@ export class SysUserService {
       updated_by: '',
     };
 
-    await this.db.knex('sys_user').insert(newRecord);
-    return this.findById((newRecord.sys_user_id as any).toString());
+    await this.db.kysely.insertInto('sys_user').values(newRecord).execute();
+    return this.findById(id);
   }
 
   async update(id: string, data: any) {
     const updated = { ...data, updated_at: new Date(), updated_by: '' };
-    await this.db.knex('sys_user').where('sys_user_id', id).update(updated);
+    await this.db.kysely
+      .updateTable('sys_user')
+      .set(updated)
+      .where('sys_user_id', '=', id)
+      .execute();
     return this.findById(id);
   }
 
   async delete(id: string) {
     await this.findById(id);
-    await this.db.knex('sys_user').where('sys_user_id', id).update({
-      is_active: false,
-      deleted_at: new Date(),
-    });
+    await this.db.kysely
+      .updateTable('sys_user')
+      .set({ is_active: false, deleted_at: new Date() })
+      .where('sys_user_id', '=', id)
+      .execute();
     return { deleted: true };
   }
 
   async getRoles(userId: string) {
-    return this.db.knex('sys_user_roles')
-      .select('sys_role.*')
-      .join('sys_role', 'sys_user_roles.sys_role_id', 'sys_role.sys_role_id')
-      .where('sys_user_roles.sys_user_id', userId)
-      .where('sys_user_roles.is_active', true)
-      .where('sys_role.is_active', true);
+    return this.db.kysely
+      .selectFrom('sys_user_roles')
+      .innerJoin('sys_role', 'sys_role.sys_role_id', 'sys_user_roles.sys_role_id')
+      .selectAll('sys_role')
+      .where('sys_user_roles.sys_user_id', '=', userId)
+      .where('sys_user_roles.is_active', '=', true)
+      .where('sys_role.is_active', '=', true)
+      .execute();
   }
 }

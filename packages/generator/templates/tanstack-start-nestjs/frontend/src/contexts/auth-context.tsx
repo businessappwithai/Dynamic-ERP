@@ -7,7 +7,7 @@
  * Uses HTTP-only cookies managed by the backend.
  */
 
-import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+import React, { createContext, type ReactNode, useContext, useEffect, useState } from "react";
 import { getSession, signIn, signOut } from "@/lib/auth";
 
 // ============================================================================

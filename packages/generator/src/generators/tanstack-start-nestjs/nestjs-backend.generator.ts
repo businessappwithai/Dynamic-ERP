@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- template context objects are dynamically shaped */
 /**
- * Option 1: NestJS + Fastify + Knex.js Backend Generator
+ * Option 1: NestJS + Fastify + Kysely Backend Generator
  *
  * Two-phase generation process:
  * 1. Scaffold using NestJS CLI (nest new)
@@ -8,7 +8,7 @@
  *
  * Generates a complete NestJS backend with:
  * - Fastify adapter for high performance
- * - Knex.js for database operations
+ * - Kysely for type-safe database operations
  * - sys_ prefixed Application Dictionary tables
  * - bus_ prefixed business entity tables
  * - Full CRUD operations with ETag concurrency
@@ -144,7 +144,7 @@ export class NestJsBackendGenerator extends BaseGenerator {
       "src/modules/rules/jdm",
       "src/modules/workflow",
       "src/trigger",
-      "migrations",
+      "src/migrations",
       "seeds",
       "test/modules/auth",
       "test/modules/jobs",
@@ -763,7 +763,7 @@ export async function executeAfterListHooks(
   }
 
   private async generateMigrations(outputDir: string, context: any): Promise<void> {
-    const migrationsDir = path.join(outputDir, "migrations");
+    const migrationsDir = path.join(outputDir, "src/migrations");
     const timestamp = Date.now();
 
     // Remove any existing generated migration files to avoid duplicates on re-generation
@@ -784,7 +784,7 @@ export async function executeAfterListHooks(
       context
     );
     await fs.writeFile(
-      path.join(outputDir, `migrations/${timestamp}_create_sys_tables.ts`),
+      path.join(outputDir, `src/migrations/${timestamp}_create_sys_tables.ts`),
       sysMigrationContent
     );
 
@@ -794,7 +794,7 @@ export async function executeAfterListHooks(
       context
     );
     await fs.writeFile(
-      path.join(outputDir, `migrations/${timestamp + 1}_create_bus_tables.ts`),
+      path.join(outputDir, `src/migrations/${timestamp + 1}_create_bus_tables.ts`),
       busMigrationContent
     );
 
@@ -841,9 +841,9 @@ export async function executeAfterListHooks(
       console.warn("Custom tsconfig template not found, keeping NestJS default");
     }
 
-    // Generate knexfile.ts
-    const knexfileContent = await this.renderTemplate("knexfile.ts.hbs", context);
-    await fs.writeFile(path.join(outputDir, "knexfile.ts"), knexfileContent);
+    // Generate src/migrate.ts (Kysely migration runner)
+    const migrateContent = await this.renderTemplate("src/migrate.ts.hbs", context);
+    await fs.writeFile(path.join(outputDir, "src", "migrate.ts"), migrateContent);
 
     // Generate/update environment files
     const envContent = await this.renderTemplate(".env.example.hbs", context);

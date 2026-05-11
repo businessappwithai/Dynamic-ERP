@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from '../../database/service';
+import { v4 as uuidv4 } from 'uuid';
+import { DatabaseService } from '../../database/database.service';
 
 @Injectable()
 export class SysAccessService {
@@ -9,19 +10,24 @@ export class SysAccessService {
     const { page = 1, limit = 100, roleId, tableId } = options;
     const offset = (page - 1) * limit;
 
-    let query = this.db.knex('sys_access').where('is_active', true);
-
-    if (roleId) {
-      query = query.where('sys_role_id', roleId);
-    }
-
-    if (tableId) {
-      query = query.where('sys_table_id', tableId);
-    }
-
     const [data, countResult] = await Promise.all([
-      query.clone().orderBy('sys_role_id').limit(limit).offset(offset),
-      query.clone().count('* as count').first(),
+      this.db.kysely
+        .selectFrom('sys_access')
+        .selectAll()
+        .where('is_active', '=', true)
+        .$if(!!roleId, (qb) => qb.where('sys_role_id', '=', roleId!))
+        .$if(!!tableId, (qb) => qb.where('sys_table_id', '=', tableId!))
+        .orderBy('sys_role_id', 'asc')
+        .limit(limit)
+        .offset(offset)
+        .execute(),
+      this.db.kysely
+        .selectFrom('sys_access')
+        .select((eb) => eb.fn.countAll().as('count'))
+        .where('is_active', '=', true)
+        .$if(!!roleId, (qb) => qb.where('sys_role_id', '=', roleId!))
+        .$if(!!tableId, (qb) => qb.where('sys_table_id', '=', tableId!))
+        .executeTakeFirst(),
     ]);
 
     return {
@@ -30,13 +36,17 @@ export class SysAccessService {
         total: Number(countResult?.count || 0),
         page,
         pageSize: limit,
-        totalPages: Math.ceil((countResult?.count || 0) / limit),
+        totalPages: Math.ceil(Number(countResult?.count || 0) / limit),
       },
     };
   }
 
   async findById(id: string) {
-    const access = await this.db.knex('sys_access').where('sys_access_id', id).first();
+    const access = await this.db.kysely
+      .selectFrom('sys_access')
+      .selectAll()
+      .where('sys_access_id', '=', id)
+      .executeTakeFirst();
     if (!access) {
       throw new NotFoundException(`SysAccess with ID ${id} not found`);
     }
@@ -45,7 +55,7 @@ export class SysAccessService {
 
   async create(data: any) {
     const now = new Date();
-    const id = this.db.knex.raw('UUID()');
+    const id = uuidv4();
 
     const newRecord = {
       sys_access_id: id,
@@ -61,22 +71,27 @@ export class SysAccessService {
       updated_by: '',
     };
 
-    await this.db.knex('sys_access').insert(newRecord);
-    return this.findById((newRecord.sys_access_id as any).toString());
+    await this.db.kysely.insertInto('sys_access').values(newRecord).execute();
+    return this.findById(id);
   }
 
   async update(id: string, data: any) {
     const updated = { ...data, updated_at: new Date(), updated_by: '' };
-    await this.db.knex('sys_access').where('sys_access_id', id).update(updated);
+    await this.db.kysely
+      .updateTable('sys_access')
+      .set(updated)
+      .where('sys_access_id', '=', id)
+      .execute();
     return this.findById(id);
   }
 
   async delete(id: string) {
     await this.findById(id);
-    await this.db.knex('sys_access').where('sys_access_id', id).update({
-      is_active: false,
-      deleted_at: new Date(),
-    });
+    await this.db.kysely
+      .updateTable('sys_access')
+      .set({ is_active: false, deleted_at: new Date() })
+      .where('sys_access_id', '=', id)
+      .execute();
     return { deleted: true };
   }
 }

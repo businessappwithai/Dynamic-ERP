@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from '../../database/service';
+import { v4 as uuidv4 } from 'uuid';
+import { DatabaseService } from '../../database/database.service';
 
 @Injectable()
 export class SysWindowService {
@@ -10,8 +11,19 @@ export class SysWindowService {
     const offset = (page - 1) * limit;
 
     const [data, countResult] = await Promise.all([
-      this.db.knex('sys_window').where('is_active', true).orderBy('name').limit(limit).offset(offset),
-      this.db.knex('sys_window').where('is_active', true).count('* as count').first(),
+      this.db.kysely
+        .selectFrom('sys_window')
+        .selectAll()
+        .where('is_active', '=', true)
+        .orderBy('name', 'asc')
+        .limit(limit)
+        .offset(offset)
+        .execute(),
+      this.db.kysely
+        .selectFrom('sys_window')
+        .select((eb) => eb.fn.countAll().as('count'))
+        .where('is_active', '=', true)
+        .executeTakeFirst(),
     ]);
 
     return {
@@ -20,13 +32,17 @@ export class SysWindowService {
         total: Number(countResult?.count || 0),
         page,
         pageSize: limit,
-        totalPages: Math.ceil((countResult?.count || 0) / limit),
+        totalPages: Math.ceil(Number(countResult?.count || 0) / limit),
       },
     };
   }
 
   async findById(id: string) {
-    const window = await this.db.knex('sys_window').where('sys_window_id', id).first();
+    const window = await this.db.kysely
+      .selectFrom('sys_window')
+      .selectAll()
+      .where('sys_window_id', '=', id)
+      .executeTakeFirst();
     if (!window) {
       throw new NotFoundException(`SysWindow with ID ${id} not found`);
     }
@@ -35,7 +51,7 @@ export class SysWindowService {
 
   async create(data: any) {
     const now = new Date();
-    const id = this.db.knex.raw('UUID()');
+    const id = uuidv4();
 
     const newRecord = {
       sys_window_id: id,
@@ -51,29 +67,37 @@ export class SysWindowService {
       updated_by: '',
     };
 
-    await this.db.knex('sys_window').insert(newRecord);
-    return this.findById((newRecord.sys_window_id as any).toString());
+    await this.db.kysely.insertInto('sys_window').values(newRecord).execute();
+    return this.findById(id);
   }
 
   async update(id: string, data: any) {
     const updated = { ...data, updated_at: new Date(), updated_by: '' };
-    await this.db.knex('sys_window').where('sys_window_id', id).update(updated);
+    await this.db.kysely
+      .updateTable('sys_window')
+      .set(updated)
+      .where('sys_window_id', '=', id)
+      .execute();
     return this.findById(id);
   }
 
   async delete(id: string) {
     await this.findById(id);
-    await this.db.knex('sys_window').where('sys_window_id', id).update({
-      is_active: false,
-      deleted_at: new Date(),
-    });
+    await this.db.kysely
+      .updateTable('sys_window')
+      .set({ is_active: false, deleted_at: new Date() })
+      .where('sys_window_id', '=', id)
+      .execute();
     return { deleted: true };
   }
 
   async getTabs(windowId: string) {
-    return this.db.knex('sys_tab')
-      .where('sys_window_id', windowId)
-      .where('is_active', true)
-      .orderBy('seq_no');
+    return this.db.kysely
+      .selectFrom('sys_tab')
+      .selectAll()
+      .where('sys_window_id', '=', windowId)
+      .where('is_active', '=', true)
+      .orderBy('seq_no', 'asc')
+      .execute();
   }
 }

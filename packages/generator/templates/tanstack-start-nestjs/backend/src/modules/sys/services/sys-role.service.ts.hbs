@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from '../../database/service';
+import { v4 as uuidv4 } from 'uuid';
+import { DatabaseService } from '../../database/database.service';
 
 @Injectable()
 export class SysRoleService {
@@ -10,8 +11,19 @@ export class SysRoleService {
     const offset = (page - 1) * limit;
 
     const [data, countResult] = await Promise.all([
-      this.db.knex('sys_role').where('is_active', true).orderBy('name').limit(limit).offset(offset),
-      this.db.knex('sys_role').where('is_active', true).count('* as count').first(),
+      this.db.kysely
+        .selectFrom('sys_role')
+        .selectAll()
+        .where('is_active', '=', true)
+        .orderBy('name', 'asc')
+        .limit(limit)
+        .offset(offset)
+        .execute(),
+      this.db.kysely
+        .selectFrom('sys_role')
+        .select((eb) => eb.fn.countAll().as('count'))
+        .where('is_active', '=', true)
+        .executeTakeFirst(),
     ]);
 
     return {
@@ -20,13 +32,17 @@ export class SysRoleService {
         total: Number(countResult?.count || 0),
         page,
         pageSize: limit,
-        totalPages: Math.ceil((countResult?.count || 0) / limit),
+        totalPages: Math.ceil(Number(countResult?.count || 0) / limit),
       },
     };
   }
 
   async findById(id: string) {
-    const role = await this.db.knex('sys_role').where('sys_role_id', id).first();
+    const role = await this.db.kysely
+      .selectFrom('sys_role')
+      .selectAll()
+      .where('sys_role_id', '=', id)
+      .executeTakeFirst();
     if (!role) {
       throw new NotFoundException(`SysRole with ID ${id} not found`);
     }
@@ -35,7 +51,7 @@ export class SysRoleService {
 
   async create(data: any) {
     const now = new Date();
-    const id = this.db.knex.raw('UUID()');
+    const id = uuidv4();
 
     const newRecord = {
       sys_role_id: id,
@@ -52,22 +68,27 @@ export class SysRoleService {
       updated_by: '',
     };
 
-    await this.db.knex('sys_role').insert(newRecord);
-    return this.findById((newRecord.sys_role_id as any).toString());
+    await this.db.kysely.insertInto('sys_role').values(newRecord).execute();
+    return this.findById(id);
   }
 
   async update(id: string, data: any) {
     const updated = { ...data, updated_at: new Date(), updated_by: '' };
-    await this.db.knex('sys_role').where('sys_role_id', id).update(updated);
+    await this.db.kysely
+      .updateTable('sys_role')
+      .set(updated)
+      .where('sys_role_id', '=', id)
+      .execute();
     return this.findById(id);
   }
 
   async delete(id: string) {
     await this.findById(id);
-    await this.db.knex('sys_role').where('sys_role_id', id).update({
-      is_active: false,
-      deleted_at: new Date(),
-    });
+    await this.db.kysely
+      .updateTable('sys_role')
+      .set({ is_active: false, deleted_at: new Date() })
+      .where('sys_role_id', '=', id)
+      .execute();
     return { deleted: true };
   }
 }

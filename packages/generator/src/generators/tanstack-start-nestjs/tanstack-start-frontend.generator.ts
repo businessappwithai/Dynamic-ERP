@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- template context objects are dynamically shaped */
 /**
- * Option 1: TanStack Start + Shadcn UI Frontend Generator
+ * TanStack Start + Shadcn UI Frontend Generator
  *
  * Two-phase generation process:
  * 1. Scaffold using TanStack Start CLI (bun create tanstack-start)
@@ -96,16 +96,33 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
       // Run: bun create tanstack-start@latest [projectName]
       // This creates the base TanStack Start scaffolding
       console.log(`  Creating TanStack Start project: ${projectName}`);
-      await CliExecutor.executeAsync("bun", [
-        "create",
-        "tanstack-start@latest",
-        projectName,
-        "--yes",
-      ], {
-        cwd: parentDir,
-        stdio: "inherit",
-        timeout: 600000, // 10 minutes for TanStack setup
-      });
+      try {
+        // Try with --yes flag first (works with npm/pnpm)
+        await CliExecutor.executeAsync("bun", [
+          "create",
+          "tanstack-start@latest",
+          projectName,
+          "--yes",
+        ], {
+          cwd: parentDir,
+          stdio: "inherit",
+          timeout: 600000,
+        });
+      } catch {
+        // If --yes fails, try without it (some bun versions don't support --yes)
+        console.log(`  Retrying scaffolding without --yes flag...`);
+        await CliExecutor.executeAsync("bun", [
+          "create",
+          "tanstack-start@latest",
+          projectName,
+        ], {
+          cwd: parentDir,
+          stdio: "inherit",
+          timeout: 600000,
+          // Provide empty stdin to accept defaults
+          env: { ...process.env, BUN_CREATE_NONINTERACTIVE: "1" },
+        });
+      }
 
       console.log(`  ✅ TanStack Start scaffolding complete`);
     } catch (error) {
@@ -120,11 +137,9 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
    */
   private async createAdditionalDirectories(outputDir: string): Promise<void> {
     const dirs = [
-      "src/app",
-      "src/app/(entities)",
-      "src/app/admin",
-      "src/app/auth/login",
-      "src/app/auth/signup",
+      "src/routes",
+      "src/routes/admin",
+      "src/routes/auth",
       "src/components/ui",
       "src/components/admin",
       "src/components/forms",
@@ -210,21 +225,30 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
   private async generateCoreFiles(outputDir: string, context: any): Promise<void> {
     const templateDir = path.join(__dirname, "../../../templates/tanstack-start-nestjs/frontend");
 
-    // Root layout
-    const layoutContent = await this.renderTemplate("src/app/layout.tsx.hbs", context);
-    await fs.writeFile(path.join(outputDir, "src/app/layout.tsx"), layoutContent);
+    // Entry files (client.tsx, ssr.tsx, router.tsx) - always generated to fix missing scaffolding
+    const clientEntryContent = await this.renderTemplate("src/client.tsx.hbs", context);
+    await fs.writeFile(path.join(outputDir, "src/client.tsx"), clientEntryContent);
 
-    // Root page (redirects to dashboard)
-    const homePageContent = await this.renderTemplate("src/app/page.tsx.hbs", context);
-    await fs.writeFile(path.join(outputDir, "src/app/page.tsx"), homePageContent);
+    const ssrEntryContent = await this.renderTemplate("src/ssr.tsx.hbs", context);
+    await fs.writeFile(path.join(outputDir, "src/ssr.tsx"), ssrEntryContent);
 
-    // Dashboard page
-    await fs.mkdir(path.join(outputDir, "src/app/dashboard"), { recursive: true });
+    const routerContent = await this.renderTemplate("src/router.tsx.hbs", context);
+    await fs.writeFile(path.join(outputDir, "src/router.tsx"), routerContent);
+
+    // Root layout (__root.tsx)
+    const layoutContent = await this.renderTemplate("src/routes/__root.tsx.hbs", context);
+    await fs.writeFile(path.join(outputDir, "src/routes/__root.tsx"), layoutContent);
+
+    // Index page (redirects to dashboard)
+    const homePageContent = await this.renderTemplate("src/routes/index.tsx.hbs", context);
+    await fs.writeFile(path.join(outputDir, "src/routes/index.tsx"), homePageContent);
+
+    // Dashboard page (flat route file)
     const dashboardPageContent = await this.renderTemplate(
-      "src/app/dashboard/page.tsx.hbs",
+      "src/routes/dashboard.tsx.hbs",
       context
     );
-    await fs.writeFile(path.join(outputDir, "src/app/dashboard/page.tsx"), dashboardPageContent);
+    await fs.writeFile(path.join(outputDir, "src/routes/dashboard.tsx"), dashboardPageContent);
 
     // Providers index (rendered template)
     const providersContent = await this.renderTemplate("src/providers/index.tsx.hbs", context);
@@ -259,25 +283,25 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
     // Auth pages (login and signup)
     try {
       const loginPageContent = await this.renderTemplate(
-        "src/app/auth/login/page.tsx.hbs",
+        "src/routes/auth/login.tsx.hbs",
         context
       );
-      await fs.writeFile(path.join(outputDir, "src/app/auth/login/page.tsx"), loginPageContent);
+      await fs.writeFile(path.join(outputDir, "src/routes/auth/login.tsx"), loginPageContent);
     } catch (e) {
       console.warn("Login page template not found");
     }
 
     try {
       const signupPageContent = await this.renderTemplate(
-        "src/app/auth/signup/page.tsx.hbs",
+        "src/routes/auth/signup.tsx.hbs",
         context
       );
-      await fs.writeFile(path.join(outputDir, "src/app/auth/signup/page.tsx"), signupPageContent);
+      await fs.writeFile(path.join(outputDir, "src/routes/auth/signup.tsx"), signupPageContent);
     } catch (e) {
       console.warn("Signup page template not found");
     }
 
-    // Better-auth client lib (static file)
+    // Auth lib file (static)
     try {
       await fs.copyFile(
         path.join(templateDir, "src/lib/auth.ts"),
@@ -286,26 +310,14 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
     } catch (e) {
       console.warn("Auth lib file not found");
     }
-
-    // Next.js middleware for authentication (static file)
-    try {
-      await fs.copyFile(
-        path.join(templateDir, "src/middleware.ts"),
-        path.join(outputDir, "src/middleware.ts")
-      );
-    } catch (e) {
-      console.warn("Middleware file not found");
-    }
   }
 
   private async generateApiLayer(outputDir: string, context: any): Promise<void> {
     const templateDir = path.join(__dirname, "../../../templates/tanstack-start-nestjs/frontend");
 
-    // API client (static file, copy directly)
-    await fs.copyFile(
-      path.join(templateDir, "src/lib/api-client.ts"),
-      path.join(outputDir, "src/lib/api-client.ts")
-    );
+    // API client (rendered template)
+    const apiClientContent = await this.renderTemplate("src/lib/api-client.ts.hbs", context);
+    await fs.writeFile(path.join(outputDir, "src/lib/api-client.ts"), apiClientContent);
 
     // i18n translation utilities (static files, copy directly)
     const i18nFiles = [
@@ -460,56 +472,82 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
   private async generateEntityPages(outputDir: string, context: any): Promise<void> {
     for (const entity of context.entities) {
       const entityContext = { ...context, entity };
-      const entityDir = path.join(outputDir, `src/app/(entities)/${entity.tableName}`);
-
+      const entityDir = path.join(outputDir, `src/routes/$entity`);
+      // Create the directory for this entity's routes
       await fs.mkdir(entityDir, { recursive: true });
-      await fs.mkdir(path.join(entityDir, "[id]"), { recursive: true });
 
-      // List page
+      // List page - renders to src/routes/$entity/index.tsx per entity
+      const listPageFilename = `${entity.tableName}.tsx`;
       const listPageContent = await this.renderTemplate(
-        "src/app/(entities)/[entity]/page.tsx.hbs",
+        "src/routes/$entity/index.tsx.hbs",
         entityContext
       );
-      await fs.writeFile(path.join(entityDir, "page.tsx"), listPageContent);
+      await fs.writeFile(path.join(outputDir, "src/routes", listPageFilename), listPageContent);
 
-      // Detail page
+      // Detail page - renders to src/routes/$entity.$id.tsx per entity
+      const detailPageFilename = `${entity.tableName}.$id.tsx`;
       const detailPageContent = await this.renderTemplate(
-        "src/app/(entities)/[entity]/[id]/page.tsx.hbs",
+        "src/routes/$entity/$id.tsx.hbs",
         entityContext
       );
-      await fs.writeFile(path.join(entityDir, "[id]/page.tsx"), detailPageContent);
+      await fs.writeFile(path.join(outputDir, "src/routes", detailPageFilename), detailPageContent);
     }
   }
 
   private async generateAdminPages(outputDir: string, context: any): Promise<void> {
-    const adminDir = path.join(outputDir, "src/app/admin");
-    await fs.mkdir(path.join(adminDir, "fields"), { recursive: true });
-    await fs.mkdir(path.join(adminDir, "rules"), { recursive: true });
-    await fs.mkdir(path.join(adminDir, "workflows"), { recursive: true });
+    const adminDir = path.join(outputDir, "src/routes/admin");
+    await fs.mkdir(adminDir, { recursive: true });
 
-    // Admin dashboard
-    const dashboardContent = await this.renderTemplate("src/app/admin/page.tsx.hbs", context);
-    await fs.writeFile(path.join(adminDir, "page.tsx"), dashboardContent);
+    // Admin dashboard - renders as /admin via admin/index.tsx
+    const dashboardContent = await this.renderTemplate("src/routes/admin/index.tsx.hbs", context);
+    await fs.writeFile(path.join(adminDir, "index.tsx"), dashboardContent);
 
-    // Field layout management
-    const fieldsContent = await this.renderTemplate("src/app/admin/fields/page.tsx.hbs", context);
-    await fs.writeFile(path.join(adminDir, "fields/page.tsx"), fieldsContent);
+    // Field layout management - renders as /admin/fields via admin/fields.tsx
+    const fieldsContent = await this.renderTemplate("src/routes/admin/fields.tsx.hbs", context);
+    await fs.writeFile(path.join(adminDir, "fields.tsx"), fieldsContent);
 
-    // Business rules management
+    // Reference types - renders as /admin/references via admin/references.tsx
     try {
-      const rulesContent = await this.renderTemplate("src/app/admin/rules/page.tsx.hbs", context);
-      await fs.writeFile(path.join(adminDir, "rules/page.tsx"), rulesContent);
+      const referencesContent = await this.renderTemplate("src/routes/admin/references.tsx.hbs", context);
+      await fs.writeFile(path.join(adminDir, "references.tsx"), referencesContent);
+    } catch (e) {
+      console.warn("Admin references page template not found");
+    }
+
+    // Table browser - renders as /admin/tables via admin/tables.tsx
+    try {
+      const tablesContent = await this.renderTemplate("src/routes/admin/tables.tsx.hbs", context);
+      await fs.writeFile(path.join(adminDir, "tables.tsx"), tablesContent);
+    } catch (e) {
+      console.warn("Admin tables page template not found");
+    }
+
+    // Table detail - renders as /admin/tables/$tableName via admin/tables.$tableName.tsx
+    try {
+      const tableDetailContent = await this.renderTemplate(
+        "src/routes/admin/tables.$tableName.tsx.hbs",
+        context
+      );
+      await fs.writeFile(path.join(adminDir, "tables.$tableName.tsx"), tableDetailContent);
+    } catch (e) {
+      console.warn("Admin table detail template not found");
+    }
+
+    // Business rules management - renders as /admin/rules via admin/rules.tsx
+    try {
+      const rulesContent = await this.renderTemplate("src/routes/admin/rules.tsx.hbs", context);
+      await fs.writeFile(path.join(adminDir, "rules.tsx"), rulesContent);
     } catch (e) {
       console.warn("Admin rules page template not found");
     }
 
-    // Workflow monitoring
+    // Workflow monitoring - renders as /admin/workflows via admin/workflows.tsx
     try {
       const workflowsContent = await this.renderTemplate(
-        "src/app/admin/workflows/page.tsx.hbs",
+        "src/routes/admin/workflows.tsx.hbs",
         context
       );
-      await fs.writeFile(path.join(adminDir, "workflows/page.tsx"), workflowsContent);
+      await fs.writeFile(path.join(adminDir, "workflows.tsx"), workflowsContent);
     } catch (e) {
       console.warn("Admin workflows page template not found");
     }
@@ -530,10 +568,10 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
 
     // Update/generate TanStack Start config if template exists
     try {
-      const tanStackConfigContent = await this.renderTemplate("vite.config.ts.hbs", context);
-      await fs.writeFile(path.join(outputDir, "vite.config.ts"), tanStackConfigContent);
+      const tanStackConfigContent = await this.renderTemplate("app.config.ts.hbs", context);
+      await fs.writeFile(path.join(outputDir, "app.config.ts"), tanStackConfigContent);
     } catch (e) {
-      console.warn("Custom vite config template not found, keeping TanStack Start default");
+      console.warn("Custom app.config.ts template not found, keeping TanStack Start default");
     }
 
     // Update tailwind.config.js

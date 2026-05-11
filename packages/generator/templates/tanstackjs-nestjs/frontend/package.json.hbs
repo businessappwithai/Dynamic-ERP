@@ -16,8 +16,8 @@
     "test:cov": "vitest run --coverage"
   },
   "dependencies": {
-    "@tanstack/start": "^1.120.20",
-    "@tanstack/react-router": "^1.120.20",
+    "@tanstack/start": "1.97.1",
+    "@tanstack/react-router": "1.97.1",
     "@tanstack/react-query": "^5.62.0",
     "@tanstack/react-table": "^8.20.0",
     "@tanstack/react-form": "^0.36.0",
@@ -51,9 +51,10 @@
     "@types/node": "^20.17.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
+    "vinxi": "0.5.1",
     "@tanstack/react-query-devtools": "^5.62.0",
-    "@tanstack/router-devtools": "^1.120.20",
-    "@tanstack/router-plugin": "^1.120.20",
+    "@tanstack/router-devtools": "1.97.1",
+    "@tanstack/router-plugin": "1.97.1",
     "@vitejs/plugin-react": "^4.3.0",
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.0",
@@ -70,6 +71,15 @@
     "jsdom": "^25.0.0",
     "@playwright/test": "^1.47.0",
     "playwright": "^1.47.0"
+  },
+  "overrides": {
+    "@tanstack/router-generator": "1.97.1",
+    "@tanstack/router-plugin": "1.97.1",
+    "@tanstack/start-plugin": "1.97.19",
+    "@tanstack/server-functions-plugin": "1.97.19",
+    "@tanstack/react-cross-context": "1.97.18",
+    "@tanstack/directive-functions-plugin": "1.97.19",
+    "@tanstack/virtual-file-routes": "1.97.8"
   },
   "engines": {
     "node": ">=18.0.0",

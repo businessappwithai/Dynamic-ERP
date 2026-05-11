@@ -76,7 +76,7 @@ export class FullStackGenerator {
 
     // Generate based on stack option
     if (this.options.stackOption === "tanstackjs-nestjs") {
-      await this.generateNextjsNestjs(entities, relationships, outputDir);
+      await this.generateTanStackStartNestjs(entities, relationships, outputDir);
     } else {
       await this.generateOpenui5Odatav4(entities, relationships, outputDir);
     }
@@ -102,7 +102,7 @@ export class FullStackGenerator {
   /**
    * Generate tanstackjs-nestjs: TanStack Start + NestJS
    */
-  private async generateNextjsNestjs(
+  private async generateTanStackStartNestjs(
     entities: Entity[],
     relationships: Relationship[],
     outputDir: string
@@ -145,7 +145,7 @@ export class FullStackGenerator {
     const backendGenerator = new NestJsBackendGenerator(backendOptions);
     await backendGenerator.generate(entities, relationships, backendDir);
 
-    console.log("📦 Generating Next.js frontend...");
+    console.log("📦 Generating TanStack Start frontend...");
     const frontendGenerator = new TanStackStartFrontendGenerator(frontendOptions);
     await frontendGenerator.generate(entities, relationships, frontendDir);
   }
@@ -223,6 +223,15 @@ export class FullStackGenerator {
       },
       devDependencies: {
         concurrently: "^8.2.0",
+      },
+      overrides: {
+        "@tanstack/router-generator": "1.97.1",
+        "@tanstack/router-plugin": "1.97.1",
+        "@tanstack/start-plugin": "1.97.19",
+        "@tanstack/server-functions-plugin": "1.97.19",
+        "@tanstack/react-cross-context": "1.97.18",
+        "@tanstack/directive-functions-plugin": "1.97.19",
+        "@tanstack/virtual-file-routes": "1.97.8",
       },
     };
 
@@ -350,7 +359,7 @@ ${this.options.projectName}/
 │   ├── migrations/    # Database migrations
 │   └── seeds/         # Seed data
 ├── frontend/          # ${this.options.stackOption === "tanstackjs-nestjs" ? "TanStack Start App" : "OpenUI5 App"}
-│   ├── ${this.options.stackOption === "tanstackjs-nestjs" ? "src/app/" : "webapp/"}
+│   ├── ${this.options.stackOption === "tanstackjs-nestjs" || this.options.stackOption === "tanstack-start-nestjs" ? "src/routes/" : "webapp/"}
 │   └── ...
 └── package.json       # Root workspace config
 \`\`\`
@@ -403,7 +412,7 @@ MIT
           );
         }
 
-        console.log("\n  📋 Linting Next.js frontend...");
+        console.log("\n  📋 Linting TanStack Start frontend...");
         const frontendLintPassed = runLint(
           "npm",
           ["run", "lint"],
