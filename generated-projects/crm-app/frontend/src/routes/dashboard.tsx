@@ -6,8 +6,8 @@
  * - Technical precision with JetBrains Mono metrics
  * - Clean borders and refined spacing
  *
- * Generated: 2026-05-09T16:10:52.351Z
- * Project: my-app
+ * Generated: 2026-05-11T18:40:00.659Z
+ * Project: CRM Application
  */
 
 import { useState } from 'react';
@@ -217,7 +217,7 @@ function DashboardPage() {
                 <Activity className="w-4 h-4 text-primary-foreground" />
               </div>
               <h1 className="text-xl font-semibold text-foreground">
-                my-app
+                CRM Application
               </h1>
             </div>
             <div className="flex items-center gap-4">
@@ -314,7 +314,7 @@ function DashboardPage() {
                 {totalEntities} registered {totalEntities === 1 ? 'entity' : 'entities'}
               </h3>
               <p className="text-xs text-muted-foreground">
-                Generated: 2026-05-09T16:10:52.351Z
+                Generated: 2026-05-11T18:40:00.659Z
               </p>
             </div>
             <Link to="/admin">

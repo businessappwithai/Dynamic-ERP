@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * Master Detail Tabs Component - Swiss Clean Design
  *

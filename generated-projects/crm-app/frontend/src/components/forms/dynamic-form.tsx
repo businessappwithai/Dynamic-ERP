@@ -642,7 +642,8 @@ export function DynamicForm({
   };
 
   return (
-    <form role="form" onSubmit={handleFormSubmit} className="space-y-6">
+    <form.Provider>
+      <form role="form" onSubmit={handleFormSubmit} className="space-y-6">
         {/* Submit button - top (hide in view mode) */}
         {!readOnly && onSubmit && (
           <div className="flex justify-end gap-4">
@@ -736,5 +737,6 @@ export function DynamicForm({
           </div>
         )}
       </form>
+    </form.Provider>
   );
 }

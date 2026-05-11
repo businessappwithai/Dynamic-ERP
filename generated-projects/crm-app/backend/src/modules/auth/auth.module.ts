@@ -8,7 +8,7 @@
  * - SessionAuthGuard: validates session cookies against better-auth
  * - RolesGuard: checks user roles for authorization
  *
- * Generated: 2026-05-09T16:10:52.290Z
+ * Generated: 2026-05-11T18:39:58.945Z
  */
 
 import { Module } from '@nestjs/common';

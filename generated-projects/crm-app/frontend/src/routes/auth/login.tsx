@@ -3,8 +3,8 @@
  *
  * User authentication with email and password
  *
- * Generated: 2026-05-09T16:10:52.353Z
- * Project: my-app
+ * Generated: 2026-05-11T18:40:00.660Z
+ * Project: CRM Application
  */
 
 import { useState } from 'react';
@@ -80,7 +80,7 @@ function LoginPage() {
             <Shield className="w-10 h-10" />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Welcome Back</h1>
-          <p className="text-muted-foreground">Sign in to access my-app</p>
+          <p className="text-muted-foreground">Sign in to access CRM Application</p>
         </div>
 
         {/* Login Form Card */}

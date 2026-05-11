@@ -1,8 +1,8 @@
 /**
  * Unit tests for syncEntityTask (Trigger.dev v3)
  *
- * Generated: 2026-05-09T16:10:52.348Z
- * Project: my-app
+ * Generated: 2026-05-11T18:39:59.000Z
+ * Project: CRM Application
  */
 
 import { describe, it, expect, vi } from 'vitest';

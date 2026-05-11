@@ -4,8 +4,8 @@
  * Allows administrators to customize field ordering and visibility
  * for forms and tables. Changes are persisted to sys_field.seq_no.
  *
- * Generated: 2026-05-09T16:10:52.367Z
- * Project: my-app
+ * Generated: 2026-05-11T18:40:00.677Z
+ * Project: CRM Application
  */
 
 import { Suspense } from 'react';

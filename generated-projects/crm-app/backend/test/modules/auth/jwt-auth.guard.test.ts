@@ -1,8 +1,8 @@
 /**
  * Unit tests for JwtAuthGuard (BetterAuth session validation)
  *
- * Generated: 2026-05-09T16:10:52.347Z
- * Project: my-app
+ * Generated: 2026-05-11T18:39:58.999Z
+ * Project: CRM Application
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';

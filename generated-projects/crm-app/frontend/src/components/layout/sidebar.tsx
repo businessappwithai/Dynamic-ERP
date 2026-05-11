@@ -1,11 +1,13 @@
+'use client';
+
 /**
  * Sidebar Navigation Component
  *
- * Generated: 2026-05-09T16:10:52.357Z
+ * Generated: 2026-05-11T18:40:00.666Z
  */
 
 import { useState } from 'react';
-import { Link, useRouterState } from '@tanstack/react-router';
+import { Link, useNavigate, useLocation } from '@tanstack/react-router';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -44,7 +46,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   {
     title: 'Dashboard',
-    href: '/dashboard',
+    href: '/',
     icon: LayoutDashboard,
     description: 'Overview and statistics',
   },
@@ -113,7 +115,7 @@ const navItems: NavItem[] = [
 const adminItems: NavItem[] = [
   {
     title: 'Dictionary',
-    href: '/admin',
+    href: '/admin/dictionary',
     icon: Database,
     description: 'Application Dictionary',
     requireAdmin: true,
@@ -139,8 +141,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ className }: SidebarProps) {
-  const routerState = useRouterState();
-  const pathname = routerState.location.pathname;
+  const location = useLocation();
+  const navigate = useNavigate();
   const { isAdmin: checkIsAdmin } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -162,7 +164,7 @@ export function Sidebar({ className }: SidebarProps) {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
               <Database className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-semibold">my-app</span>
+            <span className="font-semibold">CRM Application</span>
           </div>
         )}
         <Button
@@ -192,7 +194,7 @@ export function Sidebar({ className }: SidebarProps) {
           )}
           <div className="space-y-1">
             {navItems.map((item) => (
-              <NavItemComponent key={item.href} item={item} isActive={pathname === item.href} isCollapsed={isCollapsed} />
+              <NavItem key={item.href} item={item} isActive={pathname === item.href} isCollapsed={isCollapsed} />
             ))}
           </div>
 
@@ -208,7 +210,7 @@ export function Sidebar({ className }: SidebarProps) {
               )}
               <div className="space-y-1">
                 {adminItems.map((item) => (
-                  <NavItemComponent key={item.href} item={item} isActive={pathname === item.href} isCollapsed={isCollapsed} />
+              <NavItem key={item.href} item={item} isActive={location.pathname === item.href} isCollapsed={isCollapsed} />
                 ))}
               </div>
             </>
@@ -219,37 +221,41 @@ export function Sidebar({ className }: SidebarProps) {
   );
 }
 
-interface NavItemComponentProps {
+interface NavItemProps {
   item: NavItem;
   isActive: boolean;
   isCollapsed: boolean;
 }
 
-function NavItemComponent({ item, isActive, isCollapsed }: NavItemComponentProps) {
+function NavItem({ item, isActive, isCollapsed }: NavItemProps) {
+  const navigate = useNavigate();
   const Icon = item.icon;
 
+  const handleClick = () => {
+    navigate({ to: item.href });
+  };
+
   return (
-    <Link to={item.href}>
-      <Button
-        variant={isActive ? 'secondary' : 'ghost'}
-        className={cn(
-          'w-full justify-start gap-2',
-          isCollapsed && 'justify-center px-2'
-        )}
-      >
-        <Icon className={cn('h-4 w-4', !isCollapsed && 'mr-2')} />
-        {!isCollapsed && (
-          <>
-            <span className="flex-1 text-left">{item.title}</span>
-            {item.badge && (
-              <span className="ml-auto text-xs bg-primary text-primary-foreground px-1.5 py-0.5 rounded">
-                {item.badge}
-              </span>
-            )}
-          </>
-        )}
-        {isCollapsed && item.title.charAt(0)}
-      </Button>
-    </Link>
+    <Button
+      variant={isActive ? 'secondary' : 'ghost'}
+      className={cn(
+        'w-full justify-start gap-2',
+        isCollapsed && 'justify-center px-2'
+      )}
+      onClick={handleClick}
+    >
+      <Icon className={cn('h-4 w-4', !isCollapsed && 'mr-2')} />
+      {!isCollapsed && (
+        <>
+          <span className="flex-1 text-left">{item.title}</span>
+          {item.badge && (
+            <span className="ml-auto text-xs bg-primary text-primary-foreground px-1.5 py-0.5 rounded">
+              {item.badge}
+            </span>
+          )}
+        </>
+      )}
+      {isCollapsed && item.title.charAt(0)}
+    </Button>
   );
 }

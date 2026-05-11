@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * Header Component
  *
@@ -31,7 +29,7 @@ export function Header({ className }: HeaderProps) {
 
   const handleLogout = () => {
     logout();
-    navigate({ to: "/auth/login" });
+    navigate({ to: "/login" });
   };
 
   const getInitials = (name: string) => {

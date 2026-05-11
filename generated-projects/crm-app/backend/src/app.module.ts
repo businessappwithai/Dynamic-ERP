@@ -1,8 +1,8 @@
 /**
  * Root Application Module
  *
- * Generated: 2026-05-09T16:10:52.286Z
- * Project: my-app
+ * Generated: 2026-05-11T18:39:58.940Z
+ * Project: CRM Application
  */
 
 import { Module } from '@nestjs/common';

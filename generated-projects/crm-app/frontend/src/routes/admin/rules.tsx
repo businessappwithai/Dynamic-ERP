@@ -3,8 +3,8 @@
  *
  * Manage business rules with JDM Editor integration
  *
- * Generated: 2026-05-09T16:10:52.368Z
- * Project: my-app
+ * Generated: 2026-05-11T18:40:00.679Z
+ * Project: CRM Application
  */
 
 import { useState } from 'react';
@@ -350,7 +350,7 @@ function AdminRulesPage() {
       <footer className="border-t-2 border-black mt-16">
         <div className="max-w-7xl mx-auto px-8 py-8">
           <p className="text-sm text-gray-500">
-            my-app · Business Rules Management
+            CRM Application · Business Rules Management
           </p>
         </div>
       </footer>

@@ -21,7 +21,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate({ to: "/auth/login" });
+      navigate({ to: "/login" });
     }
   }, [isAuthenticated, isLoading, navigate]);
 

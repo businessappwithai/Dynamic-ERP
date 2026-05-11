@@ -7,8 +7,8 @@
  * - Retrying failed workflows
  * - Monitoring workflow execution
  *
- * Generated: 2026-05-09T16:10:52.301Z
- * Project: my-app
+ * Generated: 2026-05-11T18:39:58.957Z
+ * Project: CRM Application
  */
 
 import { Controller, Get, Post, Param, Query, UseGuards, Logger } from '@nestjs/common';

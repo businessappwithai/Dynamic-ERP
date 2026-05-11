@@ -1,3 +1,5 @@
+'use client';
+
 /**
  * Application Providers
  *
@@ -7,10 +9,13 @@
  * - TranslationProvider for i18n
  * - Toaster for notifications
  *
- * Generated: 2026-05-09T16:10:52.351Z
+  * Note: TanStack Router provides built-in client-side routing
+  * via @tanstack/react-router, so no custom router provider is needed.
+ *
+ * Generated: 2026-05-11T18:40:00.659Z
  */
 
-import { type ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 import { QueryProvider } from './query-provider';
 import { AuthProvider } from '@/contexts/auth-context';
 import { TranslationProvider } from '@/lib/translations';

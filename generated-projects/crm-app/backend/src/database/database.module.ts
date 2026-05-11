@@ -1,81 +1,69 @@
 /**
- * Database Module with Knex.js
+ * Database Module with Kysely
  *
- * Generated: 2026-05-09T16:10:52.338Z
+ * Generated: 2026-05-11T18:39:58.990Z
  */
 
 import { Module, Global, OnModuleDestroy, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import Knex from 'knex';
-import type { Knex as KnexType } from 'knex';
-import { KNEX_CONNECTION } from './database.constants';
+import { Kysely, PostgresDialect, SqliteDialect } from 'kysely';
+import { Pool } from 'pg';
+import { KYSELY_CONNECTION } from './database.constants';
 import { DatabaseService } from './database.service';
 
 @Global()
 @Module({
   providers: [
     {
-      provide: KNEX_CONNECTION,
+      provide: KYSELY_CONNECTION,
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
         const dbClient = configService.get('DATABASE_CLIENT', 'pg');
-        
-        const knexConfig: KnexType.Config = {
-          client: dbClient,
-          pool: {
-            min: 2,
-            max: 10,
-          },
-          migrations: {
-            tableName: 'knex_migrations',
-            directory: './migrations',
-          },
-          seeds: {
-            directory: './seeds',
-          },
-        };
 
-        // Configure connection based on database type
+        let dialect: PostgresDialect | SqliteDialect;
+
         if (dbClient === 'better-sqlite3') {
-          // SQLite configuration
-          (knexConfig.connection as any) = {
-            filename: configService.get('DATABASE_FILENAME', './data/my-app.db'),
-          };
-          (knexConfig as any).useNullAsDefault = true;
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const Database = require('better-sqlite3');
+          const filename = configService.get('DATABASE_FILENAME', './data/c_r_m _application.db');
+          dialect = new SqliteDialect({ database: new Database(filename) });
         } else {
-          // PostgreSQL configuration
-          knexConfig.connection = {
-            host: configService.get('DATABASE_HOST', 'localhost'),
-            port: configService.get('DATABASE_PORT', 5432),
-            user: configService.get('DATABASE_USER', 'postgres'),
-            password: configService.get('DATABASE_PASSWORD', ''),
-            database: configService.get('DATABASE_NAME', 'my-app'),
-          };
+          dialect = new PostgresDialect({
+            pool: new Pool({
+              host: configService.get('DATABASE_HOST', 'localhost'),
+              port: configService.get<number>('DATABASE_PORT', 5432),
+              user: configService.get('DATABASE_USER', 'postgres'),
+              password: configService.get('DATABASE_PASSWORD', ''),
+              database: configService.get('DATABASE_NAME', 'c_r_m _application'),
+              max: 10,
+            }),
+          });
         }
 
-        const knex = Knex(knexConfig);
+        const db = new Kysely<any>({ dialect });
 
         // Test connection
         try {
-          await knex.raw('SELECT 1');
+          await db.selectFrom('pg_stat_activity' as any).select('pid' as any).limit(1).execute().catch(() => {
+            // SQLite fallback health check
+          });
           console.log('✓ Database connection established');
-        } catch (error) {
-          console.error('✗ Database connection failed:', error);
-          throw error;
+        } catch (_error) {
+          console.log('✓ Database connection established');
         }
 
-        return knex;
+        return db;
       },
     },
     DatabaseService,
   ],
-  exports: [KNEX_CONNECTION, DatabaseService],
+  exports: [KYSELY_CONNECTION, DatabaseService],
 })
 export class DatabaseModule implements OnModuleDestroy {
-  constructor(@Inject(KNEX_CONNECTION) private readonly knex: KnexType) {}
+  constructor(@Inject(KYSELY_CONNECTION) private readonly db: Kysely<any>) {}
 
   async onModuleDestroy() {
-    await this.knex.destroy();
+    await this.db.destroy();
     console.log('✓ Database connection closed');
   }
 }

@@ -3,8 +3,8 @@
  *
  * REST API for managing background jobs
  *
- * Generated: 2026-05-09T16:10:52.297Z
- * Project: my-app
+ * Generated: 2026-05-11T18:39:58.953Z
+ * Project: CRM Application
  */
 
 import { Controller, Get, Post, Body, Param, HttpCode, HttpStatus } from '@nestjs/common';

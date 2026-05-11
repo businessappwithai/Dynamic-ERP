@@ -1,4 +1,4 @@
-# my-app
+# CRM Application
 
 Generated application
 
@@ -60,7 +60,7 @@ bun run build
 ## Project Structure
 
 ```
-my-app/
+CRM Application/
 ├── backend/           # NestJS API
 │   ├── src/
 │   │   ├── modules/
@@ -70,7 +70,7 @@ my-app/
 │   ├── migrations/    # Database migrations
 │   └── seeds/         # Seed data
 ├── frontend/          # TanStack Start App
-│   ├── src/app/
+│   ├── src/routes/
 │   └── ...
 └── package.json       # Root workspace config
 ```

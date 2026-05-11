@@ -2,7 +2,7 @@
  * System Dictionary Seed
  * Populates sys_ tables with metadata for business entities
  *
- * Generated: 2026-05-09T16:10:52.324Z
+ * Generated: 2026-05-11T18:39:58.976Z
  *
  * This seed creates:
  * - sys_table entries for each business entity
@@ -12,10 +12,10 @@
  * - sys_field entries with randomized seq_no for runtime modification demo
  */
 
-import type { Knex } from 'knex';
+import { Kysely } from 'kysely';
 import { v4 as uuidv4 } from 'uuid';
 
-export async function seed(knex: Knex): Promise<void> {
+export async function seed(db: Kysely<any>): Promise<void> {
   const now = new Date();
   const createdBy = '';
 
@@ -60,7 +60,7 @@ export async function seed(knex: Knex): Promise<void> {
   const adminRoleId = uuidv4();
   const userRoleId = uuidv4();
 
-  await knex('sys_role').insert([
+  await db.insertInto('sys_role').values([
     {
       sys_role_id: adminRoleId,
       name: 'Administrator',
@@ -99,14 +99,14 @@ export async function seed(knex: Knex): Promise<void> {
       created_at: now,
       updated_at: now,
     },
-  ]);
+  ]).execute();
 
   // ============================================================================
   // Create Default Admin User
   // ============================================================================
   const adminUserId = uuidv4();
 
-  await knex('sys_user').insert({
+  await db.insertInto('sys_user').values({
     sys_user_id: adminUserId,
     name: 'System Administrator',
     email: 'admin@localhost',
@@ -124,10 +124,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Assign admin role to admin user
-  await knex('sys_user_roles').insert({
+  await db.insertInto('sys_user_roles').values({
     sys_user_roles_id: uuidv4(),
     sys_user_id: adminUserId,
     sys_role_id: adminRoleId,
@@ -137,7 +137,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // ============================================================================
   // Create Default Field Groups
@@ -146,7 +146,7 @@ export async function seed(knex: Knex): Promise<void> {
   const fieldGroupDetails = uuidv4();
   const fieldGroupSystem = uuidv4();
 
-  await knex('sys_field_group').insert([
+  await db.insertInto('sys_field_group').values([
     {
       sys_field_group_id: fieldGroupGeneral,
       name: 'General',
@@ -186,7 +186,7 @@ export async function seed(knex: Knex): Promise<void> {
       created_at: now,
       updated_at: now,
     },
-  ]);
+  ]).execute();
 
   // ============================================================================
   // Business Entities Dictionary Entries
@@ -200,7 +200,7 @@ export async function seed(knex: Knex): Promise<void> {
   const companyTabId = uuidv4();
 
   // Create sys_window entry FIRST (sys_table references it)
-  await knex('sys_window').insert({
+  await db.insertInto('sys_window').values({
     sys_window_id: companyWindowId,
     name: 'Company',
     description: 'Maintain Company records',
@@ -213,10 +213,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_table entry AFTER sys_window
-  await knex('sys_table').insert({
+  await db.insertInto('sys_table').values({
     sys_table_id: companyTableId,
     table_name: 'bus_company',
     name: 'Company',
@@ -233,10 +233,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_tab entry
-  await knex('sys_tab').insert({
+  await db.insertInto('sys_tab').values({
     sys_tab_id: companyTabId,
     sys_window_id: companyWindowId,
     sys_table_id: companyTableId,
@@ -256,7 +256,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_column entries
   const companyColumns: Array<{ id: string; name: string; displayName: string }> = [];
@@ -269,7 +269,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: company_id_columnId,
     sys_table_id: companyTableId,
     column_name: 'id',
@@ -292,7 +292,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   companyColumnSeqNo += 10;
   const company_name_columnId = uuidv4();
   companyColumns.push({
@@ -301,7 +301,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Name',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: company_name_columnId,
     sys_table_id: companyTableId,
     column_name: 'name',
@@ -324,7 +324,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   companyColumnSeqNo += 10;
   const company_industry_columnId = uuidv4();
   companyColumns.push({
@@ -333,7 +333,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Industry',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: company_industry_columnId,
     sys_table_id: companyTableId,
     column_name: 'industry',
@@ -356,7 +356,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   companyColumnSeqNo += 10;
   const company_website_columnId = uuidv4();
   companyColumns.push({
@@ -365,7 +365,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Website',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: company_website_columnId,
     sys_table_id: companyTableId,
     column_name: 'website',
@@ -388,7 +388,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   companyColumnSeqNo += 10;
   const company_phone_columnId = uuidv4();
   companyColumns.push({
@@ -397,7 +397,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Phone',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: company_phone_columnId,
     sys_table_id: companyTableId,
     column_name: 'phone',
@@ -420,7 +420,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   companyColumnSeqNo += 10;
   const company_email_columnId = uuidv4();
   companyColumns.push({
@@ -429,7 +429,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Email',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: company_email_columnId,
     sys_table_id: companyTableId,
     column_name: 'email',
@@ -452,7 +452,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   companyColumnSeqNo += 10;
   const company_employeeCount_columnId = uuidv4();
   companyColumns.push({
@@ -461,7 +461,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Employee Count',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: company_employeeCount_columnId,
     sys_table_id: companyTableId,
     column_name: 'employee_count',
@@ -484,7 +484,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   companyColumnSeqNo += 10;
   const company_annualRevenue_columnId = uuidv4();
   companyColumns.push({
@@ -493,7 +493,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Annual Revenue',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: company_annualRevenue_columnId,
     sys_table_id: companyTableId,
     column_name: 'annual_revenue',
@@ -516,7 +516,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   companyColumnSeqNo += 10;
   const company_status_columnId = uuidv4();
   companyColumns.push({
@@ -525,7 +525,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Status',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: company_status_columnId,
     sys_table_id: companyTableId,
     column_name: 'status',
@@ -548,7 +548,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   companyColumnSeqNo += 10;
   const company_ownerId_columnId = uuidv4();
   companyColumns.push({
@@ -557,7 +557,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Owner Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: company_ownerId_columnId,
     sys_table_id: companyTableId,
     column_name: 'owner_id',
@@ -580,7 +580,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   companyColumnSeqNo += 10;
 
   // Create sys_field entries with RANDOMIZED seq_no
@@ -589,7 +589,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   for (let i = 0; i < companyColumns.length; i++) {
     const col = companyColumns[i];
-    await knex('sys_field').insert({
+    await db.insertInto('sys_field').values({
       sys_field_id: uuidv4(),
       sys_tab_id: companyTabId,
       sys_column_id: col.id,
@@ -610,11 +610,11 @@ export async function seed(knex: Knex): Promise<void> {
       updated_by: createdBy,
       created_at: now,
       updated_at: now,
-    });
+    }).execute();
   }
 
   // Grant access to admin role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: adminRoleId,
     sys_table_id: companyTableId,
@@ -628,10 +628,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Grant read access to user role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: userRoleId,
     sys_table_id: companyTableId,
@@ -645,7 +645,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   console.log('✓ Created dictionary entries for Company');
 
@@ -657,7 +657,7 @@ export async function seed(knex: Knex): Promise<void> {
   const contactTabId = uuidv4();
 
   // Create sys_window entry FIRST (sys_table references it)
-  await knex('sys_window').insert({
+  await db.insertInto('sys_window').values({
     sys_window_id: contactWindowId,
     name: 'Contact',
     description: 'Maintain Contact records',
@@ -670,10 +670,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_table entry AFTER sys_window
-  await knex('sys_table').insert({
+  await db.insertInto('sys_table').values({
     sys_table_id: contactTableId,
     table_name: 'bus_contact',
     name: 'Contact',
@@ -690,10 +690,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_tab entry
-  await knex('sys_tab').insert({
+  await db.insertInto('sys_tab').values({
     sys_tab_id: contactTabId,
     sys_window_id: contactWindowId,
     sys_table_id: contactTableId,
@@ -713,7 +713,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_column entries
   const contactColumns: Array<{ id: string; name: string; displayName: string }> = [];
@@ -726,7 +726,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: contact_id_columnId,
     sys_table_id: contactTableId,
     column_name: 'id',
@@ -749,7 +749,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   contactColumnSeqNo += 10;
   const contact_companyId_columnId = uuidv4();
   contactColumns.push({
@@ -758,7 +758,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Company Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: contact_companyId_columnId,
     sys_table_id: contactTableId,
     column_name: 'company_id',
@@ -781,7 +781,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   contactColumnSeqNo += 10;
   const contact_firstName_columnId = uuidv4();
   contactColumns.push({
@@ -790,7 +790,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'First Name',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: contact_firstName_columnId,
     sys_table_id: contactTableId,
     column_name: 'first_name',
@@ -813,7 +813,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   contactColumnSeqNo += 10;
   const contact_lastName_columnId = uuidv4();
   contactColumns.push({
@@ -822,7 +822,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Last Name',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: contact_lastName_columnId,
     sys_table_id: contactTableId,
     column_name: 'last_name',
@@ -845,7 +845,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   contactColumnSeqNo += 10;
   const contact_email_columnId = uuidv4();
   contactColumns.push({
@@ -854,7 +854,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Email',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: contact_email_columnId,
     sys_table_id: contactTableId,
     column_name: 'email',
@@ -877,7 +877,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   contactColumnSeqNo += 10;
   const contact_phone_columnId = uuidv4();
   contactColumns.push({
@@ -886,7 +886,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Phone',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: contact_phone_columnId,
     sys_table_id: contactTableId,
     column_name: 'phone',
@@ -909,7 +909,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   contactColumnSeqNo += 10;
   const contact_mobile_columnId = uuidv4();
   contactColumns.push({
@@ -918,7 +918,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Mobile',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: contact_mobile_columnId,
     sys_table_id: contactTableId,
     column_name: 'mobile',
@@ -941,7 +941,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   contactColumnSeqNo += 10;
   const contact_jobTitle_columnId = uuidv4();
   contactColumns.push({
@@ -950,7 +950,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Job Title',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: contact_jobTitle_columnId,
     sys_table_id: contactTableId,
     column_name: 'job_title',
@@ -973,7 +973,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   contactColumnSeqNo += 10;
   const contact_department_columnId = uuidv4();
   contactColumns.push({
@@ -982,7 +982,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Department',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: contact_department_columnId,
     sys_table_id: contactTableId,
     column_name: 'department',
@@ -1005,7 +1005,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   contactColumnSeqNo += 10;
   const contact_status_columnId = uuidv4();
   contactColumns.push({
@@ -1014,7 +1014,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Status',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: contact_status_columnId,
     sys_table_id: contactTableId,
     column_name: 'status',
@@ -1037,7 +1037,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   contactColumnSeqNo += 10;
   const contact_leadSource_columnId = uuidv4();
   contactColumns.push({
@@ -1046,7 +1046,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Lead Source',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: contact_leadSource_columnId,
     sys_table_id: contactTableId,
     column_name: 'lead_source',
@@ -1069,7 +1069,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   contactColumnSeqNo += 10;
   const contact_ownerId_columnId = uuidv4();
   contactColumns.push({
@@ -1078,7 +1078,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Owner Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: contact_ownerId_columnId,
     sys_table_id: contactTableId,
     column_name: 'owner_id',
@@ -1101,7 +1101,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   contactColumnSeqNo += 10;
 
   // Create sys_field entries with RANDOMIZED seq_no
@@ -1110,7 +1110,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   for (let i = 0; i < contactColumns.length; i++) {
     const col = contactColumns[i];
-    await knex('sys_field').insert({
+    await db.insertInto('sys_field').values({
       sys_field_id: uuidv4(),
       sys_tab_id: contactTabId,
       sys_column_id: col.id,
@@ -1131,11 +1131,11 @@ export async function seed(knex: Knex): Promise<void> {
       updated_by: createdBy,
       created_at: now,
       updated_at: now,
-    });
+    }).execute();
   }
 
   // Grant access to admin role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: adminRoleId,
     sys_table_id: contactTableId,
@@ -1149,10 +1149,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Grant read access to user role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: userRoleId,
     sys_table_id: contactTableId,
@@ -1166,7 +1166,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   console.log('✓ Created dictionary entries for Contact');
 
@@ -1178,7 +1178,7 @@ export async function seed(knex: Knex): Promise<void> {
   const dealTabId = uuidv4();
 
   // Create sys_window entry FIRST (sys_table references it)
-  await knex('sys_window').insert({
+  await db.insertInto('sys_window').values({
     sys_window_id: dealWindowId,
     name: 'Deal',
     description: 'Maintain Deal records',
@@ -1191,10 +1191,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_table entry AFTER sys_window
-  await knex('sys_table').insert({
+  await db.insertInto('sys_table').values({
     sys_table_id: dealTableId,
     table_name: 'bus_deal',
     name: 'Deal',
@@ -1211,10 +1211,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_tab entry
-  await knex('sys_tab').insert({
+  await db.insertInto('sys_tab').values({
     sys_tab_id: dealTabId,
     sys_window_id: dealWindowId,
     sys_table_id: dealTableId,
@@ -1234,7 +1234,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_column entries
   const dealColumns: Array<{ id: string; name: string; displayName: string }> = [];
@@ -1247,7 +1247,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: deal_id_columnId,
     sys_table_id: dealTableId,
     column_name: 'id',
@@ -1270,7 +1270,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealColumnSeqNo += 10;
   const deal_companyId_columnId = uuidv4();
   dealColumns.push({
@@ -1279,7 +1279,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Company Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: deal_companyId_columnId,
     sys_table_id: dealTableId,
     column_name: 'company_id',
@@ -1302,7 +1302,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealColumnSeqNo += 10;
   const deal_contactId_columnId = uuidv4();
   dealColumns.push({
@@ -1311,7 +1311,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Contact Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: deal_contactId_columnId,
     sys_table_id: dealTableId,
     column_name: 'contact_id',
@@ -1334,7 +1334,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealColumnSeqNo += 10;
   const deal_name_columnId = uuidv4();
   dealColumns.push({
@@ -1343,7 +1343,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Name',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: deal_name_columnId,
     sys_table_id: dealTableId,
     column_name: 'name',
@@ -1366,7 +1366,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealColumnSeqNo += 10;
   const deal_amount_columnId = uuidv4();
   dealColumns.push({
@@ -1375,7 +1375,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Amount',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: deal_amount_columnId,
     sys_table_id: dealTableId,
     column_name: 'amount',
@@ -1398,7 +1398,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealColumnSeqNo += 10;
   const deal_currency_columnId = uuidv4();
   dealColumns.push({
@@ -1407,7 +1407,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Currency',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: deal_currency_columnId,
     sys_table_id: dealTableId,
     column_name: 'currency',
@@ -1430,7 +1430,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealColumnSeqNo += 10;
   const deal_stage_columnId = uuidv4();
   dealColumns.push({
@@ -1439,7 +1439,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Stage',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: deal_stage_columnId,
     sys_table_id: dealTableId,
     column_name: 'stage',
@@ -1462,7 +1462,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealColumnSeqNo += 10;
   const deal_probability_columnId = uuidv4();
   dealColumns.push({
@@ -1471,7 +1471,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Probability',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: deal_probability_columnId,
     sys_table_id: dealTableId,
     column_name: 'probability',
@@ -1494,7 +1494,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealColumnSeqNo += 10;
   const deal_expectedCloseDate_columnId = uuidv4();
   dealColumns.push({
@@ -1503,7 +1503,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Expected Close Date',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: deal_expectedCloseDate_columnId,
     sys_table_id: dealTableId,
     column_name: 'expected_close_date',
@@ -1526,7 +1526,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealColumnSeqNo += 10;
   const deal_actualCloseDate_columnId = uuidv4();
   dealColumns.push({
@@ -1535,7 +1535,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Actual Close Date',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: deal_actualCloseDate_columnId,
     sys_table_id: dealTableId,
     column_name: 'actual_close_date',
@@ -1558,7 +1558,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealColumnSeqNo += 10;
   const deal_status_columnId = uuidv4();
   dealColumns.push({
@@ -1567,7 +1567,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Status',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: deal_status_columnId,
     sys_table_id: dealTableId,
     column_name: 'status',
@@ -1590,7 +1590,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealColumnSeqNo += 10;
   const deal_description_columnId = uuidv4();
   dealColumns.push({
@@ -1599,7 +1599,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Description',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: deal_description_columnId,
     sys_table_id: dealTableId,
     column_name: 'description',
@@ -1622,7 +1622,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealColumnSeqNo += 10;
   const deal_ownerId_columnId = uuidv4();
   dealColumns.push({
@@ -1631,7 +1631,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Owner Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: deal_ownerId_columnId,
     sys_table_id: dealTableId,
     column_name: 'owner_id',
@@ -1654,7 +1654,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealColumnSeqNo += 10;
 
   // Create sys_field entries with RANDOMIZED seq_no
@@ -1663,7 +1663,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   for (let i = 0; i < dealColumns.length; i++) {
     const col = dealColumns[i];
-    await knex('sys_field').insert({
+    await db.insertInto('sys_field').values({
       sys_field_id: uuidv4(),
       sys_tab_id: dealTabId,
       sys_column_id: col.id,
@@ -1684,11 +1684,11 @@ export async function seed(knex: Knex): Promise<void> {
       updated_by: createdBy,
       created_at: now,
       updated_at: now,
-    });
+    }).execute();
   }
 
   // Grant access to admin role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: adminRoleId,
     sys_table_id: dealTableId,
@@ -1702,10 +1702,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Grant read access to user role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: userRoleId,
     sys_table_id: dealTableId,
@@ -1719,7 +1719,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   console.log('✓ Created dictionary entries for Deal');
 
@@ -1731,7 +1731,7 @@ export async function seed(knex: Knex): Promise<void> {
   const dealStageTabId = uuidv4();
 
   // Create sys_window entry FIRST (sys_table references it)
-  await knex('sys_window').insert({
+  await db.insertInto('sys_window').values({
     sys_window_id: dealStageWindowId,
     name: 'Deal Stage',
     description: 'Maintain Deal Stage records',
@@ -1744,10 +1744,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_table entry AFTER sys_window
-  await knex('sys_table').insert({
+  await db.insertInto('sys_table').values({
     sys_table_id: dealStageTableId,
     table_name: 'bus_deal_stage',
     name: 'Deal Stage',
@@ -1764,10 +1764,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_tab entry
-  await knex('sys_tab').insert({
+  await db.insertInto('sys_tab').values({
     sys_tab_id: dealStageTabId,
     sys_window_id: dealStageWindowId,
     sys_table_id: dealStageTableId,
@@ -1787,7 +1787,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_column entries
   const dealStageColumns: Array<{ id: string; name: string; displayName: string }> = [];
@@ -1800,7 +1800,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: dealStage_id_columnId,
     sys_table_id: dealStageTableId,
     column_name: 'id',
@@ -1823,7 +1823,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealStageColumnSeqNo += 10;
   const dealStage_pipelineId_columnId = uuidv4();
   dealStageColumns.push({
@@ -1832,7 +1832,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Pipeline Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: dealStage_pipelineId_columnId,
     sys_table_id: dealStageTableId,
     column_name: 'pipeline_id',
@@ -1855,7 +1855,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealStageColumnSeqNo += 10;
   const dealStage_name_columnId = uuidv4();
   dealStageColumns.push({
@@ -1864,7 +1864,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Name',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: dealStage_name_columnId,
     sys_table_id: dealStageTableId,
     column_name: 'name',
@@ -1887,7 +1887,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealStageColumnSeqNo += 10;
   const dealStage_sortOrder_columnId = uuidv4();
   dealStageColumns.push({
@@ -1896,7 +1896,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Sort Order',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: dealStage_sortOrder_columnId,
     sys_table_id: dealStageTableId,
     column_name: 'sort_order',
@@ -1919,7 +1919,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealStageColumnSeqNo += 10;
   const dealStage_defaultProbability_columnId = uuidv4();
   dealStageColumns.push({
@@ -1928,7 +1928,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Default Probability',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: dealStage_defaultProbability_columnId,
     sys_table_id: dealStageTableId,
     column_name: 'default_probability',
@@ -1951,7 +1951,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealStageColumnSeqNo += 10;
   const dealStage_isWon_columnId = uuidv4();
   dealStageColumns.push({
@@ -1960,7 +1960,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Is Won',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: dealStage_isWon_columnId,
     sys_table_id: dealStageTableId,
     column_name: 'is_won',
@@ -1983,7 +1983,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealStageColumnSeqNo += 10;
   const dealStage_isLost_columnId = uuidv4();
   dealStageColumns.push({
@@ -1992,7 +1992,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Is Lost',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: dealStage_isLost_columnId,
     sys_table_id: dealStageTableId,
     column_name: 'is_lost',
@@ -2015,7 +2015,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   dealStageColumnSeqNo += 10;
 
   // Create sys_field entries with RANDOMIZED seq_no
@@ -2024,7 +2024,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   for (let i = 0; i < dealStageColumns.length; i++) {
     const col = dealStageColumns[i];
-    await knex('sys_field').insert({
+    await db.insertInto('sys_field').values({
       sys_field_id: uuidv4(),
       sys_tab_id: dealStageTabId,
       sys_column_id: col.id,
@@ -2045,11 +2045,11 @@ export async function seed(knex: Knex): Promise<void> {
       updated_by: createdBy,
       created_at: now,
       updated_at: now,
-    });
+    }).execute();
   }
 
   // Grant access to admin role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: adminRoleId,
     sys_table_id: dealStageTableId,
@@ -2063,10 +2063,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Grant read access to user role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: userRoleId,
     sys_table_id: dealStageTableId,
@@ -2080,7 +2080,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   console.log('✓ Created dictionary entries for Deal Stage');
 
@@ -2092,7 +2092,7 @@ export async function seed(knex: Knex): Promise<void> {
   const pipelineTabId = uuidv4();
 
   // Create sys_window entry FIRST (sys_table references it)
-  await knex('sys_window').insert({
+  await db.insertInto('sys_window').values({
     sys_window_id: pipelineWindowId,
     name: 'Pipeline',
     description: 'Maintain Pipeline records',
@@ -2105,10 +2105,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_table entry AFTER sys_window
-  await knex('sys_table').insert({
+  await db.insertInto('sys_table').values({
     sys_table_id: pipelineTableId,
     table_name: 'bus_pipeline',
     name: 'Pipeline',
@@ -2125,10 +2125,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_tab entry
-  await knex('sys_tab').insert({
+  await db.insertInto('sys_tab').values({
     sys_tab_id: pipelineTabId,
     sys_window_id: pipelineWindowId,
     sys_table_id: pipelineTableId,
@@ -2148,7 +2148,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_column entries
   const pipelineColumns: Array<{ id: string; name: string; displayName: string }> = [];
@@ -2161,7 +2161,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: pipeline_id_columnId,
     sys_table_id: pipelineTableId,
     column_name: 'id',
@@ -2184,7 +2184,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   pipelineColumnSeqNo += 10;
   const pipeline_name_columnId = uuidv4();
   pipelineColumns.push({
@@ -2193,7 +2193,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Name',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: pipeline_name_columnId,
     sys_table_id: pipelineTableId,
     column_name: 'name',
@@ -2216,7 +2216,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   pipelineColumnSeqNo += 10;
   const pipeline_isDefault_columnId = uuidv4();
   pipelineColumns.push({
@@ -2225,7 +2225,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Is Default',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: pipeline_isDefault_columnId,
     sys_table_id: pipelineTableId,
     column_name: 'is_default',
@@ -2248,7 +2248,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   pipelineColumnSeqNo += 10;
   const pipeline_isActive_columnId = uuidv4();
   pipelineColumns.push({
@@ -2257,7 +2257,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Is Active',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: pipeline_isActive_columnId,
     sys_table_id: pipelineTableId,
     column_name: 'is_active',
@@ -2280,7 +2280,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   pipelineColumnSeqNo += 10;
 
   // Create sys_field entries with RANDOMIZED seq_no
@@ -2289,7 +2289,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   for (let i = 0; i < pipelineColumns.length; i++) {
     const col = pipelineColumns[i];
-    await knex('sys_field').insert({
+    await db.insertInto('sys_field').values({
       sys_field_id: uuidv4(),
       sys_tab_id: pipelineTabId,
       sys_column_id: col.id,
@@ -2310,11 +2310,11 @@ export async function seed(knex: Knex): Promise<void> {
       updated_by: createdBy,
       created_at: now,
       updated_at: now,
-    });
+    }).execute();
   }
 
   // Grant access to admin role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: adminRoleId,
     sys_table_id: pipelineTableId,
@@ -2328,10 +2328,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Grant read access to user role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: userRoleId,
     sys_table_id: pipelineTableId,
@@ -2345,7 +2345,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   console.log('✓ Created dictionary entries for Pipeline');
 
@@ -2357,7 +2357,7 @@ export async function seed(knex: Knex): Promise<void> {
   const activityTabId = uuidv4();
 
   // Create sys_window entry FIRST (sys_table references it)
-  await knex('sys_window').insert({
+  await db.insertInto('sys_window').values({
     sys_window_id: activityWindowId,
     name: 'Activity',
     description: 'Maintain Activity records',
@@ -2370,10 +2370,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_table entry AFTER sys_window
-  await knex('sys_table').insert({
+  await db.insertInto('sys_table').values({
     sys_table_id: activityTableId,
     table_name: 'bus_activity',
     name: 'Activity',
@@ -2390,10 +2390,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_tab entry
-  await knex('sys_tab').insert({
+  await db.insertInto('sys_tab').values({
     sys_tab_id: activityTabId,
     sys_window_id: activityWindowId,
     sys_table_id: activityTableId,
@@ -2413,7 +2413,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_column entries
   const activityColumns: Array<{ id: string; name: string; displayName: string }> = [];
@@ -2426,7 +2426,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: activity_id_columnId,
     sys_table_id: activityTableId,
     column_name: 'id',
@@ -2449,7 +2449,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   activityColumnSeqNo += 10;
   const activity_contactId_columnId = uuidv4();
   activityColumns.push({
@@ -2458,7 +2458,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Contact Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: activity_contactId_columnId,
     sys_table_id: activityTableId,
     column_name: 'contact_id',
@@ -2481,7 +2481,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   activityColumnSeqNo += 10;
   const activity_companyId_columnId = uuidv4();
   activityColumns.push({
@@ -2490,7 +2490,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Company Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: activity_companyId_columnId,
     sys_table_id: activityTableId,
     column_name: 'company_id',
@@ -2513,7 +2513,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   activityColumnSeqNo += 10;
   const activity_dealId_columnId = uuidv4();
   activityColumns.push({
@@ -2522,7 +2522,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Deal Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: activity_dealId_columnId,
     sys_table_id: activityTableId,
     column_name: 'deal_id',
@@ -2545,7 +2545,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   activityColumnSeqNo += 10;
   const activity_activityType_columnId = uuidv4();
   activityColumns.push({
@@ -2554,7 +2554,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Activity Type',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: activity_activityType_columnId,
     sys_table_id: activityTableId,
     column_name: 'activity_type',
@@ -2577,7 +2577,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   activityColumnSeqNo += 10;
   const activity_subject_columnId = uuidv4();
   activityColumns.push({
@@ -2586,7 +2586,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Subject',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: activity_subject_columnId,
     sys_table_id: activityTableId,
     column_name: 'subject',
@@ -2609,7 +2609,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   activityColumnSeqNo += 10;
   const activity_description_columnId = uuidv4();
   activityColumns.push({
@@ -2618,7 +2618,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Description',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: activity_description_columnId,
     sys_table_id: activityTableId,
     column_name: 'description',
@@ -2641,7 +2641,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   activityColumnSeqNo += 10;
   const activity_scheduledAt_columnId = uuidv4();
   activityColumns.push({
@@ -2650,7 +2650,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Scheduled At',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: activity_scheduledAt_columnId,
     sys_table_id: activityTableId,
     column_name: 'scheduled_at',
@@ -2673,7 +2673,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   activityColumnSeqNo += 10;
   const activity_completedAt_columnId = uuidv4();
   activityColumns.push({
@@ -2682,7 +2682,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Completed At',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: activity_completedAt_columnId,
     sys_table_id: activityTableId,
     column_name: 'completed_at',
@@ -2705,7 +2705,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   activityColumnSeqNo += 10;
   const activity_durationMinutes_columnId = uuidv4();
   activityColumns.push({
@@ -2714,7 +2714,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Duration Minutes',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: activity_durationMinutes_columnId,
     sys_table_id: activityTableId,
     column_name: 'duration_minutes',
@@ -2737,7 +2737,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   activityColumnSeqNo += 10;
   const activity_status_columnId = uuidv4();
   activityColumns.push({
@@ -2746,7 +2746,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Status',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: activity_status_columnId,
     sys_table_id: activityTableId,
     column_name: 'status',
@@ -2769,7 +2769,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   activityColumnSeqNo += 10;
   const activity_ownerId_columnId = uuidv4();
   activityColumns.push({
@@ -2778,7 +2778,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Owner Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: activity_ownerId_columnId,
     sys_table_id: activityTableId,
     column_name: 'owner_id',
@@ -2801,7 +2801,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   activityColumnSeqNo += 10;
 
   // Create sys_field entries with RANDOMIZED seq_no
@@ -2810,7 +2810,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   for (let i = 0; i < activityColumns.length; i++) {
     const col = activityColumns[i];
-    await knex('sys_field').insert({
+    await db.insertInto('sys_field').values({
       sys_field_id: uuidv4(),
       sys_tab_id: activityTabId,
       sys_column_id: col.id,
@@ -2831,11 +2831,11 @@ export async function seed(knex: Knex): Promise<void> {
       updated_by: createdBy,
       created_at: now,
       updated_at: now,
-    });
+    }).execute();
   }
 
   // Grant access to admin role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: adminRoleId,
     sys_table_id: activityTableId,
@@ -2849,10 +2849,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Grant read access to user role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: userRoleId,
     sys_table_id: activityTableId,
@@ -2866,7 +2866,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   console.log('✓ Created dictionary entries for Activity');
 
@@ -2878,7 +2878,7 @@ export async function seed(knex: Knex): Promise<void> {
   const noteTabId = uuidv4();
 
   // Create sys_window entry FIRST (sys_table references it)
-  await knex('sys_window').insert({
+  await db.insertInto('sys_window').values({
     sys_window_id: noteWindowId,
     name: 'Note',
     description: 'Maintain Note records',
@@ -2891,10 +2891,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_table entry AFTER sys_window
-  await knex('sys_table').insert({
+  await db.insertInto('sys_table').values({
     sys_table_id: noteTableId,
     table_name: 'bus_note',
     name: 'Note',
@@ -2911,10 +2911,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_tab entry
-  await knex('sys_tab').insert({
+  await db.insertInto('sys_tab').values({
     sys_tab_id: noteTabId,
     sys_window_id: noteWindowId,
     sys_table_id: noteTableId,
@@ -2934,7 +2934,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_column entries
   const noteColumns: Array<{ id: string; name: string; displayName: string }> = [];
@@ -2947,7 +2947,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: note_id_columnId,
     sys_table_id: noteTableId,
     column_name: 'id',
@@ -2970,7 +2970,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   noteColumnSeqNo += 10;
   const note_contactId_columnId = uuidv4();
   noteColumns.push({
@@ -2979,7 +2979,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Contact Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: note_contactId_columnId,
     sys_table_id: noteTableId,
     column_name: 'contact_id',
@@ -3002,7 +3002,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   noteColumnSeqNo += 10;
   const note_companyId_columnId = uuidv4();
   noteColumns.push({
@@ -3011,7 +3011,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Company Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: note_companyId_columnId,
     sys_table_id: noteTableId,
     column_name: 'company_id',
@@ -3034,7 +3034,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   noteColumnSeqNo += 10;
   const note_dealId_columnId = uuidv4();
   noteColumns.push({
@@ -3043,7 +3043,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Deal Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: note_dealId_columnId,
     sys_table_id: noteTableId,
     column_name: 'deal_id',
@@ -3066,7 +3066,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   noteColumnSeqNo += 10;
   const note_content_columnId = uuidv4();
   noteColumns.push({
@@ -3075,7 +3075,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Content',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: note_content_columnId,
     sys_table_id: noteTableId,
     column_name: 'content',
@@ -3098,7 +3098,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   noteColumnSeqNo += 10;
   const note_isPinned_columnId = uuidv4();
   noteColumns.push({
@@ -3107,7 +3107,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Is Pinned',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: note_isPinned_columnId,
     sys_table_id: noteTableId,
     column_name: 'is_pinned',
@@ -3130,7 +3130,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   noteColumnSeqNo += 10;
   const note_authorId_columnId = uuidv4();
   noteColumns.push({
@@ -3139,7 +3139,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Author Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: note_authorId_columnId,
     sys_table_id: noteTableId,
     column_name: 'author_id',
@@ -3162,7 +3162,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   noteColumnSeqNo += 10;
 
   // Create sys_field entries with RANDOMIZED seq_no
@@ -3171,7 +3171,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   for (let i = 0; i < noteColumns.length; i++) {
     const col = noteColumns[i];
-    await knex('sys_field').insert({
+    await db.insertInto('sys_field').values({
       sys_field_id: uuidv4(),
       sys_tab_id: noteTabId,
       sys_column_id: col.id,
@@ -3192,11 +3192,11 @@ export async function seed(knex: Knex): Promise<void> {
       updated_by: createdBy,
       created_at: now,
       updated_at: now,
-    });
+    }).execute();
   }
 
   // Grant access to admin role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: adminRoleId,
     sys_table_id: noteTableId,
@@ -3210,10 +3210,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Grant read access to user role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: userRoleId,
     sys_table_id: noteTableId,
@@ -3227,7 +3227,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   console.log('✓ Created dictionary entries for Note');
 
@@ -3239,7 +3239,7 @@ export async function seed(knex: Knex): Promise<void> {
   const taskTabId = uuidv4();
 
   // Create sys_window entry FIRST (sys_table references it)
-  await knex('sys_window').insert({
+  await db.insertInto('sys_window').values({
     sys_window_id: taskWindowId,
     name: 'Task',
     description: 'Maintain Task records',
@@ -3252,10 +3252,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_table entry AFTER sys_window
-  await knex('sys_table').insert({
+  await db.insertInto('sys_table').values({
     sys_table_id: taskTableId,
     table_name: 'bus_task',
     name: 'Task',
@@ -3272,10 +3272,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_tab entry
-  await knex('sys_tab').insert({
+  await db.insertInto('sys_tab').values({
     sys_tab_id: taskTabId,
     sys_window_id: taskWindowId,
     sys_table_id: taskTableId,
@@ -3295,7 +3295,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_column entries
   const taskColumns: Array<{ id: string; name: string; displayName: string }> = [];
@@ -3308,7 +3308,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: task_id_columnId,
     sys_table_id: taskTableId,
     column_name: 'id',
@@ -3331,7 +3331,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   taskColumnSeqNo += 10;
   const task_contactId_columnId = uuidv4();
   taskColumns.push({
@@ -3340,7 +3340,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Contact Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: task_contactId_columnId,
     sys_table_id: taskTableId,
     column_name: 'contact_id',
@@ -3363,7 +3363,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   taskColumnSeqNo += 10;
   const task_companyId_columnId = uuidv4();
   taskColumns.push({
@@ -3372,7 +3372,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Company Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: task_companyId_columnId,
     sys_table_id: taskTableId,
     column_name: 'company_id',
@@ -3395,7 +3395,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   taskColumnSeqNo += 10;
   const task_dealId_columnId = uuidv4();
   taskColumns.push({
@@ -3404,7 +3404,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Deal Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: task_dealId_columnId,
     sys_table_id: taskTableId,
     column_name: 'deal_id',
@@ -3427,7 +3427,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   taskColumnSeqNo += 10;
   const task_title_columnId = uuidv4();
   taskColumns.push({
@@ -3436,7 +3436,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Title',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: task_title_columnId,
     sys_table_id: taskTableId,
     column_name: 'title',
@@ -3459,7 +3459,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   taskColumnSeqNo += 10;
   const task_description_columnId = uuidv4();
   taskColumns.push({
@@ -3468,7 +3468,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Description',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: task_description_columnId,
     sys_table_id: taskTableId,
     column_name: 'description',
@@ -3491,7 +3491,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   taskColumnSeqNo += 10;
   const task_priority_columnId = uuidv4();
   taskColumns.push({
@@ -3500,7 +3500,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Priority',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: task_priority_columnId,
     sys_table_id: taskTableId,
     column_name: 'priority',
@@ -3523,7 +3523,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   taskColumnSeqNo += 10;
   const task_status_columnId = uuidv4();
   taskColumns.push({
@@ -3532,7 +3532,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Status',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: task_status_columnId,
     sys_table_id: taskTableId,
     column_name: 'status',
@@ -3555,7 +3555,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   taskColumnSeqNo += 10;
   const task_dueDate_columnId = uuidv4();
   taskColumns.push({
@@ -3564,7 +3564,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Due Date',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: task_dueDate_columnId,
     sys_table_id: taskTableId,
     column_name: 'due_date',
@@ -3587,7 +3587,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   taskColumnSeqNo += 10;
   const task_completedAt_columnId = uuidv4();
   taskColumns.push({
@@ -3596,7 +3596,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Completed At',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: task_completedAt_columnId,
     sys_table_id: taskTableId,
     column_name: 'completed_at',
@@ -3619,7 +3619,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   taskColumnSeqNo += 10;
   const task_assignedTo_columnId = uuidv4();
   taskColumns.push({
@@ -3628,7 +3628,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Assigned To',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: task_assignedTo_columnId,
     sys_table_id: taskTableId,
     column_name: 'assigned_to',
@@ -3651,7 +3651,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   taskColumnSeqNo += 10;
   const task_createdBy_columnId = uuidv4();
   taskColumns.push({
@@ -3660,7 +3660,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Created By',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: task_createdBy_columnId,
     sys_table_id: taskTableId,
     column_name: 'created_by',
@@ -3683,7 +3683,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   taskColumnSeqNo += 10;
 
   // Create sys_field entries with RANDOMIZED seq_no
@@ -3692,7 +3692,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   for (let i = 0; i < taskColumns.length; i++) {
     const col = taskColumns[i];
-    await knex('sys_field').insert({
+    await db.insertInto('sys_field').values({
       sys_field_id: uuidv4(),
       sys_tab_id: taskTabId,
       sys_column_id: col.id,
@@ -3713,11 +3713,11 @@ export async function seed(knex: Knex): Promise<void> {
       updated_by: createdBy,
       created_at: now,
       updated_at: now,
-    });
+    }).execute();
   }
 
   // Grant access to admin role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: adminRoleId,
     sys_table_id: taskTableId,
@@ -3731,10 +3731,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Grant read access to user role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: userRoleId,
     sys_table_id: taskTableId,
@@ -3748,7 +3748,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   console.log('✓ Created dictionary entries for Task');
 
@@ -3760,7 +3760,7 @@ export async function seed(knex: Knex): Promise<void> {
   const emailMessageTabId = uuidv4();
 
   // Create sys_window entry FIRST (sys_table references it)
-  await knex('sys_window').insert({
+  await db.insertInto('sys_window').values({
     sys_window_id: emailMessageWindowId,
     name: 'Email Message',
     description: 'Maintain Email Message records',
@@ -3773,10 +3773,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_table entry AFTER sys_window
-  await knex('sys_table').insert({
+  await db.insertInto('sys_table').values({
     sys_table_id: emailMessageTableId,
     table_name: 'bus_email_message',
     name: 'Email Message',
@@ -3793,10 +3793,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_tab entry
-  await knex('sys_tab').insert({
+  await db.insertInto('sys_tab').values({
     sys_tab_id: emailMessageTabId,
     sys_window_id: emailMessageWindowId,
     sys_table_id: emailMessageTableId,
@@ -3816,7 +3816,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_column entries
   const emailMessageColumns: Array<{ id: string; name: string; displayName: string }> = [];
@@ -3829,7 +3829,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailMessage_id_columnId,
     sys_table_id: emailMessageTableId,
     column_name: 'id',
@@ -3852,7 +3852,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailMessageColumnSeqNo += 10;
   const emailMessage_contactId_columnId = uuidv4();
   emailMessageColumns.push({
@@ -3861,7 +3861,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Contact Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailMessage_contactId_columnId,
     sys_table_id: emailMessageTableId,
     column_name: 'contact_id',
@@ -3884,7 +3884,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailMessageColumnSeqNo += 10;
   const emailMessage_dealId_columnId = uuidv4();
   emailMessageColumns.push({
@@ -3893,7 +3893,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Deal Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailMessage_dealId_columnId,
     sys_table_id: emailMessageTableId,
     column_name: 'deal_id',
@@ -3916,7 +3916,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailMessageColumnSeqNo += 10;
   const emailMessage_threadId_columnId = uuidv4();
   emailMessageColumns.push({
@@ -3925,7 +3925,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Thread Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailMessage_threadId_columnId,
     sys_table_id: emailMessageTableId,
     column_name: 'thread_id',
@@ -3948,7 +3948,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailMessageColumnSeqNo += 10;
   const emailMessage_subject_columnId = uuidv4();
   emailMessageColumns.push({
@@ -3957,7 +3957,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Subject',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailMessage_subject_columnId,
     sys_table_id: emailMessageTableId,
     column_name: 'subject',
@@ -3980,7 +3980,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailMessageColumnSeqNo += 10;
   const emailMessage_bodyText_columnId = uuidv4();
   emailMessageColumns.push({
@@ -3989,7 +3989,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Body Text',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailMessage_bodyText_columnId,
     sys_table_id: emailMessageTableId,
     column_name: 'body_text',
@@ -4012,7 +4012,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailMessageColumnSeqNo += 10;
   const emailMessage_bodyHtml_columnId = uuidv4();
   emailMessageColumns.push({
@@ -4021,7 +4021,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Body Html',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailMessage_bodyHtml_columnId,
     sys_table_id: emailMessageTableId,
     column_name: 'body_html',
@@ -4044,7 +4044,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailMessageColumnSeqNo += 10;
   const emailMessage_direction_columnId = uuidv4();
   emailMessageColumns.push({
@@ -4053,7 +4053,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Direction',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailMessage_direction_columnId,
     sys_table_id: emailMessageTableId,
     column_name: 'direction',
@@ -4076,7 +4076,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailMessageColumnSeqNo += 10;
   const emailMessage_sentAt_columnId = uuidv4();
   emailMessageColumns.push({
@@ -4085,7 +4085,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Sent At',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailMessage_sentAt_columnId,
     sys_table_id: emailMessageTableId,
     column_name: 'sent_at',
@@ -4108,7 +4108,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailMessageColumnSeqNo += 10;
   const emailMessage_receivedAt_columnId = uuidv4();
   emailMessageColumns.push({
@@ -4117,7 +4117,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Received At',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailMessage_receivedAt_columnId,
     sys_table_id: emailMessageTableId,
     column_name: 'received_at',
@@ -4140,7 +4140,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailMessageColumnSeqNo += 10;
   const emailMessage_openedAt_columnId = uuidv4();
   emailMessageColumns.push({
@@ -4149,7 +4149,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Opened At',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailMessage_openedAt_columnId,
     sys_table_id: emailMessageTableId,
     column_name: 'opened_at',
@@ -4172,7 +4172,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailMessageColumnSeqNo += 10;
   const emailMessage_openCount_columnId = uuidv4();
   emailMessageColumns.push({
@@ -4181,7 +4181,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Open Count',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailMessage_openCount_columnId,
     sys_table_id: emailMessageTableId,
     column_name: 'open_count',
@@ -4204,7 +4204,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailMessageColumnSeqNo += 10;
 
   // Create sys_field entries with RANDOMIZED seq_no
@@ -4213,7 +4213,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   for (let i = 0; i < emailMessageColumns.length; i++) {
     const col = emailMessageColumns[i];
-    await knex('sys_field').insert({
+    await db.insertInto('sys_field').values({
       sys_field_id: uuidv4(),
       sys_tab_id: emailMessageTabId,
       sys_column_id: col.id,
@@ -4234,11 +4234,11 @@ export async function seed(knex: Knex): Promise<void> {
       updated_by: createdBy,
       created_at: now,
       updated_at: now,
-    });
+    }).execute();
   }
 
   // Grant access to admin role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: adminRoleId,
     sys_table_id: emailMessageTableId,
@@ -4252,10 +4252,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Grant read access to user role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: userRoleId,
     sys_table_id: emailMessageTableId,
@@ -4269,7 +4269,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   console.log('✓ Created dictionary entries for Email Message');
 
@@ -4281,7 +4281,7 @@ export async function seed(knex: Knex): Promise<void> {
   const emailTemplateTabId = uuidv4();
 
   // Create sys_window entry FIRST (sys_table references it)
-  await knex('sys_window').insert({
+  await db.insertInto('sys_window').values({
     sys_window_id: emailTemplateWindowId,
     name: 'Email Template',
     description: 'Maintain Email Template records',
@@ -4294,10 +4294,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_table entry AFTER sys_window
-  await knex('sys_table').insert({
+  await db.insertInto('sys_table').values({
     sys_table_id: emailTemplateTableId,
     table_name: 'bus_email_template',
     name: 'Email Template',
@@ -4314,10 +4314,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_tab entry
-  await knex('sys_tab').insert({
+  await db.insertInto('sys_tab').values({
     sys_tab_id: emailTemplateTabId,
     sys_window_id: emailTemplateWindowId,
     sys_table_id: emailTemplateTableId,
@@ -4337,7 +4337,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_column entries
   const emailTemplateColumns: Array<{ id: string; name: string; displayName: string }> = [];
@@ -4350,7 +4350,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailTemplate_id_columnId,
     sys_table_id: emailTemplateTableId,
     column_name: 'id',
@@ -4373,7 +4373,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailTemplateColumnSeqNo += 10;
   const emailTemplate_name_columnId = uuidv4();
   emailTemplateColumns.push({
@@ -4382,7 +4382,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Name',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailTemplate_name_columnId,
     sys_table_id: emailTemplateTableId,
     column_name: 'name',
@@ -4405,7 +4405,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailTemplateColumnSeqNo += 10;
   const emailTemplate_subject_columnId = uuidv4();
   emailTemplateColumns.push({
@@ -4414,7 +4414,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Subject',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailTemplate_subject_columnId,
     sys_table_id: emailTemplateTableId,
     column_name: 'subject',
@@ -4437,7 +4437,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailTemplateColumnSeqNo += 10;
   const emailTemplate_bodyHtml_columnId = uuidv4();
   emailTemplateColumns.push({
@@ -4446,7 +4446,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Body Html',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailTemplate_bodyHtml_columnId,
     sys_table_id: emailTemplateTableId,
     column_name: 'body_html',
@@ -4469,7 +4469,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailTemplateColumnSeqNo += 10;
   const emailTemplate_bodyText_columnId = uuidv4();
   emailTemplateColumns.push({
@@ -4478,7 +4478,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Body Text',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailTemplate_bodyText_columnId,
     sys_table_id: emailTemplateTableId,
     column_name: 'body_text',
@@ -4501,7 +4501,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailTemplateColumnSeqNo += 10;
   const emailTemplate_category_columnId = uuidv4();
   emailTemplateColumns.push({
@@ -4510,7 +4510,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Category',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailTemplate_category_columnId,
     sys_table_id: emailTemplateTableId,
     column_name: 'category',
@@ -4533,7 +4533,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailTemplateColumnSeqNo += 10;
   const emailTemplate_isActive_columnId = uuidv4();
   emailTemplateColumns.push({
@@ -4542,7 +4542,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Is Active',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: emailTemplate_isActive_columnId,
     sys_table_id: emailTemplateTableId,
     column_name: 'is_active',
@@ -4565,7 +4565,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   emailTemplateColumnSeqNo += 10;
 
   // Create sys_field entries with RANDOMIZED seq_no
@@ -4574,7 +4574,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   for (let i = 0; i < emailTemplateColumns.length; i++) {
     const col = emailTemplateColumns[i];
-    await knex('sys_field').insert({
+    await db.insertInto('sys_field').values({
       sys_field_id: uuidv4(),
       sys_tab_id: emailTemplateTabId,
       sys_column_id: col.id,
@@ -4595,11 +4595,11 @@ export async function seed(knex: Knex): Promise<void> {
       updated_by: createdBy,
       created_at: now,
       updated_at: now,
-    });
+    }).execute();
   }
 
   // Grant access to admin role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: adminRoleId,
     sys_table_id: emailTemplateTableId,
@@ -4613,10 +4613,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Grant read access to user role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: userRoleId,
     sys_table_id: emailTemplateTableId,
@@ -4630,7 +4630,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   console.log('✓ Created dictionary entries for Email Template');
 
@@ -4642,7 +4642,7 @@ export async function seed(knex: Knex): Promise<void> {
   const productTabId = uuidv4();
 
   // Create sys_window entry FIRST (sys_table references it)
-  await knex('sys_window').insert({
+  await db.insertInto('sys_window').values({
     sys_window_id: productWindowId,
     name: 'Product',
     description: 'Maintain Product records',
@@ -4655,10 +4655,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_table entry AFTER sys_window
-  await knex('sys_table').insert({
+  await db.insertInto('sys_table').values({
     sys_table_id: productTableId,
     table_name: 'bus_product',
     name: 'Product',
@@ -4675,10 +4675,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_tab entry
-  await knex('sys_tab').insert({
+  await db.insertInto('sys_tab').values({
     sys_tab_id: productTabId,
     sys_window_id: productWindowId,
     sys_table_id: productTableId,
@@ -4698,7 +4698,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_column entries
   const productColumns: Array<{ id: string; name: string; displayName: string }> = [];
@@ -4711,7 +4711,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: product_id_columnId,
     sys_table_id: productTableId,
     column_name: 'id',
@@ -4734,7 +4734,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   productColumnSeqNo += 10;
   const product_name_columnId = uuidv4();
   productColumns.push({
@@ -4743,7 +4743,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Name',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: product_name_columnId,
     sys_table_id: productTableId,
     column_name: 'name',
@@ -4766,7 +4766,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   productColumnSeqNo += 10;
   const product_sku_columnId = uuidv4();
   productColumns.push({
@@ -4775,7 +4775,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Sku',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: product_sku_columnId,
     sys_table_id: productTableId,
     column_name: 'sku',
@@ -4798,7 +4798,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   productColumnSeqNo += 10;
   const product_description_columnId = uuidv4();
   productColumns.push({
@@ -4807,7 +4807,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Description',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: product_description_columnId,
     sys_table_id: productTableId,
     column_name: 'description',
@@ -4830,7 +4830,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   productColumnSeqNo += 10;
   const product_unitPrice_columnId = uuidv4();
   productColumns.push({
@@ -4839,7 +4839,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Unit Price',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: product_unitPrice_columnId,
     sys_table_id: productTableId,
     column_name: 'unit_price',
@@ -4862,7 +4862,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   productColumnSeqNo += 10;
   const product_currency_columnId = uuidv4();
   productColumns.push({
@@ -4871,7 +4871,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Currency',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: product_currency_columnId,
     sys_table_id: productTableId,
     column_name: 'currency',
@@ -4894,7 +4894,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   productColumnSeqNo += 10;
   const product_isActive_columnId = uuidv4();
   productColumns.push({
@@ -4903,7 +4903,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Is Active',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: product_isActive_columnId,
     sys_table_id: productTableId,
     column_name: 'is_active',
@@ -4926,7 +4926,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   productColumnSeqNo += 10;
 
   // Create sys_field entries with RANDOMIZED seq_no
@@ -4935,7 +4935,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   for (let i = 0; i < productColumns.length; i++) {
     const col = productColumns[i];
-    await knex('sys_field').insert({
+    await db.insertInto('sys_field').values({
       sys_field_id: uuidv4(),
       sys_tab_id: productTabId,
       sys_column_id: col.id,
@@ -4956,11 +4956,11 @@ export async function seed(knex: Knex): Promise<void> {
       updated_by: createdBy,
       created_at: now,
       updated_at: now,
-    });
+    }).execute();
   }
 
   // Grant access to admin role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: adminRoleId,
     sys_table_id: productTableId,
@@ -4974,10 +4974,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Grant read access to user role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: userRoleId,
     sys_table_id: productTableId,
@@ -4991,7 +4991,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   console.log('✓ Created dictionary entries for Product');
 
@@ -5003,7 +5003,7 @@ export async function seed(knex: Knex): Promise<void> {
   const quoteTabId = uuidv4();
 
   // Create sys_window entry FIRST (sys_table references it)
-  await knex('sys_window').insert({
+  await db.insertInto('sys_window').values({
     sys_window_id: quoteWindowId,
     name: 'Quote',
     description: 'Maintain Quote records',
@@ -5016,10 +5016,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_table entry AFTER sys_window
-  await knex('sys_table').insert({
+  await db.insertInto('sys_table').values({
     sys_table_id: quoteTableId,
     table_name: 'bus_quote',
     name: 'Quote',
@@ -5036,10 +5036,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_tab entry
-  await knex('sys_tab').insert({
+  await db.insertInto('sys_tab').values({
     sys_tab_id: quoteTabId,
     sys_window_id: quoteWindowId,
     sys_table_id: quoteTableId,
@@ -5059,7 +5059,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_column entries
   const quoteColumns: Array<{ id: string; name: string; displayName: string }> = [];
@@ -5072,7 +5072,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quote_id_columnId,
     sys_table_id: quoteTableId,
     column_name: 'id',
@@ -5095,7 +5095,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteColumnSeqNo += 10;
   const quote_dealId_columnId = uuidv4();
   quoteColumns.push({
@@ -5104,7 +5104,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Deal Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quote_dealId_columnId,
     sys_table_id: quoteTableId,
     column_name: 'deal_id',
@@ -5127,7 +5127,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteColumnSeqNo += 10;
   const quote_quoteNumber_columnId = uuidv4();
   quoteColumns.push({
@@ -5136,7 +5136,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Quote Number',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quote_quoteNumber_columnId,
     sys_table_id: quoteTableId,
     column_name: 'quote_number',
@@ -5159,7 +5159,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteColumnSeqNo += 10;
   const quote_status_columnId = uuidv4();
   quoteColumns.push({
@@ -5168,7 +5168,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Status',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quote_status_columnId,
     sys_table_id: quoteTableId,
     column_name: 'status',
@@ -5191,7 +5191,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteColumnSeqNo += 10;
   const quote_validUntil_columnId = uuidv4();
   quoteColumns.push({
@@ -5200,7 +5200,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Valid Until',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quote_validUntil_columnId,
     sys_table_id: quoteTableId,
     column_name: 'valid_until',
@@ -5223,7 +5223,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteColumnSeqNo += 10;
   const quote_subtotal_columnId = uuidv4();
   quoteColumns.push({
@@ -5232,7 +5232,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Subtotal',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quote_subtotal_columnId,
     sys_table_id: quoteTableId,
     column_name: 'subtotal',
@@ -5255,7 +5255,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteColumnSeqNo += 10;
   const quote_discountAmount_columnId = uuidv4();
   quoteColumns.push({
@@ -5264,7 +5264,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Discount Amount',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quote_discountAmount_columnId,
     sys_table_id: quoteTableId,
     column_name: 'discount_amount',
@@ -5287,7 +5287,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteColumnSeqNo += 10;
   const quote_taxAmount_columnId = uuidv4();
   quoteColumns.push({
@@ -5296,7 +5296,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Tax Amount',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quote_taxAmount_columnId,
     sys_table_id: quoteTableId,
     column_name: 'tax_amount',
@@ -5319,7 +5319,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteColumnSeqNo += 10;
   const quote_totalAmount_columnId = uuidv4();
   quoteColumns.push({
@@ -5328,7 +5328,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Total Amount',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quote_totalAmount_columnId,
     sys_table_id: quoteTableId,
     column_name: 'total_amount',
@@ -5351,7 +5351,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteColumnSeqNo += 10;
   const quote_terms_columnId = uuidv4();
   quoteColumns.push({
@@ -5360,7 +5360,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Terms',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quote_terms_columnId,
     sys_table_id: quoteTableId,
     column_name: 'terms',
@@ -5383,7 +5383,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteColumnSeqNo += 10;
   const quote_notes_columnId = uuidv4();
   quoteColumns.push({
@@ -5392,7 +5392,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Notes',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quote_notes_columnId,
     sys_table_id: quoteTableId,
     column_name: 'notes',
@@ -5415,7 +5415,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteColumnSeqNo += 10;
 
   // Create sys_field entries with RANDOMIZED seq_no
@@ -5424,7 +5424,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   for (let i = 0; i < quoteColumns.length; i++) {
     const col = quoteColumns[i];
-    await knex('sys_field').insert({
+    await db.insertInto('sys_field').values({
       sys_field_id: uuidv4(),
       sys_tab_id: quoteTabId,
       sys_column_id: col.id,
@@ -5445,11 +5445,11 @@ export async function seed(knex: Knex): Promise<void> {
       updated_by: createdBy,
       created_at: now,
       updated_at: now,
-    });
+    }).execute();
   }
 
   // Grant access to admin role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: adminRoleId,
     sys_table_id: quoteTableId,
@@ -5463,10 +5463,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Grant read access to user role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: userRoleId,
     sys_table_id: quoteTableId,
@@ -5480,7 +5480,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   console.log('✓ Created dictionary entries for Quote');
 
@@ -5492,7 +5492,7 @@ export async function seed(knex: Knex): Promise<void> {
   const quoteItemTabId = uuidv4();
 
   // Create sys_window entry FIRST (sys_table references it)
-  await knex('sys_window').insert({
+  await db.insertInto('sys_window').values({
     sys_window_id: quoteItemWindowId,
     name: 'Quote Item',
     description: 'Maintain Quote Item records',
@@ -5505,10 +5505,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_table entry AFTER sys_window
-  await knex('sys_table').insert({
+  await db.insertInto('sys_table').values({
     sys_table_id: quoteItemTableId,
     table_name: 'bus_quote_item',
     name: 'Quote Item',
@@ -5525,10 +5525,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_tab entry
-  await knex('sys_tab').insert({
+  await db.insertInto('sys_tab').values({
     sys_tab_id: quoteItemTabId,
     sys_window_id: quoteItemWindowId,
     sys_table_id: quoteItemTableId,
@@ -5548,7 +5548,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_column entries
   const quoteItemColumns: Array<{ id: string; name: string; displayName: string }> = [];
@@ -5561,7 +5561,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quoteItem_id_columnId,
     sys_table_id: quoteItemTableId,
     column_name: 'id',
@@ -5584,7 +5584,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteItemColumnSeqNo += 10;
   const quoteItem_quoteId_columnId = uuidv4();
   quoteItemColumns.push({
@@ -5593,7 +5593,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Quote Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quoteItem_quoteId_columnId,
     sys_table_id: quoteItemTableId,
     column_name: 'quote_id',
@@ -5616,7 +5616,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteItemColumnSeqNo += 10;
   const quoteItem_productId_columnId = uuidv4();
   quoteItemColumns.push({
@@ -5625,7 +5625,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Product Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quoteItem_productId_columnId,
     sys_table_id: quoteItemTableId,
     column_name: 'product_id',
@@ -5648,7 +5648,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteItemColumnSeqNo += 10;
   const quoteItem_description_columnId = uuidv4();
   quoteItemColumns.push({
@@ -5657,7 +5657,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Description',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quoteItem_description_columnId,
     sys_table_id: quoteItemTableId,
     column_name: 'description',
@@ -5680,7 +5680,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteItemColumnSeqNo += 10;
   const quoteItem_quantity_columnId = uuidv4();
   quoteItemColumns.push({
@@ -5689,7 +5689,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Quantity',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quoteItem_quantity_columnId,
     sys_table_id: quoteItemTableId,
     column_name: 'quantity',
@@ -5712,7 +5712,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteItemColumnSeqNo += 10;
   const quoteItem_unitPrice_columnId = uuidv4();
   quoteItemColumns.push({
@@ -5721,7 +5721,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Unit Price',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quoteItem_unitPrice_columnId,
     sys_table_id: quoteItemTableId,
     column_name: 'unit_price',
@@ -5744,7 +5744,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteItemColumnSeqNo += 10;
   const quoteItem_discountPercent_columnId = uuidv4();
   quoteItemColumns.push({
@@ -5753,7 +5753,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Discount Percent',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quoteItem_discountPercent_columnId,
     sys_table_id: quoteItemTableId,
     column_name: 'discount_percent',
@@ -5776,7 +5776,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteItemColumnSeqNo += 10;
   const quoteItem_totalPrice_columnId = uuidv4();
   quoteItemColumns.push({
@@ -5785,7 +5785,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Total Price',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: quoteItem_totalPrice_columnId,
     sys_table_id: quoteItemTableId,
     column_name: 'total_price',
@@ -5808,7 +5808,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   quoteItemColumnSeqNo += 10;
 
   // Create sys_field entries with RANDOMIZED seq_no
@@ -5817,7 +5817,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   for (let i = 0; i < quoteItemColumns.length; i++) {
     const col = quoteItemColumns[i];
-    await knex('sys_field').insert({
+    await db.insertInto('sys_field').values({
       sys_field_id: uuidv4(),
       sys_tab_id: quoteItemTabId,
       sys_column_id: col.id,
@@ -5838,11 +5838,11 @@ export async function seed(knex: Knex): Promise<void> {
       updated_by: createdBy,
       created_at: now,
       updated_at: now,
-    });
+    }).execute();
   }
 
   // Grant access to admin role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: adminRoleId,
     sys_table_id: quoteItemTableId,
@@ -5856,10 +5856,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Grant read access to user role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: userRoleId,
     sys_table_id: quoteItemTableId,
@@ -5873,7 +5873,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   console.log('✓ Created dictionary entries for Quote Item');
 
@@ -5885,7 +5885,7 @@ export async function seed(knex: Knex): Promise<void> {
   const userTabId = uuidv4();
 
   // Create sys_window entry FIRST (sys_table references it)
-  await knex('sys_window').insert({
+  await db.insertInto('sys_window').values({
     sys_window_id: userWindowId,
     name: 'User',
     description: 'Maintain User records',
@@ -5898,10 +5898,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_table entry AFTER sys_window
-  await knex('sys_table').insert({
+  await db.insertInto('sys_table').values({
     sys_table_id: userTableId,
     table_name: 'bus_user',
     name: 'User',
@@ -5918,10 +5918,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_tab entry
-  await knex('sys_tab').insert({
+  await db.insertInto('sys_tab').values({
     sys_tab_id: userTabId,
     sys_window_id: userWindowId,
     sys_table_id: userTableId,
@@ -5941,7 +5941,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_column entries
   const userColumns: Array<{ id: string; name: string; displayName: string }> = [];
@@ -5954,7 +5954,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: user_id_columnId,
     sys_table_id: userTableId,
     column_name: 'id',
@@ -5977,7 +5977,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   userColumnSeqNo += 10;
   const user_email_columnId = uuidv4();
   userColumns.push({
@@ -5986,7 +5986,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Email',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: user_email_columnId,
     sys_table_id: userTableId,
     column_name: 'email',
@@ -6009,7 +6009,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   userColumnSeqNo += 10;
   const user_firstName_columnId = uuidv4();
   userColumns.push({
@@ -6018,7 +6018,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'First Name',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: user_firstName_columnId,
     sys_table_id: userTableId,
     column_name: 'first_name',
@@ -6041,7 +6041,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   userColumnSeqNo += 10;
   const user_lastName_columnId = uuidv4();
   userColumns.push({
@@ -6050,7 +6050,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Last Name',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: user_lastName_columnId,
     sys_table_id: userTableId,
     column_name: 'last_name',
@@ -6073,7 +6073,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   userColumnSeqNo += 10;
   const user_role_columnId = uuidv4();
   userColumns.push({
@@ -6082,7 +6082,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Role',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: user_role_columnId,
     sys_table_id: userTableId,
     column_name: 'role',
@@ -6105,7 +6105,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   userColumnSeqNo += 10;
   const user_teamId_columnId = uuidv4();
   userColumns.push({
@@ -6114,7 +6114,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Team Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: user_teamId_columnId,
     sys_table_id: userTableId,
     column_name: 'team_id',
@@ -6137,7 +6137,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   userColumnSeqNo += 10;
   const user_isActive_columnId = uuidv4();
   userColumns.push({
@@ -6146,7 +6146,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Is Active',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: user_isActive_columnId,
     sys_table_id: userTableId,
     column_name: 'is_active',
@@ -6169,7 +6169,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   userColumnSeqNo += 10;
   const user_lastLogin_columnId = uuidv4();
   userColumns.push({
@@ -6178,7 +6178,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Last Login',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: user_lastLogin_columnId,
     sys_table_id: userTableId,
     column_name: 'last_login',
@@ -6201,7 +6201,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   userColumnSeqNo += 10;
 
   // Create sys_field entries with RANDOMIZED seq_no
@@ -6210,7 +6210,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   for (let i = 0; i < userColumns.length; i++) {
     const col = userColumns[i];
-    await knex('sys_field').insert({
+    await db.insertInto('sys_field').values({
       sys_field_id: uuidv4(),
       sys_tab_id: userTabId,
       sys_column_id: col.id,
@@ -6231,11 +6231,11 @@ export async function seed(knex: Knex): Promise<void> {
       updated_by: createdBy,
       created_at: now,
       updated_at: now,
-    });
+    }).execute();
   }
 
   // Grant access to admin role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: adminRoleId,
     sys_table_id: userTableId,
@@ -6249,10 +6249,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Grant read access to user role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: userRoleId,
     sys_table_id: userTableId,
@@ -6266,7 +6266,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   console.log('✓ Created dictionary entries for User');
 
@@ -6278,7 +6278,7 @@ export async function seed(knex: Knex): Promise<void> {
   const teamTabId = uuidv4();
 
   // Create sys_window entry FIRST (sys_table references it)
-  await knex('sys_window').insert({
+  await db.insertInto('sys_window').values({
     sys_window_id: teamWindowId,
     name: 'Team',
     description: 'Maintain Team records',
@@ -6291,10 +6291,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_table entry AFTER sys_window
-  await knex('sys_table').insert({
+  await db.insertInto('sys_table').values({
     sys_table_id: teamTableId,
     table_name: 'bus_team',
     name: 'Team',
@@ -6311,10 +6311,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_tab entry
-  await knex('sys_tab').insert({
+  await db.insertInto('sys_tab').values({
     sys_tab_id: teamTabId,
     sys_window_id: teamWindowId,
     sys_table_id: teamTableId,
@@ -6334,7 +6334,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Create sys_column entries
   const teamColumns: Array<{ id: string; name: string; displayName: string }> = [];
@@ -6347,7 +6347,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: team_id_columnId,
     sys_table_id: teamTableId,
     column_name: 'id',
@@ -6370,7 +6370,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   teamColumnSeqNo += 10;
   const team_name_columnId = uuidv4();
   teamColumns.push({
@@ -6379,7 +6379,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Name',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: team_name_columnId,
     sys_table_id: teamTableId,
     column_name: 'name',
@@ -6402,7 +6402,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   teamColumnSeqNo += 10;
   const team_managerId_columnId = uuidv4();
   teamColumns.push({
@@ -6411,7 +6411,7 @@ export async function seed(knex: Knex): Promise<void> {
     displayName: 'Manager Id',
   });
 
-  await knex('sys_column').insert({
+  await db.insertInto('sys_column').values({
     sys_column_id: team_managerId_columnId,
     sys_table_id: teamTableId,
     column_name: 'manager_id',
@@ -6434,7 +6434,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
   teamColumnSeqNo += 10;
 
   // Create sys_field entries with RANDOMIZED seq_no
@@ -6443,7 +6443,7 @@ export async function seed(knex: Knex): Promise<void> {
 
   for (let i = 0; i < teamColumns.length; i++) {
     const col = teamColumns[i];
-    await knex('sys_field').insert({
+    await db.insertInto('sys_field').values({
       sys_field_id: uuidv4(),
       sys_tab_id: teamTabId,
       sys_column_id: col.id,
@@ -6464,11 +6464,11 @@ export async function seed(knex: Knex): Promise<void> {
       updated_by: createdBy,
       created_at: now,
       updated_at: now,
-    });
+    }).execute();
   }
 
   // Grant access to admin role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: adminRoleId,
     sys_table_id: teamTableId,
@@ -6482,10 +6482,10 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   // Grant read access to user role
-  await knex('sys_access').insert({
+  await db.insertInto('sys_access').values({
     sys_access_id: uuidv4(),
     sys_role_id: userRoleId,
     sys_table_id: teamTableId,
@@ -6499,7 +6499,7 @@ export async function seed(knex: Knex): Promise<void> {
     updated_by: createdBy,
     created_at: now,
     updated_at: now,
-  });
+  }).execute();
 
   console.log('✓ Created dictionary entries for Team');
 

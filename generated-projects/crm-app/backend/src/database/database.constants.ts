@@ -1,7 +1,7 @@
 /**
  * Database Constants
  *
- * Generated: 2026-05-09T16:10:52.339Z
+ * Generated: 2026-05-11T18:39:58.990Z
  */
 
-export const KNEX_CONNECTION = 'KNEX_CONNECTION';
+export const KYSELY_CONNECTION = 'KYSELY_CONNECTION';

@@ -9,8 +9,8 @@
  * Uses Trigger.dev v3 tasks which run on Trigger.dev's durable execution
  * infrastructure without requiring a self-hosted Redis instance.
  *
- * Generated: 2026-05-09T16:10:52.297Z
- * Project: my-app
+ * Generated: 2026-05-11T18:39:58.952Z
+ * Project: CRM Application
  */
 
 import { Injectable, Logger } from '@nestjs/common';

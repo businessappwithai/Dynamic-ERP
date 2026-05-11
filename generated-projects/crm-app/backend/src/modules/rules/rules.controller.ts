@@ -11,8 +11,8 @@
  * - Getting rule history
  * - Migrating rules from files to database
  *
- * Generated: 2026-05-09T16:10:52.299Z
- * Project: my-app
+ * Generated: 2026-05-11T18:39:58.954Z
+ * Project: CRM Application
  */
 
 import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, Logger } from '@nestjs/common';

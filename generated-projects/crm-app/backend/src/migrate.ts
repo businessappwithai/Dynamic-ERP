@@ -1,0 +1,76 @@
+/**
+ * Kysely Migration Runner
+ *
+ * Run with: bun run src/migrate.ts [up|down|latest|rollback]
+ * Generated: 2026-05-11T18:39:58.988Z
+ */
+
+import * as path from 'path';
+import * as fs from 'fs';
+import { Kysely, Migrator, FileMigrationProvider, PostgresDialect, SqliteDialect } from 'kysely';
+import { Pool } from 'pg';
+import 'dotenv/config';
+
+const dbClient = process.env.DATABASE_CLIENT ?? 'pg';
+
+let dialect: PostgresDialect | SqliteDialect;
+
+if (dbClient === 'better-sqlite3') {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const Database = require('better-sqlite3');
+  dialect = new SqliteDialect({ database: new Database(process.env.DATABASE_FILENAME ?? './data/app.db') });
+} else {
+  dialect = new PostgresDialect({
+    pool: new Pool({
+      host: process.env.DATABASE_HOST ?? 'localhost',
+      port: Number(process.env.DATABASE_PORT ?? 5432),
+      user: process.env.DATABASE_USER ?? 'postgres',
+      password: process.env.DATABASE_PASSWORD ?? '',
+      database: process.env.DATABASE_NAME ?? 'c_r_m _application',
+    }),
+  });
+}
+
+const db = new Kysely<any>({ dialect });
+
+const migrator = new Migrator({
+  db,
+  provider: new FileMigrationProvider({
+    fs: {
+      readdir: (dir: string) => fs.promises.readdir(dir),
+    },
+    path,
+    // @ts-ignore - import.meta.dir is supported in Bun runtime
+    migrationFolder: path.join(import.meta.dir, 'migrations'),
+  }),
+});
+
+const command = process.argv[2] ?? 'latest';
+
+async function run() {
+  let result: { error?: unknown; results?: any[] };
+
+  if (command === 'down' || command === 'rollback') {
+    result = await migrator.migrateDown();
+  } else {
+    result = await migrator.migrateToLatest();
+  }
+
+  for (const r of result.results ?? []) {
+    if (r.status === 'Success') {
+      console.log(`✓ migration "${r.migrationName}" executed successfully`);
+    } else if (r.status === 'Error') {
+      console.error(`✗ migration "${r.migrationName}" failed`);
+    }
+  }
+
+  if (result.error) {
+    console.error('Migration failed:', result.error);
+    process.exit(1);
+  }
+
+  await db.destroy();
+  console.log('✓ Done');
+}
+
+run();

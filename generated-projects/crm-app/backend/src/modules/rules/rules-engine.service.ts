@@ -24,8 +24,8 @@
  * Decision tables use hitPolicy "collect" so all matching rows are
  * returned, enabling multiple validation errors in a single call.
  *
- * Generated: 2026-05-09T16:10:52.300Z
- * Project: my-app
+ * Generated: 2026-05-11T18:39:58.956Z
+ * Project: CRM Application
  */
 
 import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';

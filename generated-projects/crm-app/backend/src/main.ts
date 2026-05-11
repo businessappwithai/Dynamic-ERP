@@ -1,8 +1,8 @@
 /**
  * NestJS Application Entry Point with Fastify Adapter
  *
- * Generated: 2026-05-09T16:10:52.285Z
- * Project: my-app
+ * Generated: 2026-05-11T18:39:58.939Z
+ * Project: CRM Application
  */
 
 import { NestFactory } from '@nestjs/core';
