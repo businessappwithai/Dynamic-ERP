@@ -36,8 +36,11 @@ const db = new Kysely<any>({ dialect });
 const migrator = new Migrator({
   db,
   provider: new FileMigrationProvider({
-    fs,
+    fs: {
+      readdir: (dir: string) => fs.promises.readdir(dir),
+    },
     path,
+    // @ts-ignore - import.meta.dir is supported in Bun runtime
     migrationFolder: path.join(import.meta.dir, 'migrations'),
   }),
 });
