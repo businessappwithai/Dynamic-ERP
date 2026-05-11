@@ -3,14 +3,14 @@
  *
  * Provides workflow orchestration for entity lifecycle events.
  *
- * Generated: 2026-05-07T09:31:28.448Z
+ * Generated: 2026-05-11T12:52:41.198Z
  * Project: crm-app
  */
 
-import { forwardRef, Module } from "@nestjs/common";
-import { RulesModule } from "../rules/rules.module";
-import { WorkflowController } from "./workflow.controller";
-import { WorkflowService } from "./workflow.service";
+import { Module, forwardRef } from '@nestjs/common';
+import { WorkflowController } from './workflow.controller';
+import { WorkflowService } from './workflow.service';
+import { RulesModule } from '../rules/rules.module';
 
 @Module({
   imports: [forwardRef(() => RulesModule)],

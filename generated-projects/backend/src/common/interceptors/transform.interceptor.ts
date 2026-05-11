@@ -2,17 +2,17 @@
  * Transform Interceptor
  *
  * Standardizes API responses with consistent format.
- * Generated: 2026-05-07T09:31:28.353Z
+ * Generated: 2026-05-11T12:52:41.184Z
  */
 
 import {
-  type CallHandler,
-  type ExecutionContext,
   Injectable,
-  type NestInterceptor,
-} from "@nestjs/common";
-import type { Observable } from "rxjs";
-import { map } from "rxjs/operators";
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export interface Response<T> {
   data: T;
@@ -24,8 +24,15 @@ export interface Response<T> {
 }
 
 @Injectable()
-export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> {
-  intercept(context: ExecutionContext, next: CallHandler): Observable<Response<T>> {
-    return next.handle().pipe(map((data) => data));
+export class TransformInterceptor<T>
+  implements NestInterceptor<T, Response<T>>
+{
+  intercept(
+    context: ExecutionContext,
+    next: CallHandler
+  ): Observable<Response<T>> {
+    return next.handle().pipe(
+      map((data) => data)
+    );
   }
 }

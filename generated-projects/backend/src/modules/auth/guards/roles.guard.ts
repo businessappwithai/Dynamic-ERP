@@ -10,14 +10,9 @@
  * async getPatients() { ... }
  */
 
-import {
-  type CanActivate,
-  type ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from "@nestjs/common";
-import type { Reflector } from "@nestjs/core";
-import { ROLES_KEY } from "../decorators/roles.decorator";
+import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -40,7 +35,7 @@ export class RolesGuard implements CanActivate {
     const user = request.user;
 
     if (!user) {
-      throw new ForbiddenException("User not authenticated. Please sign in.");
+      throw new ForbiddenException('User not authenticated. Please sign in.');
     }
 
     // Get user's roles from session or database
@@ -51,7 +46,7 @@ export class RolesGuard implements CanActivate {
 
     if (!hasRole) {
       throw new ForbiddenException(
-        `Access denied. Required roles: ${requiredRoles.join(", ")}. Your roles: ${userRoles.join(", ") || "none"}.`
+        `Access denied. Required roles: ${requiredRoles.join(', ')}. Your roles: ${userRoles.join(', ') || 'none'}.`
       );
     }
 

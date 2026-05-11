@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+import React, { createContext, type ReactNode, useContext, useEffect, useState } from "react";
 import type { Locale } from "@/i18n/config";
 import deMessages from "@/messages/de.json";
 import enMessages from "@/messages/en.json";

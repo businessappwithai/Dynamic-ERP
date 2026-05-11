@@ -8,16 +8,10 @@
  * and validates it against BetterAuth's session store.
  */
 
-import {
-  type CanActivate,
-  type ExecutionContext,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from "@nestjs/common";
-import type { Reflector } from "@nestjs/core";
-import { auth } from "../../../lib/better-auth";
-import { IS_PUBLIC_KEY } from "../decorators/public.decorator";
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, Logger } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { auth } from '../../../lib/better-auth';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()
 export class SessionAuthGuard implements CanActivate {
@@ -46,8 +40,8 @@ export class SessionAuthGuard implements CanActivate {
       });
 
       if (!session) {
-        this.logger.debug("No valid session found in request");
-        throw new UnauthorizedException("Invalid or expired session. Please sign in again.");
+        this.logger.debug('No valid session found in request');
+        throw new UnauthorizedException('Invalid or expired session. Please sign in again.');
       }
 
       // Attach user and session to request for use in controllers/services
@@ -62,7 +56,7 @@ export class SessionAuthGuard implements CanActivate {
       }
 
       this.logger.error(`Authentication failed: ${error.message}`);
-      throw new UnauthorizedException("Authentication failed. Please sign in again.");
+      throw new UnauthorizedException('Authentication failed. Please sign in again.');
     }
   }
 }

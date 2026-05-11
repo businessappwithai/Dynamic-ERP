@@ -9,13 +9,13 @@
  * Tasks are defined in src/trigger/ and executed on Trigger.dev's
  * durable infrastructure. No Redis required.
  *
- * Generated: 2026-05-07T09:31:28.414Z
+ * Generated: 2026-05-11T12:52:41.193Z
  * Project: crm-app
  */
 
-import { Module } from "@nestjs/common";
-import { JobQueueController } from "./job-queue.controller";
-import { JobQueueService } from "./job-queue.service";
+import { Module } from '@nestjs/common';
+import { JobQueueService } from './job-queue.service';
+import { JobQueueController } from './job-queue.controller';
 
 @Module({
   controllers: [JobQueueController],

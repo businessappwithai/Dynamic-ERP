@@ -5,10 +5,10 @@
  * Provides test utilities, fixtures, and database setup
  */
 
-import { FastifyAdapter, type NestFastifyApplication } from "@nestjs/platform-fastify";
-import { Test, type TestingModule } from "@nestjs/testing";
-import Knex from "knex";
-import { KNEX_CONNECTION } from "../src/database/database.constants";
+import { Test, TestingModule } from '@nestjs/testing';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import Knex from 'knex';
+import { KNEX_CONNECTION } from '../src/database/database.constants';
 
 // Test database instance
 let testDb: Knex.Knex;
@@ -22,16 +22,16 @@ let testApp: NestFastifyApplication;
 export async function initTestDatabase(): Promise<Knex.Knex> {
   if (!testDb) {
     testDb = Knex({
-      client: "better-sqlite3",
+      client: 'better-sqlite3',
       connection: {
-        filename: ":memory:",
+        filename: ':memory:',
       },
       useNullAsDefault: true,
       migrations: {
-        directory: "./migrations",
+        directory: './migrations',
       },
       seeds: {
-        directory: "./seeds",
+        directory: './seeds',
       },
     });
 
@@ -80,10 +80,12 @@ export async function createTestApp(module: any): Promise<NestFastifyApplication
 
   const moduleFixture: TestingModule = await builder.compile();
 
-  const app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
+  const app = moduleFixture.createNestApplication<NestFastifyApplication>(
+    new FastifyAdapter()
+  );
 
   // Match production configuration
-  app.setGlobalPrefix("api");
+  app.setGlobalPrefix('api');
 
   await app.init();
   await app.getHttpAdapter().getInstance().ready();
@@ -104,9 +106,9 @@ export async function closeTestApp(app: NestFastifyApplication): Promise<void> {
  * Generate test UUID
  */
 export function generateTestId(): string {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = (Math.random() * 16) | 0;
-    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 }
@@ -171,10 +173,10 @@ export const TestDataFactory = {
       currency: `Test Currency ${uid}`,
       stage: `Test Stage ${uid}`,
       probability: 1,
-      expected_close_date: "2024-01-15",
-      actual_close_date: "2024-01-15",
+      expected_close_date: '2024-01-15',
+      actual_close_date: '2024-01-15',
       status: `Test Status ${uid}`,
-      description: `Test text content ${uid}`,
+      description: 'Test text content',
       owner_id: `Test Owner Id ${uid}`,
       ...overrides,
     };
@@ -223,7 +225,7 @@ export const TestDataFactory = {
       deal_id: `Test Deal Id ${uid}`,
       activity_type: `Test Activity Type ${uid}`,
       subject: `Test Subject ${uid}`,
-      description: `Test text content ${uid}`,
+      description: 'Test text content',
       scheduled_at: new Date().toISOString(),
       completed_at: new Date().toISOString(),
       duration_minutes: 1,
@@ -243,7 +245,7 @@ export const TestDataFactory = {
       contact_id: `Test Contact Id ${uid}`,
       company_id: `Test Company Id ${uid}`,
       deal_id: `Test Deal Id ${uid}`,
-      content: `Test text content ${uid}`,
+      content: 'Test text content',
       is_pinned: true,
       author_id: `Test Author Id ${uid}`,
       ...overrides,
@@ -261,10 +263,10 @@ export const TestDataFactory = {
       company_id: `Test Company Id ${uid}`,
       deal_id: `Test Deal Id ${uid}`,
       title: `Test Title ${uid}`,
-      description: `Test text content ${uid}`,
+      description: 'Test text content',
       priority: `Test Priority ${uid}`,
       status: `Test Status ${uid}`,
-      due_date: "2024-01-15",
+      due_date: '2024-01-15',
       completed_at: new Date().toISOString(),
       assigned_to: `Test Assigned To ${uid}`,
       created_by: `Test Created By ${uid}`,
@@ -283,8 +285,8 @@ export const TestDataFactory = {
       deal_id: `Test Deal Id ${uid}`,
       thread_id: `Test Thread Id ${uid}`,
       subject: `Test Subject ${uid}`,
-      body_text: `Test text content ${uid}`,
-      body_html: `Test text content ${uid}`,
+      body_text: 'Test text content',
+      body_html: 'Test text content',
       direction: `Test Direction ${uid}`,
       sent_at: new Date().toISOString(),
       received_at: new Date().toISOString(),
@@ -303,8 +305,8 @@ export const TestDataFactory = {
       id: generateTestId(),
       name: `Test Name ${uid}`,
       subject: `Test Subject ${uid}`,
-      body_html: `Test text content ${uid}`,
-      body_text: `Test text content ${uid}`,
+      body_html: 'Test text content',
+      body_text: 'Test text content',
       category: `Test Category ${uid}`,
       is_active: true,
       ...overrides,
@@ -320,7 +322,7 @@ export const TestDataFactory = {
       id: generateTestId(),
       name: `Test Name ${uid}`,
       sku: `Test Sku ${uid}`,
-      description: `Test text content ${uid}`,
+      description: 'Test text content',
       unit_price: 10.99,
       currency: `Test Currency ${uid}`,
       is_active: true,
@@ -338,13 +340,13 @@ export const TestDataFactory = {
       deal_id: `Test Deal Id ${uid}`,
       quote_number: `Test Quote Number ${uid}`,
       status: `Test Status ${uid}`,
-      valid_until: "2024-01-15",
+      valid_until: '2024-01-15',
       subtotal: 10.99,
       discount_amount: 10.99,
       tax_amount: 10.99,
       total_amount: 10.99,
-      terms: `Test text content ${uid}`,
-      notes: `Test text content ${uid}`,
+      terms: 'Test text content',
+      notes: 'Test text content',
       ...overrides,
     };
   },
@@ -397,6 +399,7 @@ export const TestDataFactory = {
       ...overrides,
     };
   },
+
 };
 
 /**
@@ -406,21 +409,21 @@ export async function cleanupTestData(): Promise<void> {
   const db = await initTestDatabase();
 
   // Delete in reverse order of dependencies
-  await db("bus_company").del();
-  await db("bus_contact").del();
-  await db("bus_deal").del();
-  await db("bus_deal_stage").del();
-  await db("bus_pipeline").del();
-  await db("bus_activity").del();
-  await db("bus_note").del();
-  await db("bus_task").del();
-  await db("bus_email_message").del();
-  await db("bus_email_template").del();
-  await db("bus_product").del();
-  await db("bus_quote").del();
-  await db("bus_quote_item").del();
-  await db("bus_user").del();
-  await db("bus_team").del();
+  await db('bus_company').del();
+  await db('bus_contact').del();
+  await db('bus_deal').del();
+  await db('bus_deal_stage').del();
+  await db('bus_pipeline').del();
+  await db('bus_activity').del();
+  await db('bus_note').del();
+  await db('bus_task').del();
+  await db('bus_email_message').del();
+  await db('bus_email_template').del();
+  await db('bus_product').del();
+  await db('bus_quote').del();
+  await db('bus_quote_item').del();
+  await db('bus_user').del();
+  await db('bus_team').del();
 }
 
 /**

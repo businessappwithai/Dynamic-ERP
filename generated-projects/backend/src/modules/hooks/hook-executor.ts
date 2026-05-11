@@ -2,11 +2,11 @@
  * Hook Executor
  *
  * Executes registered hooks for entity lifecycle events.
- * Generated: 2026-05-07T09:31:28.387Z
+ * Generated: 2026-05-11T12:52:41.190Z
  */
 
-import type { HookContext, HookLifecycle } from "./hook.types";
-import { globalHookRegistry } from "./hook-registry";
+import { HookContext, HookLifecycle } from './hook.types';
+import { globalHookRegistry } from './hook-registry';
 
 export class HookExecutor {
   async execute<T>(
@@ -22,7 +22,7 @@ export class HookExecutor {
       entity: entityName,
       lifecycle,
       data: result,
-      metadata,
+      metadata
     };
 
     for (const hook of hooks) {

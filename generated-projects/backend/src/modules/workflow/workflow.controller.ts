@@ -7,21 +7,21 @@
  * - Retrying failed workflows
  * - Monitoring workflow execution
  *
- * Generated: 2026-05-07T09:31:28.452Z
+ * Generated: 2026-05-11T12:52:41.198Z
  * Project: crm-app
  */
 
-import { Controller, Get, Logger, Param, Post, Query, UseGuards } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { Roles } from "../auth/decorators/roles.decorator";
-import { RolesGuard } from "../auth/guards/roles.guard";
-import { SessionAuthGuard } from "../auth/guards/session-auth.guard";
-import type { WorkflowService } from "./workflow.service";
+import { Controller, Get, Post, Param, Query, UseGuards, Logger } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { SessionAuthGuard } from '../auth/guards/session-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { WorkflowService } from './workflow.service';
 
-@ApiTags("workflows")
+@ApiTags('workflows')
 @ApiBearerAuth()
 @UseGuards(SessionAuthGuard, RolesGuard)
-@Controller("workflows")
+@Controller('workflows')
 export class WorkflowController {
   private readonly logger = new Logger(WorkflowController.name);
 
@@ -35,13 +35,13 @@ export class WorkflowController {
     return await this.workflowService.getStatus(runId);
   }
 
-  @Get("entity/:entityName/:entityId")
-  @ApiOperation({ summary: "Get workflow history for an entity" })
-  @ApiResponse({ status: 200, description: "Workflow history retrieved" })
+  @Get('entity/:entityName/:entityId')
+  @ApiOperation({ summary: 'Get workflow history for an entity' })
+  @ApiResponse({ status: 200, description: 'Workflow history retrieved' })
   async getEntityWorkflows(
     @Param('entityName') entityName: string,
     @Param('entityId') entityId: string,
-    @Query('limit') limit?: string
+    @Query('limit') limit?: string,
   ) {
     return await this.workflowService.getEntityWorkflows(
       entityName,
@@ -50,14 +50,14 @@ export class WorkflowController {
     );
   }
 
-  @Get("runs")
-  @Roles("admin")
-  @ApiOperation({ summary: "Get all workflow runs (admin only)" })
-  @ApiResponse({ status: 200, description: "Workflow runs retrieved" })
+  @Get('runs')
+  @Roles('admin')
+  @ApiOperation({ summary: 'Get all workflow runs (admin only)' })
+  @ApiResponse({ status: 200, description: 'Workflow runs retrieved' })
   async getAllWorkflows(
     @Query('status') status?: 'draft' | 'success' | 'error',
     @Query('entityName') entityName?: string,
-    @Query('limit') limit?: string
+    @Query('limit') limit?: string,
   ) {
     return await this.workflowService.getAllWorkflows({
       status,

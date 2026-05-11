@@ -6,11 +6,11 @@
  *
  * Configure your email provider (SendGrid, Resend, etc.) in the run() body.
  *
- * Generated: 2026-05-07T09:31:28.397Z
+ * Generated: 2026-05-11T12:52:41.191Z
  * Project: crm-app
  */
 
-import { task } from "@trigger.dev/sdk/v3";
+import { task } from '@trigger.dev/sdk/v3';
 
 export interface EmailTaskPayload {
   to: string;
@@ -20,7 +20,7 @@ export interface EmailTaskPayload {
 }
 
 export const sendEmailTask = task({
-  id: "send-email",
+  id: 'send-email',
   maxDuration: 60,
   retry: {
     maxAttempts: 3,

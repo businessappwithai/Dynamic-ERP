@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 /**
  * Application Providers
@@ -9,17 +9,17 @@
  * - TranslationProvider for i18n
  * - Toaster for notifications
  *
- * Note: Next.js App Router provides built-in client-side routing
- * via next/navigation, so no custom router provider is needed.
+  * Note: TanStack Router provides built-in client-side routing
+  * via @tanstack/react-router, so no custom router provider is needed.
  *
- * Generated: 2026-05-07T09:31:28.731Z
+ * Generated: 2026-05-11T12:52:42.855Z
  */
 
-import type { ReactNode } from "react";
-import { Toaster } from "sonner";
-import { AuthProvider } from "@/contexts/auth-context";
-import { TranslationProvider } from "@/lib/translations";
-import { QueryProvider } from "./query-provider";
+import React, { type ReactNode } from 'react';
+import { QueryProvider } from './query-provider';
+import { AuthProvider } from '@/contexts/auth-context';
+import { TranslationProvider } from '@/lib/translations';
+import { Toaster } from 'sonner';
 
 interface ProvidersProps {
   children: ReactNode;

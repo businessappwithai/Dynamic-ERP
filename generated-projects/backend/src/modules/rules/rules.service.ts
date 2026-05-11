@@ -4,21 +4,21 @@
  * Provides CRUD operations for managing business rules in the database.
  * Integrates with GoRules Zen Engine for rule evaluation.
  *
- * Generated: 2026-05-07T09:31:28.427Z
+ * Generated: 2026-05-11T12:52:41.195Z
  * Project: crm-app
  */
 
-import { Injectable, Logger, NotFoundException } from "@nestjs/common";
-import { readFileSync } from "fs";
-import type { Knex } from "knex";
-import { join } from "path";
-import { InjectDatabase } from "../../database/database.service.decorator";
-import type { RuleEvaluationResult, RulesEngine } from "./rules-engine.service";
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Kysely } from 'kysely';
+import { InjectDatabase } from '../../database/database.service.decorator';
+import { RulesEngine, RuleEvaluationResult } from './rules-engine.service';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 export interface CreateRuleDto {
   entityName: string;
   ruleName: string;
-  operation: "CREATE" | "READ" | "UPDATE" | "DELETE" | "ALL";
+  operation: 'CREATE' | 'READ' | 'UPDATE' | 'DELETE' | 'ALL';
   jdmContent: string;
 }
 
@@ -47,7 +47,7 @@ export class RulesService {
 
   constructor(
     private readonly rulesEngine: RulesEngine,
-    @InjectDatabase() private readonly db: Knex,
+    @InjectDatabase() private readonly db: Kysely<any>,
   ) {}
 
   /**
@@ -58,25 +58,25 @@ export class RulesService {
     operation?: string;
     isActive?: boolean;
   }): Promise<Rule[]> {
-    let query = this.db("sys_rule_definitions").select("*");
+    let query = this.db.selectFrom('sys_rule_definitions').selectAll();
 
     if (filters?.entityName) {
-      query = query.where("entity_name", filters.entityName);
+      query = query.where('entity_name', '=', filters.entityName);
     }
 
     if (filters?.operation) {
-      query = query.where("operation", filters.operation.toUpperCase());
+      query = query.where('operation', '=', filters.operation.toUpperCase());
     }
 
     if (filters?.isActive !== undefined) {
-      query = query.where("is_active", filters.isActive);
+      query = query.where('is_active', '=', filters.isActive);
     }
 
-    const rules = await query.orderBy([
-      { column: "entity_name" },
-      { column: "operation" },
-      { column: "rule_name" },
-    ]);
+    const rules = await query
+      .orderBy('entity_name', 'asc')
+      .orderBy('operation', 'asc')
+      .orderBy('rule_name', 'asc')
+      .execute();
 
     return rules.map((rule) => this.mapDbRuleToRule(rule));
   }
@@ -85,7 +85,11 @@ export class RulesService {
    * Get rule by ID
    */
   async findById(id: string): Promise<Rule> {
-    const rule = await this.db("sys_rule_definitions").where("id", id).first();
+    const rule = await this.db
+      .selectFrom('sys_rule_definitions')
+      .selectAll()
+      .where('id', '=', id)
+      .executeTakeFirst();
 
     if (!rule) {
       throw new NotFoundException(`Rule with ID ${id} not found`);
@@ -98,25 +102,28 @@ export class RulesService {
    * Create a new rule
    */
   async create(dto: CreateRuleDto, userId: string): Promise<Rule> {
-    const existing = await this.db("sys_rule_definitions")
-      .where({
-        entity_name: dto.entityName,
-        operation: dto.operation,
-        rule_name: dto.ruleName,
-      })
-      .first();
+    const existing = await this.db
+      .selectFrom('sys_rule_definitions')
+      .selectAll()
+      .where('entity_name', '=', dto.entityName)
+      .where('operation', '=', dto.operation)
+      .where('rule_name', '=', dto.ruleName)
+      .executeTakeFirst();
 
     if (existing) {
-      throw new Error(`Rule ${dto.ruleName} already exists for ${dto.entityName}:${dto.operation}`);
+      throw new Error(
+        `Rule ${dto.ruleName} already exists for ${dto.entityName}:${dto.operation}`
+      );
     }
 
     const validation = await this.validateJDM(dto.jdmContent);
     if (!validation.valid) {
-      throw new Error(`Invalid JDM content: ${validation.errors.join(", ")}`);
+      throw new Error(`Invalid JDM content: ${validation.errors.join(', ')}`);
     }
 
-    const [rule] = await this.db("sys_rule_definitions")
-      .insert({
+    const rule = await this.db
+      .insertInto('sys_rule_definitions')
+      .values({
         entity_name: dto.entityName,
         rule_name: dto.ruleName,
         operation: dto.operation.toUpperCase(),
@@ -126,8 +133,9 @@ export class RulesService {
         created_by: userId,
         created_at: new Date(),
         updated_at: new Date(),
-      })
-      .returning("*");
+      } as any)
+      .returningAll()
+      .executeTakeFirst();
 
     this.logger.log(`Created rule ${rule.rule_name} for ${rule.entity_name}:${rule.operation}`);
 
@@ -143,7 +151,7 @@ export class RulesService {
     if (dto.jdmContent) {
       const validation = await this.validateJDM(dto.jdmContent);
       if (!validation.valid) {
-        throw new Error(`Invalid JDM content: ${validation.errors.join(", ")}`);
+        throw new Error(`Invalid JDM content: ${validation.errors.join(', ')}`);
       }
     }
 
@@ -161,10 +169,12 @@ export class RulesService {
       updateData.is_active = dto.isActive;
     }
 
-    const [updated] = await this.db("sys_rule_definitions")
-      .where("id", id)
-      .update(updateData)
-      .returning("*");
+    const updated = await this.db
+      .updateTable('sys_rule_definitions')
+      .set(updateData)
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirst();
 
     this.logger.log(`Updated rule ${updated.rule_name} (version ${updated.version})`);
 
@@ -177,10 +187,14 @@ export class RulesService {
   async delete(id: string): Promise<void> {
     const rule = await this.findById(id);
 
-    await this.db("sys_rule_definitions").where("id", id).update({
-      is_active: false,
-      updated_at: new Date(),
-    });
+    await this.db
+      .updateTable('sys_rule_definitions')
+      .set({
+        is_active: false,
+        updated_at: new Date(),
+      })
+      .where('id', '=', id)
+      .execute();
 
     this.logger.log(`Deactivated rule ${rule.ruleName}`);
   }
@@ -203,11 +217,11 @@ export class RulesService {
       const parsed = JSON.parse(jdmContent);
 
       if (!parsed.nodes || !Array.isArray(parsed.nodes)) {
-        return { valid: false, errors: ["JDM must have a nodes array"] };
+        return { valid: false, errors: ['JDM must have a nodes array'] };
       }
 
       if (!parsed.edges || !Array.isArray(parsed.edges)) {
-        return { valid: false, errors: ["JDM must have an edges array"] };
+        return { valid: false, errors: ['JDM must have an edges array'] };
       }
 
       const engine = this.rulesEngine.getEngine();
@@ -226,10 +240,7 @@ export class RulesService {
   /**
    * Dry run - evaluate rule with sample context
    */
-  async dryRun(
-    jdmContent: string,
-    context: Record<string, unknown>
-  ): Promise<{
+  async dryRun(jdmContent: string, context: Record<string, unknown>): Promise<{
     success: boolean;
     result?: unknown;
     errors?: string[];
@@ -256,42 +267,38 @@ export class RulesService {
     let migrated = 0;
 
     const entityOperations = [
-      { file: "bus_company.jdm.json", entityName: "bus_company", operation: "CREATE" },
-      { file: "bus_contact.jdm.json", entityName: "bus_contact", operation: "CREATE" },
-      { file: "bus_deal.jdm.json", entityName: "bus_deal", operation: "CREATE" },
-      { file: "bus_deal_stage.jdm.json", entityName: "bus_deal_stage", operation: "CREATE" },
-      { file: "bus_pipeline.jdm.json", entityName: "bus_pipeline", operation: "CREATE" },
-      { file: "bus_activity.jdm.json", entityName: "bus_activity", operation: "CREATE" },
-      { file: "bus_note.jdm.json", entityName: "bus_note", operation: "CREATE" },
-      { file: "bus_task.jdm.json", entityName: "bus_task", operation: "CREATE" },
-      { file: "bus_email_message.jdm.json", entityName: "bus_email_message", operation: "CREATE" },
-      {
-        file: "bus_email_template.jdm.json",
-        entityName: "bus_email_template",
-        operation: "CREATE",
-      },
-      { file: "bus_product.jdm.json", entityName: "bus_product", operation: "CREATE" },
-      { file: "bus_quote.jdm.json", entityName: "bus_quote", operation: "CREATE" },
-      { file: "bus_quote_item.jdm.json", entityName: "bus_quote_item", operation: "CREATE" },
-      { file: "bus_user.jdm.json", entityName: "bus_user", operation: "CREATE" },
-      { file: "bus_team.jdm.json", entityName: "bus_team", operation: "CREATE" },
+      { file: 'bus_company.jdm.json', entityName: 'bus_company', operation: 'CREATE' },
+      { file: 'bus_contact.jdm.json', entityName: 'bus_contact', operation: 'CREATE' },
+      { file: 'bus_deal.jdm.json', entityName: 'bus_deal', operation: 'CREATE' },
+      { file: 'bus_deal_stage.jdm.json', entityName: 'bus_deal_stage', operation: 'CREATE' },
+      { file: 'bus_pipeline.jdm.json', entityName: 'bus_pipeline', operation: 'CREATE' },
+      { file: 'bus_activity.jdm.json', entityName: 'bus_activity', operation: 'CREATE' },
+      { file: 'bus_note.jdm.json', entityName: 'bus_note', operation: 'CREATE' },
+      { file: 'bus_task.jdm.json', entityName: 'bus_task', operation: 'CREATE' },
+      { file: 'bus_email_message.jdm.json', entityName: 'bus_email_message', operation: 'CREATE' },
+      { file: 'bus_email_template.jdm.json', entityName: 'bus_email_template', operation: 'CREATE' },
+      { file: 'bus_product.jdm.json', entityName: 'bus_product', operation: 'CREATE' },
+      { file: 'bus_quote.jdm.json', entityName: 'bus_quote', operation: 'CREATE' },
+      { file: 'bus_quote_item.jdm.json', entityName: 'bus_quote_item', operation: 'CREATE' },
+      { file: 'bus_user.jdm.json', entityName: 'bus_user', operation: 'CREATE' },
+      { file: 'bus_team.jdm.json', entityName: 'bus_team', operation: 'CREATE' },
     ];
 
     for (const { file, entityName, operation } of entityOperations) {
       try {
-        const jdmPath = join(__dirname, "jdm", file);
-        const jdmContent = readFileSync(jdmPath, "utf-8");
+        const jdmPath = join(__dirname, 'jdm', file);
+        const jdmContent = readFileSync(jdmPath, 'utf-8');
 
         const parsed = JSON.parse(jdmContent);
         const ruleName = parsed.name || `${entityName}_${operation.toLowerCase()}_rule`;
 
-        const existing = await this.db("sys_rule_definitions")
-          .where({
-            entity_name: entityName,
-            operation,
-            rule_name: ruleName,
-          })
-          .first();
+        const existing = await this.db
+          .selectFrom('sys_rule_definitions')
+          .selectAll()
+          .where('entity_name', '=', entityName)
+          .where('operation', '=', operation)
+          .where('rule_name', '=', ruleName)
+          .executeTakeFirst();
 
         if (existing) {
           this.logger.log(`Rule ${ruleName} already exists, skipping migration`);
@@ -302,10 +309,10 @@ export class RulesService {
           {
             entityName,
             ruleName,
-            operation: operation as CreateRuleDto["operation"],
+            operation: operation as CreateRuleDto['operation'],
             jdmContent,
           },
-          "system-migration"
+          'system-migration'
         );
 
         migrated++;
@@ -326,15 +333,15 @@ export class RulesService {
   async validate(
     entityType: string,
     data: Record<string, unknown>,
-    action: "create" | "update" | "delete" = "create"
+    action: 'create' | 'update' | 'delete' = 'create',
   ): Promise<{ valid: boolean; errors: string[]; warnings: string[] }> {
-    const rule = await this.db("sys_rule_definitions")
-      .where({
-        entity_name: entityType,
-        operation: action.toUpperCase(),
-        is_active: true,
-      })
-      .first();
+    const rule = await this.db
+      .selectFrom('sys_rule_definitions')
+      .selectAll()
+      .where('entity_name', '=', entityType)
+      .where('operation', '=', action.toUpperCase())
+      .where('is_active', '=', true)
+      .executeTakeFirst();
 
     if (!rule) {
       return { valid: true, errors: [], warnings: [] };
@@ -354,13 +361,13 @@ export class RulesService {
       if (!result.matched) continue;
 
       for (const ruleAction of result.actions) {
-        if (ruleAction.type === "prevent") {
+        if (ruleAction.type === 'prevent') {
           const message = ruleAction.config.message as string | undefined;
           errors.push(message || `Rule violation: ${result.ruleName}`);
-        } else if (ruleAction.type === "validate") {
+        } else if (ruleAction.type === 'validate') {
           const message = ruleAction.config.message as string | undefined;
           warnings.push(message || `Validation warning: ${result.ruleName}`);
-        } else if (ruleAction.type === "notify") {
+        } else if (ruleAction.type === 'notify') {
           warnings.push(`Notification: ${result.ruleName}`);
         }
       }
@@ -379,21 +386,26 @@ export class RulesService {
   async evaluate(
     entityType: string,
     data: Record<string, unknown>,
-    action: "create" | "update" | "delete" = "create"
+    action: 'create' | 'update' | 'delete' = 'create',
   ): Promise<RuleEvaluationResult[]> {
-    const rule = await this.db("sys_rule_definitions")
-      .where({
-        entity_name: entityType,
-        operation: action.toUpperCase(),
-        is_active: true,
-      })
-      .first();
+    const rule = await this.db
+      .selectFrom('sys_rule_definitions')
+      .selectAll()
+      .where('entity_name', '=', entityType)
+      .where('operation', '=', action.toUpperCase())
+      .where('is_active', '=', true)
+      .executeTakeFirst();
 
     if (!rule) {
       return [];
     }
 
-    return this.rulesEngine.evaluateRulesWithJDM(entityType, rule.jdm_content, data, action);
+    return this.rulesEngine.evaluateRulesWithJDM(
+      entityType,
+      rule.jdm_content,
+      data,
+      action
+    );
   }
 
   private mapDbRuleToRule(record: Record<string, unknown>): Rule {

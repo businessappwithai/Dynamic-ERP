@@ -13,24 +13,24 @@
  * 6. Mutations applied in DB transaction
  * 7. Workflow record updated (status: success/error)
  *
- * Generated: 2026-05-07T09:31:28.449Z
+ * Generated: 2026-05-11T12:52:41.198Z
  * Project: crm-app
  */
 
-import { Injectable, Logger } from "@nestjs/common";
-import type { Knex } from "knex";
-import { InjectDatabase } from "../../database/database.service.decorator";
-import { entityLifecycleWorkflow } from "../../trigger/entity-lifecycle-workflow.task";
+import { Injectable, Logger } from '@nestjs/common';
+import { Kysely } from 'kysely';
+import { InjectDatabase } from '../../database/database.service.decorator';
+import { entityLifecycleWorkflow } from '../../trigger/entity-lifecycle-workflow.task';
 
 export interface TriggerWorkflowDto {
   entityName: string;
   entityId: string;
-  operation: "create" | "update" | "delete";
+  operation: 'create' | 'update' | 'delete';
   userId: string;
 }
 
 export interface WorkflowStatus {
-  status: "draft" | "success" | "error";
+  status: 'draft' | 'success' | 'error';
   completedAt?: Date;
   error?: string;
   mutationsApplied?: Record<string, unknown>;
@@ -41,7 +41,9 @@ export interface WorkflowStatus {
 export class WorkflowService {
   private readonly logger = new Logger(WorkflowService.name);
 
-  constructor(@InjectDatabase() private readonly db: Knex) {}
+  constructor(
+    @InjectDatabase() private readonly db: Kysely<any>,
+  ) {}
 
   /**
    * Trigger an entity lifecycle workflow.
@@ -51,24 +53,32 @@ export class WorkflowService {
    * @returns Trigger.dev run ID
    */
   async trigger(dto: TriggerWorkflowDto): Promise<string> {
-    this.logger.log(`Triggering workflow for ${dto.entityName}:${dto.entityId} (${dto.operation})`);
+    this.logger.log(
+      `Triggering workflow for ${dto.entityName}:${dto.entityId} (${dto.operation})`
+    );
 
     // Create workflow run record
-    const [workflowRun] = await this.db("sys_workflow_runs")
-      .insert({
+    const workflowRun = await this.db
+      .insertInto('sys_workflow_runs')
+      .values({
         entity_name: dto.entityName,
         entity_id: dto.entityId,
         operation: dto.operation,
-        status: "draft",
+        status: 'draft',
         created_by: dto.userId,
-      })
-      .returning("*");
+      } as any)
+      .returningAll()
+      .executeTakeFirst();
 
     // Set entity workflow_status to draft
-    await this.db(dto.entityName).where("id", dto.entityId).update({
-      workflow_status: "draft",
-      workflow_run_id: workflowRun.id,
-    });
+    await this.db
+      .updateTable(dto.entityName as any)
+      .set({
+        workflow_status: 'draft',
+        workflow_run_id: workflowRun.id,
+      } as any)
+      .where('id', '=', dto.entityId)
+      .execute();
 
     // Trigger async workflow in Trigger.dev
     const handle = await entityLifecycleWorkflow.trigger({
@@ -79,7 +89,9 @@ export class WorkflowService {
       userId: dto.userId,
     });
 
-    this.logger.log(`Workflow ${handle.id} triggered for ${dto.entityName}:${dto.entityId}`);
+    this.logger.log(
+      `Workflow ${handle.id} triggered for ${dto.entityName}:${dto.entityId}`
+    );
 
     return handle.id;
   }
@@ -91,7 +103,11 @@ export class WorkflowService {
    * @returns Workflow status
    */
   async getStatus(runId: string): Promise<WorkflowStatus> {
-    const workflowRun = await this.db("sys_workflow_runs").where("id", runId).first();
+    const workflowRun = await this.db
+      .selectFrom('sys_workflow_runs')
+      .selectAll()
+      .where('id', '=', runId)
+      .executeTakeFirst();
 
     if (!workflowRun) {
       throw new Error(`Workflow run ${runId} not found`);
@@ -115,17 +131,25 @@ export class WorkflowService {
    * @returns New workflow run ID
    */
   async retry(workflowRunId: string): Promise<string> {
-    const workflowRun = await this.db("sys_workflow_runs").where("id", workflowRunId).first();
+    const workflowRun = await this.db
+      .selectFrom('sys_workflow_runs')
+      .selectAll()
+      .where('id', '=', workflowRunId)
+      .executeTakeFirst();
 
     if (!workflowRun) {
       throw new Error(`Workflow run ${workflowRunId} not found`);
     }
 
     // Reset entity workflow_status to none
-    await this.db(workflowRun.entity_name).where("id", workflowRun.entity_id).update({
-      workflow_status: "none",
-      workflow_run_id: null,
-    });
+    await this.db
+      .updateTable(workflowRun.entity_name as any)
+      .set({
+        workflow_status: 'none',
+        workflow_run_id: null,
+      } as any)
+      .where('id', '=', workflowRun.entity_id)
+      .execute();
 
     // Trigger new workflow
     return await this.trigger({
@@ -144,14 +168,19 @@ export class WorkflowService {
    * @param limit Number of runs to return
    * @returns Workflow runs
    */
-  async getEntityWorkflows(entityName: string, entityId: string, limit = 10) {
-    return await this.db("sys_workflow_runs")
-      .where({
-        entity_name: entityName,
-        entity_id: entityId,
-      })
-      .orderBy("created_at", "desc")
-      .limit(limit);
+  async getEntityWorkflows(
+    entityName: string,
+    entityId: string,
+    limit = 10
+  ) {
+    return await this.db
+      .selectFrom('sys_workflow_runs')
+      .selectAll()
+      .where('entity_name', '=', entityName)
+      .where('entity_id', '=', entityId)
+      .orderBy('created_at', 'desc')
+      .limit(limit)
+      .execute();
   }
 
   /**
@@ -161,22 +190,22 @@ export class WorkflowService {
    * @returns Workflow runs
    */
   async getAllWorkflows(filters?: {
-    status?: "draft" | "success" | "error";
+    status?: 'draft' | 'success' | 'error';
     entityName?: string;
     limit?: number;
   }) {
-    let query = this.db("sys_workflow_runs");
+    let query = this.db.selectFrom('sys_workflow_runs').selectAll();
 
     if (filters?.status) {
-      query = query.where("status", filters.status);
+      query = query.where('status', '=', filters.status);
     }
 
     if (filters?.entityName) {
-      query = query.where("entity_name", filters.entityName);
+      query = query.where('entity_name', '=', filters.entityName);
     }
 
     const limit = filters?.limit ?? 100;
 
-    return await query.orderBy("created_at", "desc").limit(limit);
+    return await query.orderBy('created_at', 'desc').limit(limit).execute();
   }
 }

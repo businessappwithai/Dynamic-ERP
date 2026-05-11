@@ -1,10 +1,10 @@
 /**
  * API Client for Backend Communication
  *
- * Generated: {{now}}
+ * Generated: 2026-05-11T12:52:42.857Z
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "{{config.baseUrl}}";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 // ============================================================================
 // Logger Utility

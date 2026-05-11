@@ -1,11 +1,5 @@
-/**
- * TanStack Start Configuration
- *
- * Generated: 2026-05-09T16:10:52.369Z
- * Project: my-app
- */
-
-import { defineConfig } from '@tanstack/start/config';
+import { defineConfig } from '@tanstack/start/config'
+import path from 'path'
 
 export default defineConfig({
   tsr: {
@@ -18,4 +12,22 @@ export default defineConfig({
   server: {
     preset: 'node-server',
   },
-});
+  react: {
+    jsxRuntime: 'automatic',
+    jsxImportSource: 'react',
+  },
+  vite: {
+    esbuild: {
+      jsx: 'automatic',
+      jsxImportSource: 'react',
+    },
+    resolve: {
+      alias: {
+        '@': path.resolve('./src'),
+      },
+    },
+    ssr: {
+      noExternal: ['@tanstack/*', 'better-auth'],
+    },
+  },
+})

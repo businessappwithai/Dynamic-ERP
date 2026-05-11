@@ -3,18 +3,13 @@
  *
  * Protects routes by validating session tokens from BetterAuth
  *
- * Generated: 2026-05-07T09:31:28.363Z
+ * Generated: 2026-05-11T12:52:41.186Z
  */
 
-import {
-  type CanActivate,
-  type ExecutionContext,
-  Injectable,
-  UnauthorizedException,
-} from "@nestjs/common";
-import type { Reflector } from "@nestjs/core";
-import { auth } from "../../../lib/better-auth";
-import { IS_PUBLIC_KEY } from "../decorators/public.decorator";
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { auth } from '../../../lib/better-auth';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -40,7 +35,7 @@ export class JwtAuthGuard implements CanActivate {
       });
 
       if (!session) {
-        throw new UnauthorizedException("Invalid or expired session");
+        throw new UnauthorizedException('Invalid or expired session');
       }
 
       // Attach user and session to request
@@ -49,7 +44,7 @@ export class JwtAuthGuard implements CanActivate {
 
       return true;
     } catch (error) {
-      throw new UnauthorizedException("Authentication failed");
+      throw new UnauthorizedException('Authentication failed');
     }
   }
 }

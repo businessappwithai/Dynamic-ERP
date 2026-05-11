@@ -4,20 +4,20 @@
  * Background task for synchronising entity data with external systems.
  * Triggered via syncEntityTask.trigger(payload) from JobQueueService.
  *
- * Generated: 2026-05-07T09:31:28.403Z
+ * Generated: 2026-05-11T12:52:41.192Z
  * Project: crm-app
  */
 
-import { task } from "@trigger.dev/sdk/v3";
+import { task } from '@trigger.dev/sdk/v3';
 
 export interface SyncTaskPayload {
   entityType: string;
   entityId: string;
-  action: "create" | "update" | "delete";
+  action: 'create' | 'update' | 'delete';
 }
 
 export const syncEntityTask = task({
-  id: "sync-entity",
+  id: 'sync-entity',
   maxDuration: 120,
   retry: {
     maxAttempts: 5,

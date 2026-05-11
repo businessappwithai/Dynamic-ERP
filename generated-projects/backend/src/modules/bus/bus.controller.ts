@@ -4,44 +4,46 @@
  * Dynamic controller for all bus_ prefixed tables.
  * CRUD operations are driven by the Application Dictionary metadata.
  *
- * Generated: 2026-05-07T09:31:28.477Z
+ * Generated: 2026-05-11T12:52:41.206Z
  */
 
 import {
-  BadRequestException,
-  Body,
   Controller,
-  Delete,
   Get,
+  Post,
+  Put,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
   Headers,
   HttpCode,
   HttpStatus,
-  Inject,
-  Logger,
-  Optional,
-  Param,
   ParseUUIDPipe,
-  Patch,
-  Post,
-  Put,
-  Query,
-} from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { BusService } from "./bus.service";
+  Logger,
+  Inject,
+  Optional,
+  BadRequestException,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import { BusService } from './bus.service';
 
-@ApiTags("bus")
+@ApiTags('bus')
 @ApiBearerAuth()
-@Controller("bus")
+@Controller('bus')
 export class BusController {
   private readonly logger = new Logger(BusController.name);
 
-  constructor(@Inject(BusService) @Optional() private readonly busService?: BusService) {
+  constructor(
+    @Inject(BusService) @Optional() private readonly busService?: BusService,
+  ) {
     this.logger.log('BusController initialized');
   }
 
   private getBusService(): BusService {
     if (!this.busService) {
-      throw new BadRequestException("BusService not available");
+      throw new BadRequestException('BusService not available');
     }
     return this.busService;
   }
@@ -50,22 +52,20 @@ export class BusController {
    * List all records for a business entity
    * GET /api/bus/:entity
    */
-  @Get(":entity")
-  @ApiOperation({ summary: "List all records for a business entity" })
-  @ApiParam({ name: "entity", description: "Entity name (e.g., customer, order)" })
-  @ApiResponse({ status: 200, description: "Returns paginated list of records" })
+  @Get(':entity')
+  @ApiOperation({ summary: 'List all records for a business entity' })
+  @ApiParam({ name: 'entity', description: 'Entity name (e.g., customer, order)' })
+  @ApiResponse({ status: 200, description: 'Returns paginated list of records' })
   async findAll(
     @Param('entity') entity: string,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
     @Query('orderBy') orderBy?: string,
     @Query('orderDir') orderDir?: 'asc' | 'desc',
-    @Query() query?: Record<string, any>
+    @Query() query?: Record<string, any>,
   ) {
-    const methodName = "findAll";
-    this.logger.debug(
-      `[${methodName}] Request - entity: ${entity}, page: ${page}, limit: ${limit}, orderBy: ${orderBy}, orderDir: ${orderDir}`
-    );
+    const methodName = 'findAll';
+    this.logger.debug(`[${methodName}] Request - entity: ${entity}, page: ${page}, limit: ${limit}, orderBy: ${orderBy}, orderDir: ${orderDir}`);
 
     // Extract filters from query params (exclude pagination params)
     const { page: _p, limit: _l, orderBy: _ob, orderDir: _od, ...rawFilters } = query || {};
@@ -77,15 +77,9 @@ export class BusController {
       this.logger.debug(`[${methodName}] Filters: ${JSON.stringify(parsedFilters)}`);
     }
 
-    const result = await this.getBusService().findAll(
-      entity,
-      { page, limit, orderBy, orderDir },
-      parsedFilters
-    );
+    const result = await this.getBusService().findAll(entity, { page, limit, orderBy, orderDir }, parsedFilters);
 
-    this.logger.log(
-      `[${methodName}] Success - entity: ${entity}, returned ${result.data.length} records (total: ${result.meta.total})`
-    );
+    this.logger.log(`[${methodName}] Success - entity: ${entity}, returned ${result.data.length} records (total: ${result.meta.total})`);
     return result;
   }
 
@@ -99,38 +93,38 @@ export class BusController {
 
     for (const [key, value] of Object.entries(rawFilters)) {
       // Check if this is a filter parameter (starts with 'filter.')
-      if (key.startsWith("filter.")) {
+      if (key.startsWith('filter.')) {
         const fieldName = key.substring(7); // Remove 'filter.' prefix
 
         // Parse operator:value format
-        if (typeof value === "string" && value.includes(":")) {
-          const [operator, searchValue] = value.split(":", 2);
+        if (typeof value === 'string' && value.includes(':')) {
+          const [operator, searchValue] = value.split(':', 2);
 
           switch (operator) {
-            case "contains":
+            case 'contains':
               parsed[fieldName] = `%${searchValue}%`;
               break;
-            case "startsWith":
+            case 'startsWith':
               parsed[fieldName] = `${searchValue}%`;
               break;
-            case "endsWith":
+            case 'endsWith':
               parsed[fieldName] = `%${searchValue}`;
               break;
-            case "equals":
-            case "eq":
+            case 'equals':
+            case 'eq':
               parsed[fieldName] = searchValue;
               break;
-            case "gt":
-              parsed[fieldName] = { operator: ">", value: searchValue };
+            case 'gt':
+              parsed[fieldName] = { operator: '>', value: searchValue };
               break;
-            case "gte":
-              parsed[fieldName] = { operator: ">=", value: searchValue };
+            case 'gte':
+              parsed[fieldName] = { operator: '>=', value: searchValue };
               break;
-            case "lt":
-              parsed[fieldName] = { operator: "<", value: searchValue };
+            case 'lt':
+              parsed[fieldName] = { operator: '<', value: searchValue };
               break;
-            case "lte":
-              parsed[fieldName] = { operator: "<=", value: searchValue };
+            case 'lte':
+              parsed[fieldName] = { operator: '<=', value: searchValue };
               break;
             default:
               // Unknown operator, treat as exact match
@@ -142,12 +136,7 @@ export class BusController {
           // No operator specified, use as-is
           parsed[fieldName] = value;
         }
-      } else if (
-        !key.startsWith("page") &&
-        !key.startsWith("limit") &&
-        !key.startsWith("orderBy") &&
-        !key.startsWith("orderDir")
-      ) {
+      } else if (!key.startsWith('page') && !key.startsWith('limit') && !key.startsWith('orderBy') && !key.startsWith('orderDir')) {
         // Non-filter query params, pass through as-is
         parsed[key] = value;
       }
@@ -160,14 +149,17 @@ export class BusController {
    * Get a single record by ID
    * GET /api/bus/:entity/:id
    */
-  @Get(":entity/:id")
-  @ApiOperation({ summary: "Get a single record by ID" })
-  @ApiParam({ name: "entity", description: "Entity name" })
-  @ApiParam({ name: "id", description: "Record UUID" })
-  @ApiResponse({ status: 200, description: "Returns the record" })
-  @ApiResponse({ status: 404, description: "Record not found" })
-  async findOne(@Param('entity') entity: string, @Param('id', ParseUUIDPipe) id: string) {
-    const methodName = "findOne";
+  @Get(':entity/:id')
+  @ApiOperation({ summary: 'Get a single record by ID' })
+  @ApiParam({ name: 'entity', description: 'Entity name' })
+  @ApiParam({ name: 'id', description: 'Record UUID' })
+  @ApiResponse({ status: 200, description: 'Returns the record' })
+  @ApiResponse({ status: 404, description: 'Record not found' })
+  async findOne(
+    @Param('entity') entity: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    const methodName = 'findOne';
     this.logger.debug(`[${methodName}] Request - entity: ${entity}, id: ${id}`);
 
     const result = await this.getBusService().findById(entity, id);
@@ -180,18 +172,21 @@ export class BusController {
    * Create a new record
    * POST /api/bus/:entity
    */
-  @Post(":entity")
-  @ApiOperation({ summary: "Create a new record" })
-  @ApiParam({ name: "entity", description: "Entity name" })
-  @ApiResponse({ status: 201, description: "Record created successfully" })
-  @ApiResponse({ status: 400, description: "Validation error" })
-  async create(@Param('entity') entity: string, @Body() data: Record<string, any>) {
-    const methodName = "create";
+  @Post(':entity')
+  @ApiOperation({ summary: 'Create a new record' })
+  @ApiParam({ name: 'entity', description: 'Entity name' })
+  @ApiResponse({ status: 201, description: 'Record created successfully' })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  async create(
+    @Param('entity') entity: string,
+    @Body() data: Record<string, any>,
+  ) {
+    const methodName = 'create';
     this.logger.log(`[${methodName}] Request - entity: ${entity}`);
     this.logger.debug(`[${methodName}] Request body: ${JSON.stringify(data)}`);
 
     // Validate data against dictionary metadata
-    await this.getBusService().validateData(entity, data, "create");
+    await this.getBusService().validateData(entity, data, 'create');
     const result = await this.getBusService().create(entity, data);
 
     this.logger.log(`[${methodName}] Success - entity: ${entity}, created id: ${result.id}`);
@@ -202,35 +197,33 @@ export class BusController {
    * Update an existing record (full replace)
    * PUT /api/bus/:entity/:id
    */
-  @Put(":entity/:id")
-  @ApiOperation({ summary: "Update a record (full replace)" })
-  @ApiParam({ name: "entity", description: "Entity name" })
-  @ApiParam({ name: "id", description: "Record UUID" })
-  @ApiResponse({ status: 200, description: "Record updated successfully" })
-  @ApiResponse({ status: 404, description: "Record not found" })
-  @ApiResponse({ status: 409, description: "Conflict - record was modified" })
+  @Put(':entity/:id')
+  @ApiOperation({ summary: 'Update a record (full replace)' })
+  @ApiParam({ name: 'entity', description: 'Entity name' })
+  @ApiParam({ name: 'id', description: 'Record UUID' })
+  @ApiResponse({ status: 200, description: 'Record updated successfully' })
+  @ApiResponse({ status: 404, description: 'Record not found' })
+  @ApiResponse({ status: 409, description: 'Conflict - record was modified' })
   async update(
     @Param('entity') entity: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() data: Record<string, any>,
-    @Headers('if-match') ifMatch?: string
+    @Headers('if-match') ifMatch?: string,
   ) {
-    const methodName = "update";
+    const methodName = 'update';
     // Extract version from If-Match header
-    const version = ifMatch ? parseInt(ifMatch.replace(/"/g, "").replace("v", ""), 10) : undefined;
+    const version = ifMatch
+      ? parseInt(ifMatch.replace(/"/g, '').replace('v', ''), 10)
+      : undefined;
 
-    this.logger.log(
-      `[${methodName}] Request - entity: ${entity}, id: ${id}, expectedVersion: ${version}`
-    );
+    this.logger.log(`[${methodName}] Request - entity: ${entity}, id: ${id}, expectedVersion: ${version}`);
     this.logger.debug(`[${methodName}] Request body: ${JSON.stringify(data)}`);
 
     // Validate data against dictionary metadata
-    await this.getBusService().validateData(entity, data, "update");
+    await this.getBusService().validateData(entity, data, 'update');
     const result = await this.getBusService().update(entity, id, data, version);
 
-    this.logger.log(
-      `[${methodName}] Success - entity: ${entity}, id: ${id}, new version: ${result.version}`
-    );
+    this.logger.log(`[${methodName}] Success - entity: ${entity}, id: ${id}, new version: ${result.version}`);
     return result;
   }
 
@@ -238,34 +231,32 @@ export class BusController {
    * Partially update a record
    * PATCH /api/bus/:entity/:id
    */
-  @Patch(":entity/:id")
-  @ApiOperation({ summary: "Partially update a record" })
-  @ApiParam({ name: "entity", description: "Entity name" })
-  @ApiParam({ name: "id", description: "Record UUID" })
-  @ApiResponse({ status: 200, description: "Record updated successfully" })
-  @ApiResponse({ status: 404, description: "Record not found" })
-  @ApiResponse({ status: 409, description: "Conflict - record was modified" })
+  @Patch(':entity/:id')
+  @ApiOperation({ summary: 'Partially update a record' })
+  @ApiParam({ name: 'entity', description: 'Entity name' })
+  @ApiParam({ name: 'id', description: 'Record UUID' })
+  @ApiResponse({ status: 200, description: 'Record updated successfully' })
+  @ApiResponse({ status: 404, description: 'Record not found' })
+  @ApiResponse({ status: 409, description: 'Conflict - record was modified' })
   async patch(
     @Param('entity') entity: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() data: Record<string, any>,
-    @Headers('if-match') ifMatch?: string
+    @Headers('if-match') ifMatch?: string,
   ) {
-    const methodName = "patch";
-    const version = ifMatch ? parseInt(ifMatch.replace(/"/g, "").replace("v", ""), 10) : undefined;
+    const methodName = 'patch';
+    const version = ifMatch
+      ? parseInt(ifMatch.replace(/"/g, '').replace('v', ''), 10)
+      : undefined;
 
-    this.logger.log(
-      `[${methodName}] Request - entity: ${entity}, id: ${id}, expectedVersion: ${version}`
-    );
+    this.logger.log(`[${methodName}] Request - entity: ${entity}, id: ${id}, expectedVersion: ${version}`);
     this.logger.debug(`[${methodName}] Request body: ${JSON.stringify(data)}`);
 
     // Validate partial data against dictionary metadata
-    await this.getBusService().validateData(entity, data, "patch");
+    await this.getBusService().validateData(entity, data, 'patch');
     const result = await this.getBusService().update(entity, id, data, version);
 
-    this.logger.log(
-      `[${methodName}] Success - entity: ${entity}, id: ${id}, new version: ${result.version}`
-    );
+    this.logger.log(`[${methodName}] Success - entity: ${entity}, id: ${id}, new version: ${result.version}`);
     return result;
   }
 
@@ -273,15 +264,18 @@ export class BusController {
    * Delete a record (soft delete)
    * DELETE /api/bus/:entity/:id
    */
-  @Delete(":entity/:id")
+  @Delete(':entity/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: "Delete a record (soft delete)" })
-  @ApiParam({ name: "entity", description: "Entity name" })
-  @ApiParam({ name: "id", description: "Record UUID" })
-  @ApiResponse({ status: 204, description: "Record deleted successfully" })
-  @ApiResponse({ status: 404, description: "Record not found" })
-  async delete(@Param('entity') entity: string, @Param('id', ParseUUIDPipe) id: string) {
-    const methodName = "delete";
+  @ApiOperation({ summary: 'Delete a record (soft delete)' })
+  @ApiParam({ name: 'entity', description: 'Entity name' })
+  @ApiParam({ name: 'id', description: 'Record UUID' })
+  @ApiResponse({ status: 204, description: 'Record deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Record not found' })
+  async delete(
+    @Param('entity') entity: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    const methodName = 'delete';
     this.logger.log(`[${methodName}] Request - entity: ${entity}, id: ${id}`);
 
     await this.getBusService().softDelete(entity, id);
@@ -304,9 +298,7 @@ export class BusController {
 
     const result = await this.getBusService().getEntityMetadata(entity);
 
-    this.logger.debug(
-      `[${methodName}] Success - entity: ${entity}, returned ${result.columns.length} columns`,
-    );
+    this.logger.debug(`[${methodName}] Success - entity: ${entity}, returned ${result.columns.length} columns`);
     return result;
   }
 
@@ -323,9 +315,7 @@ export class BusController {
 
     const result = await this.getBusService().getFormFields(entity);
 
-    this.logger.debug(
-      `[${methodName}] Success - entity: ${entity}, returned ${result.length} form fields`,
-    );
+    this.logger.debug(`[${methodName}] Success - entity: ${entity}, returned ${result.length} form fields`);
     return result;
   }
 
@@ -342,9 +332,7 @@ export class BusController {
 
     const result = await this.getBusService().getGridFields(entity);
 
-    this.logger.debug(
-      `[${methodName}] Success - entity: ${entity}, returned ${result.length} grid fields`,
-    );
+    this.logger.debug(`[${methodName}] Success - entity: ${entity}, returned ${result.length} grid fields`);
     return result;
   }
 }

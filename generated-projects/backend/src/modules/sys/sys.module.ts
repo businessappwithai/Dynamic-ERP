@@ -4,13 +4,13 @@
  * Handles all sys_ prefixed tables:
  * - sys_table, sys_column, sys_field
  *
- * Generated: 2026-05-07T09:31:28.471Z
+ * Generated: 2026-05-11T12:52:41.204Z
  */
 
-import { Module } from "@nestjs/common";
-import { DatabaseModule } from "../../database/database.module";
-import { SysController } from "./sys.controller";
-import { SysService } from "./sys.service";
+import { Module } from '@nestjs/common';
+import { DatabaseModule } from '../../database/database.module';
+import { SysController } from './sys.controller';
+import { SysService } from './sys.service';
 
 @Module({
   imports: [DatabaseModule],

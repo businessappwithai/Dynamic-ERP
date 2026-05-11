@@ -39,7 +39,10 @@ export function getHooks(_entity: string): HookRegistry {
 /**
  * Execute beforeCreate hooks for an entity
  */
-export async function executeBeforeCreateHooks(entity: string, data: any): Promise<any> {
+export async function executeBeforeCreateHooks(
+  entity: string,
+  data: any
+): Promise<any> {
   const hooks = getHooks(entity);
   const beforeHooks = hooks.beforeCreate || {};
 
@@ -54,7 +57,10 @@ export async function executeBeforeCreateHooks(entity: string, data: any): Promi
 /**
  * Execute afterCreate hooks for an entity
  */
-export async function executeAfterCreateHooks(entity: string, data: any): Promise<void> {
+export async function executeAfterCreateHooks(
+  entity: string,
+  data: any
+): Promise<void> {
   const hooks = getHooks(entity);
   const afterHooks = hooks.afterCreate || {};
 
@@ -67,7 +73,10 @@ export async function executeAfterCreateHooks(entity: string, data: any): Promis
 /**
  * Execute beforeUpdate hooks for an entity
  */
-export async function executeBeforeUpdateHooks(entity: string, data: any): Promise<any> {
+export async function executeBeforeUpdateHooks(
+  entity: string,
+  data: any
+): Promise<any> {
   const hooks = getHooks(entity);
   const beforeHooks = hooks.beforeUpdate || {};
 
@@ -82,7 +91,10 @@ export async function executeBeforeUpdateHooks(entity: string, data: any): Promi
 /**
  * Execute afterUpdate hooks for an entity
  */
-export async function executeAfterUpdateHooks(entity: string, data: any): Promise<void> {
+export async function executeAfterUpdateHooks(
+  entity: string,
+  data: any
+): Promise<void> {
   const hooks = getHooks(entity);
   const afterHooks = hooks.afterUpdate || {};
 
@@ -95,7 +107,10 @@ export async function executeAfterUpdateHooks(entity: string, data: any): Promis
 /**
  * Execute beforeDelete hooks for an entity
  */
-export async function executeBeforeDeleteHooks(entity: string, id: string): Promise<boolean> {
+export async function executeBeforeDeleteHooks(
+  entity: string,
+  id: string
+): Promise<boolean> {
   const hooks = getHooks(entity);
   const beforeHooks = hooks.beforeDelete || {};
 
@@ -110,7 +125,10 @@ export async function executeBeforeDeleteHooks(entity: string, id: string): Prom
 /**
  * Execute afterDelete hooks for an entity
  */
-export async function executeAfterDeleteHooks(entity: string, data: any): Promise<void> {
+export async function executeAfterDeleteHooks(
+  entity: string,
+  data: any
+): Promise<void> {
   const hooks = getHooks(entity);
   const afterHooks = hooks.afterDelete || {};
 
@@ -123,7 +141,10 @@ export async function executeAfterDeleteHooks(entity: string, data: any): Promis
 /**
  * Execute beforeRead hooks for an entity
  */
-export async function executeBeforeReadHooks(entity: string, params: any): Promise<any> {
+export async function executeBeforeReadHooks(
+  entity: string,
+  params: any
+): Promise<any> {
   const hooks = getHooks(entity);
   const beforeHooks = hooks.beforeRead || {};
 
@@ -138,7 +159,10 @@ export async function executeBeforeReadHooks(entity: string, params: any): Promi
 /**
  * Execute afterRead hooks for an entity
  */
-export async function executeAfterReadHooks(entity: string, data: any): Promise<void> {
+export async function executeAfterReadHooks(
+  entity: string,
+  data: any
+): Promise<void> {
   const hooks = getHooks(entity);
   const afterHooks = hooks.afterRead || {};
 
@@ -151,7 +175,10 @@ export async function executeAfterReadHooks(entity: string, data: any): Promise<
 /**
  * Execute beforeList hooks for an entity
  */
-export async function executeBeforeListHooks(entity: string, params: any): Promise<any> {
+export async function executeBeforeListHooks(
+  entity: string,
+  params: any
+): Promise<any> {
   const hooks = getHooks(entity);
   const beforeHooks = hooks.beforeList || {};
 
@@ -166,7 +193,10 @@ export async function executeBeforeListHooks(entity: string, params: any): Promi
 /**
  * Execute afterList hooks for an entity
  */
-export async function executeAfterListHooks(entity: string, data: any[]): Promise<void> {
+export async function executeAfterListHooks(
+  entity: string,
+  data: any[]
+): Promise<void> {
   const hooks = getHooks(entity);
   const afterHooks = hooks.afterList || {};
 

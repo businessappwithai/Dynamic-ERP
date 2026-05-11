@@ -3,21 +3,16 @@
  *
  * REST API for managing background jobs
  *
- * Generated: 2026-05-07T09:31:28.420Z
+ * Generated: 2026-05-11T12:52:41.194Z
  * Project: crm-app
  */
 
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import type {
-  EmailJobData,
-  JobQueueService,
-  ReportJobData,
-  SyncJobData,
-} from "./job-queue.service";
+import { Controller, Get, Post, Body, Param, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { JobQueueService, EmailJobData, ReportJobData, SyncJobData } from './job-queue.service';
 
-@ApiTags("jobs")
-@Controller("jobs")
+@ApiTags('jobs')
+@Controller('jobs')
 export class JobQueueController {
   constructor(private readonly jobQueueService: JobQueueService) {}
 
@@ -57,15 +52,15 @@ export class JobQueueController {
     };
   }
 
-  @Get(":queueName/:jobId")
-  @ApiOperation({ summary: "Get job status" })
-  @ApiResponse({ status: 200, description: "Job status retrieved" })
-  @ApiResponse({ status: 404, description: "Job not found" })
+  @Get(':queueName/:jobId')
+  @ApiOperation({ summary: 'Get job status' })
+  @ApiResponse({ status: 200, description: 'Job status retrieved' })
+  @ApiResponse({ status: 404, description: 'Job not found' })
   async getJobStatus(@Param('queueName') queueName: string, @Param('jobId') jobId: string) {
     const status = await this.jobQueueService.getJobStatus(queueName, jobId);
     if (!status) {
       return {
-        error: "Job not found",
+        error: 'Job not found',
       };
     }
     return status;

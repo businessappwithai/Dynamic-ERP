@@ -70,7 +70,7 @@ crm-app/
 │   ├── migrations/    # Database migrations
 │   └── seeds/         # Seed data
 ├── frontend/          # TanStack Start App
-│   ├── src/app/
+│   ├── src/routes/
 │   └── ...
 └── package.json       # Root workspace config
 ```

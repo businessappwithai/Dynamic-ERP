@@ -7,12 +7,12 @@
  * Enables runtime UI layout customization by fetching field
  * ordering and display settings from the backend.
  *
- * Generated: 2026-05-07T09:31:28.744Z
+ * Generated: 2026-05-11T12:52:42.858Z
  * Project: crm-app
  */
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiClient, type PaginatedResponse } from "@/lib/api-client";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiClient, PaginatedResponse } from '@/lib/api-client';
 
 export interface FieldMetadata {
   sys_field_id: string;
@@ -56,7 +56,7 @@ export interface SysReference {
  */
 export function useFieldMetadata(tableName: string) {
   return useQuery({
-    queryKey: ["sys", "fields", tableName],
+    queryKey: ['sys', 'fields', tableName],
     queryFn: async () => {
       // First get the table ID
       const tableRes = await apiClient.get<PaginatedResponse<SysTable>>(
@@ -82,7 +82,7 @@ export function useFieldMetadata(tableName: string) {
  */
 export function useTableColumns(tableId: string) {
   return useQuery({
-    queryKey: ["sys", "columns", tableId],
+    queryKey: ['sys', 'columns', tableId],
     queryFn: async () => {
       const response = await apiClient.get<PaginatedResponse<ColumnMetadata>>(
         `/api/sys/columns?table_id=${tableId}`
@@ -108,7 +108,7 @@ export function useUpdateFieldOrder() {
     },
     onSuccess: () => {
       // Invalidate field queries to refetch with new order
-      queryClient.invalidateQueries({ queryKey: ["sys", "fields"] });
+      queryClient.invalidateQueries({ queryKey: ['sys', 'fields'] });
     },
   });
 }
@@ -126,7 +126,7 @@ export function useToggleFieldVisibility() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["sys", "fields"] });
+      queryClient.invalidateQueries({ queryKey: ['sys', 'fields'] });
     },
   });
 }
@@ -136,9 +136,11 @@ export function useToggleFieldVisibility() {
  */
 export function useReferenceTypes() {
   return useQuery({
-    queryKey: ["sys", "references"],
+    queryKey: ['sys', 'references'],
     queryFn: async () => {
-      const response = await apiClient.get<PaginatedResponse<SysReference>>("/api/sys/references");
+      const response = await apiClient.get<PaginatedResponse<SysReference>>(
+        '/api/sys/references'
+      );
       return response.data;
     },
     staleTime: 30 * 60 * 1000, // 30 minutes - reference types rarely change

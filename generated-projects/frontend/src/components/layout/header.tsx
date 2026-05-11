@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * Header Component
  *
@@ -7,7 +5,7 @@
  */
 
 import { Bell, LogOut, Search, Settings, User } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "@tanstack/react-router";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,11 +25,11 @@ interface HeaderProps {
 
 export function Header({ className }: HeaderProps) {
   const { user, logout } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    router.push("/login");
+    navigate({ to: "/login" });
   };
 
   const getInitials = (name: string) => {
@@ -105,11 +103,11 @@ export function Header({ className }: HeaderProps) {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push("/profile")}>
+            <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push("/settings")}>
+            <DropdownMenuItem onClick={() => navigate({ to: "/settings" })}>
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>

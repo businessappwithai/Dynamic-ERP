@@ -2,22 +2,22 @@
  * Hook System Types
  *
  * Defines the lifecycle events and hook interfaces for the application.
- * Generated: 2026-05-07T09:31:28.383Z
+ * Generated: 2026-05-11T12:52:41.189Z
  */
 
 export type HookLifecycle =
-  | "beforeCreate"
-  | "afterCreate"
-  | "beforeUpdate"
-  | "afterUpdate"
-  | "beforeDelete"
-  | "afterDelete"
-  | "beforeQuery"
-  | "afterQuery"
-  | "beforeRead"
-  | "afterRead"
-  | "beforeList"
-  | "afterList";
+  | 'beforeCreate'
+  | 'afterCreate'
+  | 'beforeUpdate'
+  | 'afterUpdate'
+  | 'beforeDelete'
+  | 'afterDelete'
+  | 'beforeQuery'
+  | 'afterQuery'
+  | 'beforeRead'
+  | 'afterRead'
+  | 'beforeList'
+  | 'afterList';
 
 export interface HookContext<T = any> {
   entity: string;

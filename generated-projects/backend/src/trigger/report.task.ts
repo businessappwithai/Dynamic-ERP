@@ -4,11 +4,11 @@
  * Background task for generating reports (PDF, CSV, etc.).
  * Triggered via generateReportTask.trigger(payload) from JobQueueService.
  *
- * Generated: 2026-05-07T09:31:28.400Z
+ * Generated: 2026-05-11T12:52:41.192Z
  * Project: crm-app
  */
 
-import { task } from "@trigger.dev/sdk/v3";
+import { task } from '@trigger.dev/sdk/v3';
 
 export interface ReportTaskPayload {
   reportType: string;
@@ -17,7 +17,7 @@ export interface ReportTaskPayload {
 }
 
 export const generateReportTask = task({
-  id: "generate-report",
+  id: 'generate-report',
   maxDuration: 300,
   retry: {
     maxAttempts: 2,

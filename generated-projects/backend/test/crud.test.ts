@@ -5,21 +5,21 @@
  * Comprehensive Create, Read, Update, Delete tests for all entities
  */
 
-import type { NestFastifyApplication } from "@nestjs/platform-fastify";
-import request from "supertest";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { AppModule } from "../src/app.module";
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { NestFastifyApplication } from '@nestjs/platform-fastify';
+import request from 'supertest';
+import { AppModule } from '../src/app.module';
 import {
-  cleanupTestData,
-  closeTestApp,
-  closeTestDatabase,
   createTestApp,
-  generateTestId,
+  closeTestApp,
   initTestDatabase,
+  closeTestDatabase,
+  cleanupTestData,
   TestDataFactory,
-} from "./setup";
+  generateTestId,
+} from './setup';
 
-describe("CRUD Operations", () => {
+describe('CRUD Operations', () => {
   let app: NestFastifyApplication;
 
   beforeAll(async () => {
@@ -36,11 +36,11 @@ describe("CRUD Operations", () => {
     await cleanupTestData();
   });
 
-  describe("Company CRUD", () => {
-    const basePath = "/api/bus/bus_company";
+  describe('Company CRUD', () => {
+    const basePath = '/api/bus/bus_company';
 
-    describe("CREATE", () => {
-      it("should create a new Company", async () => {
+    describe('CREATE', () => {
+      it('should create a new Company', async () => {
         const testData = TestDataFactory.createCompany();
         delete testData.id; // ID should be auto-generated
 
@@ -56,13 +56,16 @@ describe("CRUD Operations", () => {
         expect(response.body.owner_id).toBeDefined();
       });
 
-      it("should return 400 for invalid data", async () => {
+      it('should return 400 for invalid data', async () => {
         const invalidData = {};
 
-        await request(app.getHttpServer()).post(basePath).send(invalidData).expect(400);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(invalidData)
+          .expect(400);
       });
 
-      it("should validate required fields", async () => {
+      it('should validate required fields', async () => {
         const incompleteData = {
           // Missing required fields
         };
@@ -76,23 +79,30 @@ describe("CRUD Operations", () => {
       });
     });
 
-    describe("READ", () => {
-      it("should get all Companies", async () => {
+    describe('READ', () => {
+      it('should get all Companies', async () => {
         // Create test data
         const testData1 = TestDataFactory.createCompany();
         const testData2 = TestDataFactory.createCompany();
 
-        await request(app.getHttpServer()).post(basePath).send(testData1);
-        await request(app.getHttpServer()).post(basePath).send(testData2);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
-        const response = await request(app.getHttpServer()).get(basePath).expect(200);
+        const response = await request(app.getHttpServer())
+          .get(basePath)
+          .expect(200);
 
-        expect(response.body).toHaveProperty("data");
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(Array.isArray(response.body.data)).toBe(true);
         expect(response.body.data.length).toBeGreaterThanOrEqual(2);
       });
 
-      it("should get Company by ID", async () => {
+      it('should get Company by ID', async () => {
         const testData = TestDataFactory.createCompany();
 
         const createResponse = await request(app.getHttpServer())
@@ -109,28 +119,34 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 for non-existent Company", async () => {
+      it('should return 404 for non-existent Company', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).get(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should support pagination", async () => {
+      it('should support pagination', async () => {
         // Create multiple records
         for (let i = 0; i < 15; i++) {
-          await request(app.getHttpServer()).post(basePath).send(TestDataFactory.createCompany());
+          await request(app.getHttpServer())
+            .post(basePath)
+            .send(TestDataFactory.createCompany());
         }
 
         const response = await request(app.getHttpServer())
           .get(`${basePath}?page=1&limit=10`)
           .expect(200);
 
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(response.body.data.length).toBeLessThanOrEqual(10);
       });
     });
 
-    describe("UPDATE", () => {
-      it("should update an existing Company", async () => {
+    describe('UPDATE', () => {
+      it('should update an existing Company', async () => {
         const testData = TestDataFactory.createCompany();
 
         const createResponse = await request(app.getHttpServer())
@@ -140,13 +156,13 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
         const updateData = {
-          name: "Updated Name",
-          industry: "Updated Industry",
-          website: "Updated Website",
-          phone: "Updated Phone",
-          email: "Updated Email",
-          status: "Updated Status",
-          owner_id: "Updated Owner Id",
+          name: 'Updated Name',
+          industry: 'Updated Industry',
+          website: 'Updated Website',
+          phone: 'Updated Phone',
+          email: 'Updated Email',
+          status: 'Updated Status',
+          owner_id: 'Updated Owner Id',
         };
 
         const response = await request(app.getHttpServer())
@@ -157,10 +173,18 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 when updating non-existent Company", async () => {
+      it('should return 404 when updating non-existent Company', async () => {
         const nonExistentId = generateTestId();
-        const updateData = TestDataFactory.createCompany();
-        delete updateData.id; // id is non-updateable, would cause 400 before 404
+        // Only send string fields (no id) to avoid non-updateable field validation errors
+        const updateData = {
+          name: 'Updated Name',
+          industry: 'Updated Industry',
+          website: 'Updated Website',
+          phone: 'Updated Phone',
+          email: 'Updated Email',
+          status: 'Updated Status',
+          owner_id: 'Updated Owner Id',
+        };
 
         await request(app.getHttpServer())
           .patch(`${basePath}/${nonExistentId}`)
@@ -168,7 +192,7 @@ describe("CRUD Operations", () => {
           .expect(404);
       });
 
-      it("should validate update data", async () => {
+      it('should validate update data', async () => {
         const testData = TestDataFactory.createCompany();
 
         const createResponse = await request(app.getHttpServer())
@@ -191,7 +215,7 @@ describe("CRUD Operations", () => {
         expect([200, 400]).toContain(response.status);
       });
 
-      it("should support ETag-based optimistic locking", async () => {
+      it('should support ETag-based optimistic locking', async () => {
         const testData = TestDataFactory.createCompany();
 
         const createResponse = await request(app.getHttpServer())
@@ -200,24 +224,22 @@ describe("CRUD Operations", () => {
           .expect(201);
 
         const createdId = createResponse.body.id;
-        const etag = createResponse.headers["etag"];
+        const etag = createResponse.headers['etag'];
 
         if (etag) {
           // Update with correct ETag should succeed
           const response = await request(app.getHttpServer())
             .patch(`${basePath}/${createdId}`)
-            .set("If-Match", etag)
-            .send({
-              /* update data */
-            });
+            .set('If-Match', etag)
+            .send({ /* update data */ });
 
           expect([200, 204]).toContain(response.status);
         }
       });
     });
 
-    describe("DELETE", () => {
-      it("should delete an existing Company", async () => {
+    describe('DELETE', () => {
+      it('should delete an existing Company', async () => {
         const testData = TestDataFactory.createCompany();
 
         const createResponse = await request(app.getHttpServer())
@@ -227,19 +249,25 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
 
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Verify deletion
-        await request(app.getHttpServer()).get(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${createdId}`)
+          .expect(404);
       });
 
-      it("should return 404 when deleting non-existent Company", async () => {
+      it('should return 404 when deleting non-existent Company', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).delete(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should be idempotent on repeated delete", async () => {
+      it('should be idempotent on repeated delete', async () => {
         const testData = TestDataFactory.createCompany();
 
         const createResponse = await request(app.getHttpServer())
@@ -250,65 +278,97 @@ describe("CRUD Operations", () => {
         const createdId = createResponse.body.id;
 
         // First delete
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Second delete should return 404
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(404);
       });
     });
 
-    describe("Validation", () => {
-      it("should enforce uniqueness of id", async () => {
+    describe('Validation', () => {
+
+      it('should enforce uniqueness of id', async () => {
         const testData1 = TestDataFactory.createCompany();
         const testData2 = TestDataFactory.createCompany({
           id: testData1.id,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require name field", async () => {
+      it('should require name field', async () => {
         const testData = TestDataFactory.createCompany();
         delete testData.name;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require status field", async () => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+      it('should require status field', async () => {
         const testData = TestDataFactory.createCompany();
         delete testData.status;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require owner_id field", async () => {
+
+      it('should require owner_id field', async () => {
         const testData = TestDataFactory.createCompany();
         delete testData.owner_id;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
+
+
     });
   });
 
-  describe("Contact CRUD", () => {
-    const basePath = "/api/bus/bus_contact";
+  describe('Contact CRUD', () => {
+    const basePath = '/api/bus/bus_contact';
 
-    describe("CREATE", () => {
-      it("should create a new Contact", async () => {
+    describe('CREATE', () => {
+      it('should create a new Contact', async () => {
         const testData = TestDataFactory.createContact();
         delete testData.id; // ID should be auto-generated
 
@@ -326,13 +386,16 @@ describe("CRUD Operations", () => {
         expect(response.body.owner_id).toBeDefined();
       });
 
-      it("should return 400 for invalid data", async () => {
+      it('should return 400 for invalid data', async () => {
         const invalidData = {};
 
-        await request(app.getHttpServer()).post(basePath).send(invalidData).expect(400);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(invalidData)
+          .expect(400);
       });
 
-      it("should validate required fields", async () => {
+      it('should validate required fields', async () => {
         const incompleteData = {
           // Missing required fields
         };
@@ -346,23 +409,30 @@ describe("CRUD Operations", () => {
       });
     });
 
-    describe("READ", () => {
-      it("should get all Contacts", async () => {
+    describe('READ', () => {
+      it('should get all Contacts', async () => {
         // Create test data
         const testData1 = TestDataFactory.createContact();
         const testData2 = TestDataFactory.createContact();
 
-        await request(app.getHttpServer()).post(basePath).send(testData1);
-        await request(app.getHttpServer()).post(basePath).send(testData2);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
-        const response = await request(app.getHttpServer()).get(basePath).expect(200);
+        const response = await request(app.getHttpServer())
+          .get(basePath)
+          .expect(200);
 
-        expect(response.body).toHaveProperty("data");
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(Array.isArray(response.body.data)).toBe(true);
         expect(response.body.data.length).toBeGreaterThanOrEqual(2);
       });
 
-      it("should get Contact by ID", async () => {
+      it('should get Contact by ID', async () => {
         const testData = TestDataFactory.createContact();
 
         const createResponse = await request(app.getHttpServer())
@@ -379,28 +449,34 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 for non-existent Contact", async () => {
+      it('should return 404 for non-existent Contact', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).get(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should support pagination", async () => {
+      it('should support pagination', async () => {
         // Create multiple records
         for (let i = 0; i < 15; i++) {
-          await request(app.getHttpServer()).post(basePath).send(TestDataFactory.createContact());
+          await request(app.getHttpServer())
+            .post(basePath)
+            .send(TestDataFactory.createContact());
         }
 
         const response = await request(app.getHttpServer())
           .get(`${basePath}?page=1&limit=10`)
           .expect(200);
 
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(response.body.data.length).toBeLessThanOrEqual(10);
       });
     });
 
-    describe("UPDATE", () => {
-      it("should update an existing Contact", async () => {
+    describe('UPDATE', () => {
+      it('should update an existing Contact', async () => {
         const testData = TestDataFactory.createContact();
 
         const createResponse = await request(app.getHttpServer())
@@ -410,17 +486,17 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
         const updateData = {
-          company_id: "Updated Company Id",
-          first_name: "Updated First Name",
-          last_name: "Updated Last Name",
-          email: "Updated Email",
-          phone: "Updated Phone",
-          mobile: "Updated Mobile",
-          job_title: "Updated Job Title",
-          department: "Updated Department",
-          status: "Updated Status",
-          lead_source: "Updated Lead Source",
-          owner_id: "Updated Owner Id",
+          company_id: 'Updated Company Id',
+          first_name: 'Updated First Name',
+          last_name: 'Updated Last Name',
+          email: 'Updated Email',
+          phone: 'Updated Phone',
+          mobile: 'Updated Mobile',
+          job_title: 'Updated Job Title',
+          department: 'Updated Department',
+          status: 'Updated Status',
+          lead_source: 'Updated Lead Source',
+          owner_id: 'Updated Owner Id',
         };
 
         const response = await request(app.getHttpServer())
@@ -431,10 +507,22 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 when updating non-existent Contact", async () => {
+      it('should return 404 when updating non-existent Contact', async () => {
         const nonExistentId = generateTestId();
-        const updateData = TestDataFactory.createContact();
-        delete updateData.id; // id is non-updateable, would cause 400 before 404
+        // Only send string fields (no id) to avoid non-updateable field validation errors
+        const updateData = {
+          company_id: 'Updated Company Id',
+          first_name: 'Updated First Name',
+          last_name: 'Updated Last Name',
+          email: 'Updated Email',
+          phone: 'Updated Phone',
+          mobile: 'Updated Mobile',
+          job_title: 'Updated Job Title',
+          department: 'Updated Department',
+          status: 'Updated Status',
+          lead_source: 'Updated Lead Source',
+          owner_id: 'Updated Owner Id',
+        };
 
         await request(app.getHttpServer())
           .patch(`${basePath}/${nonExistentId}`)
@@ -442,7 +530,7 @@ describe("CRUD Operations", () => {
           .expect(404);
       });
 
-      it("should validate update data", async () => {
+      it('should validate update data', async () => {
         const testData = TestDataFactory.createContact();
 
         const createResponse = await request(app.getHttpServer())
@@ -465,7 +553,7 @@ describe("CRUD Operations", () => {
         expect([200, 400]).toContain(response.status);
       });
 
-      it("should support ETag-based optimistic locking", async () => {
+      it('should support ETag-based optimistic locking', async () => {
         const testData = TestDataFactory.createContact();
 
         const createResponse = await request(app.getHttpServer())
@@ -474,24 +562,22 @@ describe("CRUD Operations", () => {
           .expect(201);
 
         const createdId = createResponse.body.id;
-        const etag = createResponse.headers["etag"];
+        const etag = createResponse.headers['etag'];
 
         if (etag) {
           // Update with correct ETag should succeed
           const response = await request(app.getHttpServer())
             .patch(`${basePath}/${createdId}`)
-            .set("If-Match", etag)
-            .send({
-              /* update data */
-            });
+            .set('If-Match', etag)
+            .send({ /* update data */ });
 
           expect([200, 204]).toContain(response.status);
         }
       });
     });
 
-    describe("DELETE", () => {
-      it("should delete an existing Contact", async () => {
+    describe('DELETE', () => {
+      it('should delete an existing Contact', async () => {
         const testData = TestDataFactory.createContact();
 
         const createResponse = await request(app.getHttpServer())
@@ -501,19 +587,25 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
 
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Verify deletion
-        await request(app.getHttpServer()).get(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${createdId}`)
+          .expect(404);
       });
 
-      it("should return 404 when deleting non-existent Contact", async () => {
+      it('should return 404 when deleting non-existent Contact', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).delete(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should be idempotent on repeated delete", async () => {
+      it('should be idempotent on repeated delete', async () => {
         const testData = TestDataFactory.createContact();
 
         const createResponse = await request(app.getHttpServer())
@@ -524,99 +616,141 @@ describe("CRUD Operations", () => {
         const createdId = createResponse.body.id;
 
         // First delete
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Second delete should return 404
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(404);
       });
     });
 
-    describe("Validation", () => {
-      it("should enforce uniqueness of id", async () => {
+    describe('Validation', () => {
+
+      it('should enforce uniqueness of id', async () => {
         const testData1 = TestDataFactory.createContact();
         const testData2 = TestDataFactory.createContact({
           id: testData1.id,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require first_name field", async () => {
+
+
+      it('should require first_name field', async () => {
         const testData = TestDataFactory.createContact();
         delete testData.first_name;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require last_name field", async () => {
+
+      it('should require last_name field', async () => {
         const testData = TestDataFactory.createContact();
         delete testData.last_name;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require email field", async () => {
+
+      it('should require email field', async () => {
         const testData = TestDataFactory.createContact();
         delete testData.email;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should enforce uniqueness of email", async () => {
+      it('should enforce uniqueness of email', async () => {
         const testData1 = TestDataFactory.createContact();
         const testData2 = TestDataFactory.createContact({
           email: testData1.email,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require status field", async () => {
+
+
+
+
+
+
+
+
+      it('should require status field', async () => {
         const testData = TestDataFactory.createContact();
         delete testData.status;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require owner_id field", async () => {
+
+
+
+      it('should require owner_id field', async () => {
         const testData = TestDataFactory.createContact();
         delete testData.owner_id;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
+
+
     });
   });
 
-  describe("Deal CRUD", () => {
-    const basePath = "/api/bus/bus_deal";
+  describe('Deal CRUD', () => {
+    const basePath = '/api/bus/bus_deal';
 
-    describe("CREATE", () => {
-      it("should create a new Deal", async () => {
+    describe('CREATE', () => {
+      it('should create a new Deal', async () => {
         const testData = TestDataFactory.createDeal();
         delete testData.id; // ID should be auto-generated
 
@@ -634,13 +768,16 @@ describe("CRUD Operations", () => {
         expect(response.body.owner_id).toBeDefined();
       });
 
-      it("should return 400 for invalid data", async () => {
+      it('should return 400 for invalid data', async () => {
         const invalidData = {};
 
-        await request(app.getHttpServer()).post(basePath).send(invalidData).expect(400);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(invalidData)
+          .expect(400);
       });
 
-      it("should validate required fields", async () => {
+      it('should validate required fields', async () => {
         const incompleteData = {
           // Missing required fields
         };
@@ -654,23 +791,30 @@ describe("CRUD Operations", () => {
       });
     });
 
-    describe("READ", () => {
-      it("should get all Deals", async () => {
+    describe('READ', () => {
+      it('should get all Deals', async () => {
         // Create test data
         const testData1 = TestDataFactory.createDeal();
         const testData2 = TestDataFactory.createDeal();
 
-        await request(app.getHttpServer()).post(basePath).send(testData1);
-        await request(app.getHttpServer()).post(basePath).send(testData2);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
-        const response = await request(app.getHttpServer()).get(basePath).expect(200);
+        const response = await request(app.getHttpServer())
+          .get(basePath)
+          .expect(200);
 
-        expect(response.body).toHaveProperty("data");
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(Array.isArray(response.body.data)).toBe(true);
         expect(response.body.data.length).toBeGreaterThanOrEqual(2);
       });
 
-      it("should get Deal by ID", async () => {
+      it('should get Deal by ID', async () => {
         const testData = TestDataFactory.createDeal();
 
         const createResponse = await request(app.getHttpServer())
@@ -687,28 +831,34 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 for non-existent Deal", async () => {
+      it('should return 404 for non-existent Deal', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).get(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should support pagination", async () => {
+      it('should support pagination', async () => {
         // Create multiple records
         for (let i = 0; i < 15; i++) {
-          await request(app.getHttpServer()).post(basePath).send(TestDataFactory.createDeal());
+          await request(app.getHttpServer())
+            .post(basePath)
+            .send(TestDataFactory.createDeal());
         }
 
         const response = await request(app.getHttpServer())
           .get(`${basePath}?page=1&limit=10`)
           .expect(200);
 
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(response.body.data.length).toBeLessThanOrEqual(10);
       });
     });
 
-    describe("UPDATE", () => {
-      it("should update an existing Deal", async () => {
+    describe('UPDATE', () => {
+      it('should update an existing Deal', async () => {
         const testData = TestDataFactory.createDeal();
 
         const createResponse = await request(app.getHttpServer())
@@ -718,13 +868,13 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
         const updateData = {
-          company_id: "Updated Company Id",
-          contact_id: "Updated Contact Id",
-          name: "Updated Name",
-          currency: "Updated Currency",
-          stage: "Updated Stage",
-          status: "Updated Status",
-          owner_id: "Updated Owner Id",
+          company_id: 'Updated Company Id',
+          contact_id: 'Updated Contact Id',
+          name: 'Updated Name',
+          currency: 'Updated Currency',
+          stage: 'Updated Stage',
+          status: 'Updated Status',
+          owner_id: 'Updated Owner Id',
         };
 
         const response = await request(app.getHttpServer())
@@ -735,10 +885,18 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 when updating non-existent Deal", async () => {
+      it('should return 404 when updating non-existent Deal', async () => {
         const nonExistentId = generateTestId();
-        const updateData = TestDataFactory.createDeal();
-        delete updateData.id; // id is non-updateable, would cause 400 before 404
+        // Only send string fields (no id) to avoid non-updateable field validation errors
+        const updateData = {
+          company_id: 'Updated Company Id',
+          contact_id: 'Updated Contact Id',
+          name: 'Updated Name',
+          currency: 'Updated Currency',
+          stage: 'Updated Stage',
+          status: 'Updated Status',
+          owner_id: 'Updated Owner Id',
+        };
 
         await request(app.getHttpServer())
           .patch(`${basePath}/${nonExistentId}`)
@@ -746,7 +904,7 @@ describe("CRUD Operations", () => {
           .expect(404);
       });
 
-      it("should validate update data", async () => {
+      it('should validate update data', async () => {
         const testData = TestDataFactory.createDeal();
 
         const createResponse = await request(app.getHttpServer())
@@ -769,7 +927,7 @@ describe("CRUD Operations", () => {
         expect([200, 400]).toContain(response.status);
       });
 
-      it("should support ETag-based optimistic locking", async () => {
+      it('should support ETag-based optimistic locking', async () => {
         const testData = TestDataFactory.createDeal();
 
         const createResponse = await request(app.getHttpServer())
@@ -778,24 +936,22 @@ describe("CRUD Operations", () => {
           .expect(201);
 
         const createdId = createResponse.body.id;
-        const etag = createResponse.headers["etag"];
+        const etag = createResponse.headers['etag'];
 
         if (etag) {
           // Update with correct ETag should succeed
           const response = await request(app.getHttpServer())
             .patch(`${basePath}/${createdId}`)
-            .set("If-Match", etag)
-            .send({
-              /* update data */
-            });
+            .set('If-Match', etag)
+            .send({ /* update data */ });
 
           expect([200, 204]).toContain(response.status);
         }
       });
     });
 
-    describe("DELETE", () => {
-      it("should delete an existing Deal", async () => {
+    describe('DELETE', () => {
+      it('should delete an existing Deal', async () => {
         const testData = TestDataFactory.createDeal();
 
         const createResponse = await request(app.getHttpServer())
@@ -805,19 +961,25 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
 
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Verify deletion
-        await request(app.getHttpServer()).get(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${createdId}`)
+          .expect(404);
       });
 
-      it("should return 404 when deleting non-existent Deal", async () => {
+      it('should return 404 when deleting non-existent Deal', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).delete(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should be idempotent on repeated delete", async () => {
+      it('should be idempotent on repeated delete', async () => {
         const testData = TestDataFactory.createDeal();
 
         const createResponse = await request(app.getHttpServer())
@@ -828,85 +990,125 @@ describe("CRUD Operations", () => {
         const createdId = createResponse.body.id;
 
         // First delete
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Second delete should return 404
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(404);
       });
     });
 
-    describe("Validation", () => {
-      it("should enforce uniqueness of id", async () => {
+    describe('Validation', () => {
+
+      it('should enforce uniqueness of id', async () => {
         const testData1 = TestDataFactory.createDeal();
         const testData2 = TestDataFactory.createDeal({
           id: testData1.id,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require name field", async () => {
+
+
+
+
+      it('should require name field', async () => {
         const testData = TestDataFactory.createDeal();
         delete testData.name;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require currency field", async () => {
+
+
+
+      it('should require currency field', async () => {
         const testData = TestDataFactory.createDeal();
         delete testData.currency;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require stage field", async () => {
+
+      it('should require stage field', async () => {
         const testData = TestDataFactory.createDeal();
         delete testData.stage;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require status field", async () => {
+
+
+
+
+
+
+
+      it('should require status field', async () => {
         const testData = TestDataFactory.createDeal();
         delete testData.status;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require owner_id field", async () => {
+
+
+
+      it('should require owner_id field', async () => {
         const testData = TestDataFactory.createDeal();
         delete testData.owner_id;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
+
+
     });
   });
 
-  describe("DealStage CRUD", () => {
-    const basePath = "/api/bus/bus_deal_stage";
+  describe('DealStage CRUD', () => {
+    const basePath = '/api/bus/bus_deal_stage';
 
-    describe("CREATE", () => {
-      it("should create a new DealStage", async () => {
+    describe('CREATE', () => {
+      it('should create a new DealStage', async () => {
         const testData = TestDataFactory.createDealStage();
         delete testData.id; // ID should be auto-generated
 
@@ -925,13 +1127,16 @@ describe("CRUD Operations", () => {
         expect(response.body.is_lost).toBeDefined();
       });
 
-      it("should return 400 for invalid data", async () => {
+      it('should return 400 for invalid data', async () => {
         const invalidData = {};
 
-        await request(app.getHttpServer()).post(basePath).send(invalidData).expect(400);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(invalidData)
+          .expect(400);
       });
 
-      it("should validate required fields", async () => {
+      it('should validate required fields', async () => {
         const incompleteData = {
           // Missing required fields
         };
@@ -945,23 +1150,30 @@ describe("CRUD Operations", () => {
       });
     });
 
-    describe("READ", () => {
-      it("should get all DealStages", async () => {
+    describe('READ', () => {
+      it('should get all DealStages', async () => {
         // Create test data
         const testData1 = TestDataFactory.createDealStage();
         const testData2 = TestDataFactory.createDealStage();
 
-        await request(app.getHttpServer()).post(basePath).send(testData1);
-        await request(app.getHttpServer()).post(basePath).send(testData2);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
-        const response = await request(app.getHttpServer()).get(basePath).expect(200);
+        const response = await request(app.getHttpServer())
+          .get(basePath)
+          .expect(200);
 
-        expect(response.body).toHaveProperty("data");
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(Array.isArray(response.body.data)).toBe(true);
         expect(response.body.data.length).toBeGreaterThanOrEqual(2);
       });
 
-      it("should get DealStage by ID", async () => {
+      it('should get DealStage by ID', async () => {
         const testData = TestDataFactory.createDealStage();
 
         const createResponse = await request(app.getHttpServer())
@@ -978,28 +1190,34 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 for non-existent DealStage", async () => {
+      it('should return 404 for non-existent DealStage', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).get(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should support pagination", async () => {
+      it('should support pagination', async () => {
         // Create multiple records
         for (let i = 0; i < 15; i++) {
-          await request(app.getHttpServer()).post(basePath).send(TestDataFactory.createDealStage());
+          await request(app.getHttpServer())
+            .post(basePath)
+            .send(TestDataFactory.createDealStage());
         }
 
         const response = await request(app.getHttpServer())
           .get(`${basePath}?page=1&limit=10`)
           .expect(200);
 
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(response.body.data.length).toBeLessThanOrEqual(10);
       });
     });
 
-    describe("UPDATE", () => {
-      it("should update an existing DealStage", async () => {
+    describe('UPDATE', () => {
+      it('should update an existing DealStage', async () => {
         const testData = TestDataFactory.createDealStage();
 
         const createResponse = await request(app.getHttpServer())
@@ -1009,8 +1227,8 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
         const updateData = {
-          pipeline_id: "Updated Pipeline Id",
-          name: "Updated Name",
+          pipeline_id: 'Updated Pipeline Id',
+          name: 'Updated Name',
         };
 
         const response = await request(app.getHttpServer())
@@ -1021,10 +1239,13 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 when updating non-existent DealStage", async () => {
+      it('should return 404 when updating non-existent DealStage', async () => {
         const nonExistentId = generateTestId();
-        const updateData = TestDataFactory.createDealStage();
-        delete updateData.id; // id is non-updateable, would cause 400 before 404
+        // Only send string fields (no id) to avoid non-updateable field validation errors
+        const updateData = {
+          pipeline_id: 'Updated Pipeline Id',
+          name: 'Updated Name',
+        };
 
         await request(app.getHttpServer())
           .patch(`${basePath}/${nonExistentId}`)
@@ -1032,7 +1253,7 @@ describe("CRUD Operations", () => {
           .expect(404);
       });
 
-      it("should validate update data", async () => {
+      it('should validate update data', async () => {
         const testData = TestDataFactory.createDealStage();
 
         const createResponse = await request(app.getHttpServer())
@@ -1055,7 +1276,7 @@ describe("CRUD Operations", () => {
         expect([200, 400]).toContain(response.status);
       });
 
-      it("should support ETag-based optimistic locking", async () => {
+      it('should support ETag-based optimistic locking', async () => {
         const testData = TestDataFactory.createDealStage();
 
         const createResponse = await request(app.getHttpServer())
@@ -1064,24 +1285,22 @@ describe("CRUD Operations", () => {
           .expect(201);
 
         const createdId = createResponse.body.id;
-        const etag = createResponse.headers["etag"];
+        const etag = createResponse.headers['etag'];
 
         if (etag) {
           // Update with correct ETag should succeed
           const response = await request(app.getHttpServer())
             .patch(`${basePath}/${createdId}`)
-            .set("If-Match", etag)
-            .send({
-              /* update data */
-            });
+            .set('If-Match', etag)
+            .send({ /* update data */ });
 
           expect([200, 204]).toContain(response.status);
         }
       });
     });
 
-    describe("DELETE", () => {
-      it("should delete an existing DealStage", async () => {
+    describe('DELETE', () => {
+      it('should delete an existing DealStage', async () => {
         const testData = TestDataFactory.createDealStage();
 
         const createResponse = await request(app.getHttpServer())
@@ -1091,19 +1310,25 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
 
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Verify deletion
-        await request(app.getHttpServer()).get(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${createdId}`)
+          .expect(404);
       });
 
-      it("should return 404 when deleting non-existent DealStage", async () => {
+      it('should return 404 when deleting non-existent DealStage', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).delete(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should be idempotent on repeated delete", async () => {
+      it('should be idempotent on repeated delete', async () => {
         const testData = TestDataFactory.createDealStage();
 
         const createResponse = await request(app.getHttpServer())
@@ -1114,95 +1339,124 @@ describe("CRUD Operations", () => {
         const createdId = createResponse.body.id;
 
         // First delete
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Second delete should return 404
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(404);
       });
     });
 
-    describe("Validation", () => {
-      it("should enforce uniqueness of id", async () => {
+    describe('Validation', () => {
+
+      it('should enforce uniqueness of id', async () => {
         const testData1 = TestDataFactory.createDealStage();
         const testData2 = TestDataFactory.createDealStage({
           id: testData1.id,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require pipeline_id field", async () => {
+      it('should require pipeline_id field', async () => {
         const testData = TestDataFactory.createDealStage();
         delete testData.pipeline_id;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require name field", async () => {
+
+      it('should require name field', async () => {
         const testData = TestDataFactory.createDealStage();
         delete testData.name;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require sort_order field", async () => {
+
+      it('should require sort_order field', async () => {
         const testData = TestDataFactory.createDealStage();
         delete testData.sort_order;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require default_probability field", async () => {
+
+      it('should require default_probability field', async () => {
         const testData = TestDataFactory.createDealStage();
         delete testData.default_probability;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require is_won field", async () => {
+
+      it('should require is_won field', async () => {
         const testData = TestDataFactory.createDealStage();
         delete testData.is_won;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require is_lost field", async () => {
+
+      it('should require is_lost field', async () => {
         const testData = TestDataFactory.createDealStage();
         delete testData.is_lost;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
+
+
     });
   });
 
-  describe("Pipeline CRUD", () => {
-    const basePath = "/api/bus/bus_pipeline";
+  describe('Pipeline CRUD', () => {
+    const basePath = '/api/bus/bus_pipeline';
 
-    describe("CREATE", () => {
-      it("should create a new Pipeline", async () => {
+    describe('CREATE', () => {
+      it('should create a new Pipeline', async () => {
         const testData = TestDataFactory.createPipeline();
         delete testData.id; // ID should be auto-generated
 
@@ -1218,13 +1472,16 @@ describe("CRUD Operations", () => {
         expect(response.body.is_active).toBeDefined();
       });
 
-      it("should return 400 for invalid data", async () => {
+      it('should return 400 for invalid data', async () => {
         const invalidData = {};
 
-        await request(app.getHttpServer()).post(basePath).send(invalidData).expect(400);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(invalidData)
+          .expect(400);
       });
 
-      it("should validate required fields", async () => {
+      it('should validate required fields', async () => {
         const incompleteData = {
           // Missing required fields
         };
@@ -1238,23 +1495,30 @@ describe("CRUD Operations", () => {
       });
     });
 
-    describe("READ", () => {
-      it("should get all Pipelines", async () => {
+    describe('READ', () => {
+      it('should get all Pipelines', async () => {
         // Create test data
         const testData1 = TestDataFactory.createPipeline();
         const testData2 = TestDataFactory.createPipeline();
 
-        await request(app.getHttpServer()).post(basePath).send(testData1);
-        await request(app.getHttpServer()).post(basePath).send(testData2);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
-        const response = await request(app.getHttpServer()).get(basePath).expect(200);
+        const response = await request(app.getHttpServer())
+          .get(basePath)
+          .expect(200);
 
-        expect(response.body).toHaveProperty("data");
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(Array.isArray(response.body.data)).toBe(true);
         expect(response.body.data.length).toBeGreaterThanOrEqual(2);
       });
 
-      it("should get Pipeline by ID", async () => {
+      it('should get Pipeline by ID', async () => {
         const testData = TestDataFactory.createPipeline();
 
         const createResponse = await request(app.getHttpServer())
@@ -1271,28 +1535,34 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 for non-existent Pipeline", async () => {
+      it('should return 404 for non-existent Pipeline', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).get(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should support pagination", async () => {
+      it('should support pagination', async () => {
         // Create multiple records
         for (let i = 0; i < 15; i++) {
-          await request(app.getHttpServer()).post(basePath).send(TestDataFactory.createPipeline());
+          await request(app.getHttpServer())
+            .post(basePath)
+            .send(TestDataFactory.createPipeline());
         }
 
         const response = await request(app.getHttpServer())
           .get(`${basePath}?page=1&limit=10`)
           .expect(200);
 
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(response.body.data.length).toBeLessThanOrEqual(10);
       });
     });
 
-    describe("UPDATE", () => {
-      it("should update an existing Pipeline", async () => {
+    describe('UPDATE', () => {
+      it('should update an existing Pipeline', async () => {
         const testData = TestDataFactory.createPipeline();
 
         const createResponse = await request(app.getHttpServer())
@@ -1302,7 +1572,7 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
         const updateData = {
-          name: "Updated Name",
+          name: 'Updated Name',
         };
 
         const response = await request(app.getHttpServer())
@@ -1313,10 +1583,12 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 when updating non-existent Pipeline", async () => {
+      it('should return 404 when updating non-existent Pipeline', async () => {
         const nonExistentId = generateTestId();
-        const updateData = TestDataFactory.createPipeline();
-        delete updateData.id; // id is non-updateable, would cause 400 before 404
+        // Only send string fields (no id) to avoid non-updateable field validation errors
+        const updateData = {
+          name: 'Updated Name',
+        };
 
         await request(app.getHttpServer())
           .patch(`${basePath}/${nonExistentId}`)
@@ -1324,7 +1596,7 @@ describe("CRUD Operations", () => {
           .expect(404);
       });
 
-      it("should validate update data", async () => {
+      it('should validate update data', async () => {
         const testData = TestDataFactory.createPipeline();
 
         const createResponse = await request(app.getHttpServer())
@@ -1347,7 +1619,7 @@ describe("CRUD Operations", () => {
         expect([200, 400]).toContain(response.status);
       });
 
-      it("should support ETag-based optimistic locking", async () => {
+      it('should support ETag-based optimistic locking', async () => {
         const testData = TestDataFactory.createPipeline();
 
         const createResponse = await request(app.getHttpServer())
@@ -1356,24 +1628,22 @@ describe("CRUD Operations", () => {
           .expect(201);
 
         const createdId = createResponse.body.id;
-        const etag = createResponse.headers["etag"];
+        const etag = createResponse.headers['etag'];
 
         if (etag) {
           // Update with correct ETag should succeed
           const response = await request(app.getHttpServer())
             .patch(`${basePath}/${createdId}`)
-            .set("If-Match", etag)
-            .send({
-              /* update data */
-            });
+            .set('If-Match', etag)
+            .send({ /* update data */ });
 
           expect([200, 204]).toContain(response.status);
         }
       });
     });
 
-    describe("DELETE", () => {
-      it("should delete an existing Pipeline", async () => {
+    describe('DELETE', () => {
+      it('should delete an existing Pipeline', async () => {
         const testData = TestDataFactory.createPipeline();
 
         const createResponse = await request(app.getHttpServer())
@@ -1383,19 +1653,25 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
 
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Verify deletion
-        await request(app.getHttpServer()).get(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${createdId}`)
+          .expect(404);
       });
 
-      it("should return 404 when deleting non-existent Pipeline", async () => {
+      it('should return 404 when deleting non-existent Pipeline', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).delete(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should be idempotent on repeated delete", async () => {
+      it('should be idempotent on repeated delete', async () => {
         const testData = TestDataFactory.createPipeline();
 
         const createResponse = await request(app.getHttpServer())
@@ -1406,65 +1682,85 @@ describe("CRUD Operations", () => {
         const createdId = createResponse.body.id;
 
         // First delete
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Second delete should return 404
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(404);
       });
     });
 
-    describe("Validation", () => {
-      it("should enforce uniqueness of id", async () => {
+    describe('Validation', () => {
+
+      it('should enforce uniqueness of id', async () => {
         const testData1 = TestDataFactory.createPipeline();
         const testData2 = TestDataFactory.createPipeline({
           id: testData1.id,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require name field", async () => {
+      it('should require name field', async () => {
         const testData = TestDataFactory.createPipeline();
         delete testData.name;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require is_default field", async () => {
+
+      it('should require is_default field', async () => {
         const testData = TestDataFactory.createPipeline();
         delete testData.is_default;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require is_active field", async () => {
+
+      it('should require is_active field', async () => {
         const testData = TestDataFactory.createPipeline();
         delete testData.is_active;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
+
+
     });
   });
 
-  describe("Activity CRUD", () => {
-    const basePath = "/api/bus/bus_activity";
+  describe('Activity CRUD', () => {
+    const basePath = '/api/bus/bus_activity';
 
-    describe("CREATE", () => {
-      it("should create a new Activity", async () => {
+    describe('CREATE', () => {
+      it('should create a new Activity', async () => {
         const testData = TestDataFactory.createActivity();
         delete testData.id; // ID should be auto-generated
 
@@ -1481,13 +1777,16 @@ describe("CRUD Operations", () => {
         expect(response.body.owner_id).toBeDefined();
       });
 
-      it("should return 400 for invalid data", async () => {
+      it('should return 400 for invalid data', async () => {
         const invalidData = {};
 
-        await request(app.getHttpServer()).post(basePath).send(invalidData).expect(400);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(invalidData)
+          .expect(400);
       });
 
-      it("should validate required fields", async () => {
+      it('should validate required fields', async () => {
         const incompleteData = {
           // Missing required fields
         };
@@ -1501,23 +1800,30 @@ describe("CRUD Operations", () => {
       });
     });
 
-    describe("READ", () => {
-      it("should get all Activities", async () => {
+    describe('READ', () => {
+      it('should get all Activities', async () => {
         // Create test data
         const testData1 = TestDataFactory.createActivity();
         const testData2 = TestDataFactory.createActivity();
 
-        await request(app.getHttpServer()).post(basePath).send(testData1);
-        await request(app.getHttpServer()).post(basePath).send(testData2);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
-        const response = await request(app.getHttpServer()).get(basePath).expect(200);
+        const response = await request(app.getHttpServer())
+          .get(basePath)
+          .expect(200);
 
-        expect(response.body).toHaveProperty("data");
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(Array.isArray(response.body.data)).toBe(true);
         expect(response.body.data.length).toBeGreaterThanOrEqual(2);
       });
 
-      it("should get Activity by ID", async () => {
+      it('should get Activity by ID', async () => {
         const testData = TestDataFactory.createActivity();
 
         const createResponse = await request(app.getHttpServer())
@@ -1534,28 +1840,34 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 for non-existent Activity", async () => {
+      it('should return 404 for non-existent Activity', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).get(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should support pagination", async () => {
+      it('should support pagination', async () => {
         // Create multiple records
         for (let i = 0; i < 15; i++) {
-          await request(app.getHttpServer()).post(basePath).send(TestDataFactory.createActivity());
+          await request(app.getHttpServer())
+            .post(basePath)
+            .send(TestDataFactory.createActivity());
         }
 
         const response = await request(app.getHttpServer())
           .get(`${basePath}?page=1&limit=10`)
           .expect(200);
 
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(response.body.data.length).toBeLessThanOrEqual(10);
       });
     });
 
-    describe("UPDATE", () => {
-      it("should update an existing Activity", async () => {
+    describe('UPDATE', () => {
+      it('should update an existing Activity', async () => {
         const testData = TestDataFactory.createActivity();
 
         const createResponse = await request(app.getHttpServer())
@@ -1565,13 +1877,13 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
         const updateData = {
-          contact_id: "Updated Contact Id",
-          company_id: "Updated Company Id",
-          deal_id: "Updated Deal Id",
-          activity_type: "Updated Activity Type",
-          subject: "Updated Subject",
-          status: "Updated Status",
-          owner_id: "Updated Owner Id",
+          contact_id: 'Updated Contact Id',
+          company_id: 'Updated Company Id',
+          deal_id: 'Updated Deal Id',
+          activity_type: 'Updated Activity Type',
+          subject: 'Updated Subject',
+          status: 'Updated Status',
+          owner_id: 'Updated Owner Id',
         };
 
         const response = await request(app.getHttpServer())
@@ -1582,10 +1894,18 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 when updating non-existent Activity", async () => {
+      it('should return 404 when updating non-existent Activity', async () => {
         const nonExistentId = generateTestId();
-        const updateData = TestDataFactory.createActivity();
-        delete updateData.id; // id is non-updateable, would cause 400 before 404
+        // Only send string fields (no id) to avoid non-updateable field validation errors
+        const updateData = {
+          contact_id: 'Updated Contact Id',
+          company_id: 'Updated Company Id',
+          deal_id: 'Updated Deal Id',
+          activity_type: 'Updated Activity Type',
+          subject: 'Updated Subject',
+          status: 'Updated Status',
+          owner_id: 'Updated Owner Id',
+        };
 
         await request(app.getHttpServer())
           .patch(`${basePath}/${nonExistentId}`)
@@ -1593,7 +1913,7 @@ describe("CRUD Operations", () => {
           .expect(404);
       });
 
-      it("should validate update data", async () => {
+      it('should validate update data', async () => {
         const testData = TestDataFactory.createActivity();
 
         const createResponse = await request(app.getHttpServer())
@@ -1616,7 +1936,7 @@ describe("CRUD Operations", () => {
         expect([200, 400]).toContain(response.status);
       });
 
-      it("should support ETag-based optimistic locking", async () => {
+      it('should support ETag-based optimistic locking', async () => {
         const testData = TestDataFactory.createActivity();
 
         const createResponse = await request(app.getHttpServer())
@@ -1625,24 +1945,22 @@ describe("CRUD Operations", () => {
           .expect(201);
 
         const createdId = createResponse.body.id;
-        const etag = createResponse.headers["etag"];
+        const etag = createResponse.headers['etag'];
 
         if (etag) {
           // Update with correct ETag should succeed
           const response = await request(app.getHttpServer())
             .patch(`${basePath}/${createdId}`)
-            .set("If-Match", etag)
-            .send({
-              /* update data */
-            });
+            .set('If-Match', etag)
+            .send({ /* update data */ });
 
           expect([200, 204]).toContain(response.status);
         }
       });
     });
 
-    describe("DELETE", () => {
-      it("should delete an existing Activity", async () => {
+    describe('DELETE', () => {
+      it('should delete an existing Activity', async () => {
         const testData = TestDataFactory.createActivity();
 
         const createResponse = await request(app.getHttpServer())
@@ -1652,19 +1970,25 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
 
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Verify deletion
-        await request(app.getHttpServer()).get(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${createdId}`)
+          .expect(404);
       });
 
-      it("should return 404 when deleting non-existent Activity", async () => {
+      it('should return 404 when deleting non-existent Activity', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).delete(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should be idempotent on repeated delete", async () => {
+      it('should be idempotent on repeated delete', async () => {
         const testData = TestDataFactory.createActivity();
 
         const createResponse = await request(app.getHttpServer())
@@ -1675,75 +1999,112 @@ describe("CRUD Operations", () => {
         const createdId = createResponse.body.id;
 
         // First delete
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Second delete should return 404
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(404);
       });
     });
 
-    describe("Validation", () => {
-      it("should enforce uniqueness of id", async () => {
+    describe('Validation', () => {
+
+      it('should enforce uniqueness of id', async () => {
         const testData1 = TestDataFactory.createActivity();
         const testData2 = TestDataFactory.createActivity({
           id: testData1.id,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require activity_type field", async () => {
+
+
+
+
+
+
+      it('should require activity_type field', async () => {
         const testData = TestDataFactory.createActivity();
         delete testData.activity_type;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require subject field", async () => {
+
+      it('should require subject field', async () => {
         const testData = TestDataFactory.createActivity();
         delete testData.subject;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require status field", async () => {
+
+
+
+
+
+
+
+
+
+      it('should require status field', async () => {
         const testData = TestDataFactory.createActivity();
         delete testData.status;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require owner_id field", async () => {
+
+      it('should require owner_id field', async () => {
         const testData = TestDataFactory.createActivity();
         delete testData.owner_id;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
+
+
     });
   });
 
-  describe("Note CRUD", () => {
-    const basePath = "/api/bus/bus_note";
+  describe('Note CRUD', () => {
+    const basePath = '/api/bus/bus_note';
 
-    describe("CREATE", () => {
-      it("should create a new Note", async () => {
+    describe('CREATE', () => {
+      it('should create a new Note', async () => {
         const testData = TestDataFactory.createNote();
         delete testData.id; // ID should be auto-generated
 
@@ -1759,13 +2120,16 @@ describe("CRUD Operations", () => {
         expect(response.body.author_id).toBeDefined();
       });
 
-      it("should return 400 for invalid data", async () => {
+      it('should return 400 for invalid data', async () => {
         const invalidData = {};
 
-        await request(app.getHttpServer()).post(basePath).send(invalidData).expect(400);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(invalidData)
+          .expect(400);
       });
 
-      it("should validate required fields", async () => {
+      it('should validate required fields', async () => {
         const incompleteData = {
           // Missing required fields
         };
@@ -1779,23 +2143,30 @@ describe("CRUD Operations", () => {
       });
     });
 
-    describe("READ", () => {
-      it("should get all Notes", async () => {
+    describe('READ', () => {
+      it('should get all Notes', async () => {
         // Create test data
         const testData1 = TestDataFactory.createNote();
         const testData2 = TestDataFactory.createNote();
 
-        await request(app.getHttpServer()).post(basePath).send(testData1);
-        await request(app.getHttpServer()).post(basePath).send(testData2);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
-        const response = await request(app.getHttpServer()).get(basePath).expect(200);
+        const response = await request(app.getHttpServer())
+          .get(basePath)
+          .expect(200);
 
-        expect(response.body).toHaveProperty("data");
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(Array.isArray(response.body.data)).toBe(true);
         expect(response.body.data.length).toBeGreaterThanOrEqual(2);
       });
 
-      it("should get Note by ID", async () => {
+      it('should get Note by ID', async () => {
         const testData = TestDataFactory.createNote();
 
         const createResponse = await request(app.getHttpServer())
@@ -1812,28 +2183,34 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 for non-existent Note", async () => {
+      it('should return 404 for non-existent Note', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).get(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should support pagination", async () => {
+      it('should support pagination', async () => {
         // Create multiple records
         for (let i = 0; i < 15; i++) {
-          await request(app.getHttpServer()).post(basePath).send(TestDataFactory.createNote());
+          await request(app.getHttpServer())
+            .post(basePath)
+            .send(TestDataFactory.createNote());
         }
 
         const response = await request(app.getHttpServer())
           .get(`${basePath}?page=1&limit=10`)
           .expect(200);
 
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(response.body.data.length).toBeLessThanOrEqual(10);
       });
     });
 
-    describe("UPDATE", () => {
-      it("should update an existing Note", async () => {
+    describe('UPDATE', () => {
+      it('should update an existing Note', async () => {
         const testData = TestDataFactory.createNote();
 
         const createResponse = await request(app.getHttpServer())
@@ -1843,10 +2220,10 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
         const updateData = {
-          contact_id: "Updated Contact Id",
-          company_id: "Updated Company Id",
-          deal_id: "Updated Deal Id",
-          author_id: "Updated Author Id",
+          contact_id: 'Updated Contact Id',
+          company_id: 'Updated Company Id',
+          deal_id: 'Updated Deal Id',
+          author_id: 'Updated Author Id',
         };
 
         const response = await request(app.getHttpServer())
@@ -1857,10 +2234,15 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 when updating non-existent Note", async () => {
+      it('should return 404 when updating non-existent Note', async () => {
         const nonExistentId = generateTestId();
-        const updateData = TestDataFactory.createNote();
-        delete updateData.id; // id is non-updateable, would cause 400 before 404
+        // Only send string fields (no id) to avoid non-updateable field validation errors
+        const updateData = {
+          contact_id: 'Updated Contact Id',
+          company_id: 'Updated Company Id',
+          deal_id: 'Updated Deal Id',
+          author_id: 'Updated Author Id',
+        };
 
         await request(app.getHttpServer())
           .patch(`${basePath}/${nonExistentId}`)
@@ -1868,7 +2250,7 @@ describe("CRUD Operations", () => {
           .expect(404);
       });
 
-      it("should validate update data", async () => {
+      it('should validate update data', async () => {
         const testData = TestDataFactory.createNote();
 
         const createResponse = await request(app.getHttpServer())
@@ -1891,7 +2273,7 @@ describe("CRUD Operations", () => {
         expect([200, 400]).toContain(response.status);
       });
 
-      it("should support ETag-based optimistic locking", async () => {
+      it('should support ETag-based optimistic locking', async () => {
         const testData = TestDataFactory.createNote();
 
         const createResponse = await request(app.getHttpServer())
@@ -1900,24 +2282,22 @@ describe("CRUD Operations", () => {
           .expect(201);
 
         const createdId = createResponse.body.id;
-        const etag = createResponse.headers["etag"];
+        const etag = createResponse.headers['etag'];
 
         if (etag) {
           // Update with correct ETag should succeed
           const response = await request(app.getHttpServer())
             .patch(`${basePath}/${createdId}`)
-            .set("If-Match", etag)
-            .send({
-              /* update data */
-            });
+            .set('If-Match', etag)
+            .send({ /* update data */ });
 
           expect([200, 204]).toContain(response.status);
         }
       });
     });
 
-    describe("DELETE", () => {
-      it("should delete an existing Note", async () => {
+    describe('DELETE', () => {
+      it('should delete an existing Note', async () => {
         const testData = TestDataFactory.createNote();
 
         const createResponse = await request(app.getHttpServer())
@@ -1927,19 +2307,25 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
 
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Verify deletion
-        await request(app.getHttpServer()).get(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${createdId}`)
+          .expect(404);
       });
 
-      it("should return 404 when deleting non-existent Note", async () => {
+      it('should return 404 when deleting non-existent Note', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).delete(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should be idempotent on repeated delete", async () => {
+      it('should be idempotent on repeated delete', async () => {
         const testData = TestDataFactory.createNote();
 
         const createResponse = await request(app.getHttpServer())
@@ -1950,65 +2336,91 @@ describe("CRUD Operations", () => {
         const createdId = createResponse.body.id;
 
         // First delete
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Second delete should return 404
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(404);
       });
     });
 
-    describe("Validation", () => {
-      it("should enforce uniqueness of id", async () => {
+    describe('Validation', () => {
+
+      it('should enforce uniqueness of id', async () => {
         const testData1 = TestDataFactory.createNote();
         const testData2 = TestDataFactory.createNote({
           id: testData1.id,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require content field", async () => {
+
+
+
+
+
+
+      it('should require content field', async () => {
         const testData = TestDataFactory.createNote();
         delete testData.content;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require is_pinned field", async () => {
+
+      it('should require is_pinned field', async () => {
         const testData = TestDataFactory.createNote();
         delete testData.is_pinned;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require author_id field", async () => {
+
+      it('should require author_id field', async () => {
         const testData = TestDataFactory.createNote();
         delete testData.author_id;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
+
+
     });
   });
 
-  describe("Task CRUD", () => {
-    const basePath = "/api/bus/bus_task";
+  describe('Task CRUD', () => {
+    const basePath = '/api/bus/bus_task';
 
-    describe("CREATE", () => {
-      it("should create a new Task", async () => {
+    describe('CREATE', () => {
+      it('should create a new Task', async () => {
         const testData = TestDataFactory.createTask();
         delete testData.id; // ID should be auto-generated
 
@@ -2026,13 +2438,16 @@ describe("CRUD Operations", () => {
         expect(response.body.created_by).toBeDefined();
       });
 
-      it("should return 400 for invalid data", async () => {
+      it('should return 400 for invalid data', async () => {
         const invalidData = {};
 
-        await request(app.getHttpServer()).post(basePath).send(invalidData).expect(400);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(invalidData)
+          .expect(400);
       });
 
-      it("should validate required fields", async () => {
+      it('should validate required fields', async () => {
         const incompleteData = {
           // Missing required fields
         };
@@ -2046,23 +2461,30 @@ describe("CRUD Operations", () => {
       });
     });
 
-    describe("READ", () => {
-      it("should get all Tasks", async () => {
+    describe('READ', () => {
+      it('should get all Tasks', async () => {
         // Create test data
         const testData1 = TestDataFactory.createTask();
         const testData2 = TestDataFactory.createTask();
 
-        await request(app.getHttpServer()).post(basePath).send(testData1);
-        await request(app.getHttpServer()).post(basePath).send(testData2);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
-        const response = await request(app.getHttpServer()).get(basePath).expect(200);
+        const response = await request(app.getHttpServer())
+          .get(basePath)
+          .expect(200);
 
-        expect(response.body).toHaveProperty("data");
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(Array.isArray(response.body.data)).toBe(true);
         expect(response.body.data.length).toBeGreaterThanOrEqual(2);
       });
 
-      it("should get Task by ID", async () => {
+      it('should get Task by ID', async () => {
         const testData = TestDataFactory.createTask();
 
         const createResponse = await request(app.getHttpServer())
@@ -2079,28 +2501,34 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 for non-existent Task", async () => {
+      it('should return 404 for non-existent Task', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).get(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should support pagination", async () => {
+      it('should support pagination', async () => {
         // Create multiple records
         for (let i = 0; i < 15; i++) {
-          await request(app.getHttpServer()).post(basePath).send(TestDataFactory.createTask());
+          await request(app.getHttpServer())
+            .post(basePath)
+            .send(TestDataFactory.createTask());
         }
 
         const response = await request(app.getHttpServer())
           .get(`${basePath}?page=1&limit=10`)
           .expect(200);
 
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(response.body.data.length).toBeLessThanOrEqual(10);
       });
     });
 
-    describe("UPDATE", () => {
-      it("should update an existing Task", async () => {
+    describe('UPDATE', () => {
+      it('should update an existing Task', async () => {
         const testData = TestDataFactory.createTask();
 
         const createResponse = await request(app.getHttpServer())
@@ -2110,14 +2538,14 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
         const updateData = {
-          contact_id: "Updated Contact Id",
-          company_id: "Updated Company Id",
-          deal_id: "Updated Deal Id",
-          title: "Updated Title",
-          priority: "Updated Priority",
-          status: "Updated Status",
-          assigned_to: "Updated Assigned To",
-          created_by: "Updated Created By",
+          contact_id: 'Updated Contact Id',
+          company_id: 'Updated Company Id',
+          deal_id: 'Updated Deal Id',
+          title: 'Updated Title',
+          priority: 'Updated Priority',
+          status: 'Updated Status',
+          assigned_to: 'Updated Assigned To',
+          created_by: 'Updated Created By',
         };
 
         const response = await request(app.getHttpServer())
@@ -2128,10 +2556,19 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 when updating non-existent Task", async () => {
+      it('should return 404 when updating non-existent Task', async () => {
         const nonExistentId = generateTestId();
-        const updateData = TestDataFactory.createTask();
-        delete updateData.id; // id is non-updateable, would cause 400 before 404
+        // Only send string fields (no id) to avoid non-updateable field validation errors
+        const updateData = {
+          contact_id: 'Updated Contact Id',
+          company_id: 'Updated Company Id',
+          deal_id: 'Updated Deal Id',
+          title: 'Updated Title',
+          priority: 'Updated Priority',
+          status: 'Updated Status',
+          assigned_to: 'Updated Assigned To',
+          created_by: 'Updated Created By',
+        };
 
         await request(app.getHttpServer())
           .patch(`${basePath}/${nonExistentId}`)
@@ -2139,7 +2576,7 @@ describe("CRUD Operations", () => {
           .expect(404);
       });
 
-      it("should validate update data", async () => {
+      it('should validate update data', async () => {
         const testData = TestDataFactory.createTask();
 
         const createResponse = await request(app.getHttpServer())
@@ -2162,7 +2599,7 @@ describe("CRUD Operations", () => {
         expect([200, 400]).toContain(response.status);
       });
 
-      it("should support ETag-based optimistic locking", async () => {
+      it('should support ETag-based optimistic locking', async () => {
         const testData = TestDataFactory.createTask();
 
         const createResponse = await request(app.getHttpServer())
@@ -2171,24 +2608,22 @@ describe("CRUD Operations", () => {
           .expect(201);
 
         const createdId = createResponse.body.id;
-        const etag = createResponse.headers["etag"];
+        const etag = createResponse.headers['etag'];
 
         if (etag) {
           // Update with correct ETag should succeed
           const response = await request(app.getHttpServer())
             .patch(`${basePath}/${createdId}`)
-            .set("If-Match", etag)
-            .send({
-              /* update data */
-            });
+            .set('If-Match', etag)
+            .send({ /* update data */ });
 
           expect([200, 204]).toContain(response.status);
         }
       });
     });
 
-    describe("DELETE", () => {
-      it("should delete an existing Task", async () => {
+    describe('DELETE', () => {
+      it('should delete an existing Task', async () => {
         const testData = TestDataFactory.createTask();
 
         const createResponse = await request(app.getHttpServer())
@@ -2198,19 +2633,25 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
 
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Verify deletion
-        await request(app.getHttpServer()).get(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${createdId}`)
+          .expect(404);
       });
 
-      it("should return 404 when deleting non-existent Task", async () => {
+      it('should return 404 when deleting non-existent Task', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).delete(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should be idempotent on repeated delete", async () => {
+      it('should be idempotent on repeated delete', async () => {
         const testData = TestDataFactory.createTask();
 
         const createResponse = await request(app.getHttpServer())
@@ -2221,85 +2662,123 @@ describe("CRUD Operations", () => {
         const createdId = createResponse.body.id;
 
         // First delete
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Second delete should return 404
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(404);
       });
     });
 
-    describe("Validation", () => {
-      it("should enforce uniqueness of id", async () => {
+    describe('Validation', () => {
+
+      it('should enforce uniqueness of id', async () => {
         const testData1 = TestDataFactory.createTask();
         const testData2 = TestDataFactory.createTask({
           id: testData1.id,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require title field", async () => {
+
+
+
+
+
+
+      it('should require title field', async () => {
         const testData = TestDataFactory.createTask();
         delete testData.title;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require priority field", async () => {
+
+
+
+      it('should require priority field', async () => {
         const testData = TestDataFactory.createTask();
         delete testData.priority;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require status field", async () => {
+
+      it('should require status field', async () => {
         const testData = TestDataFactory.createTask();
         delete testData.status;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require assigned_to field", async () => {
+
+
+
+
+
+      it('should require assigned_to field', async () => {
         const testData = TestDataFactory.createTask();
         delete testData.assigned_to;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require created_by field", async () => {
+
+      it('should require created_by field', async () => {
         const testData = TestDataFactory.createTask();
         delete testData.created_by;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
+
+
     });
   });
 
-  describe("EmailMessage CRUD", () => {
-    const basePath = "/api/bus/bus_email_message";
+  describe('EmailMessage CRUD', () => {
+    const basePath = '/api/bus/bus_email_message';
 
-    describe("CREATE", () => {
-      it("should create a new EmailMessage", async () => {
+    describe('CREATE', () => {
+      it('should create a new EmailMessage', async () => {
         const testData = TestDataFactory.createEmailMessage();
         delete testData.id; // ID should be auto-generated
 
@@ -2315,13 +2794,16 @@ describe("CRUD Operations", () => {
         expect(response.body.open_count).toBeDefined();
       });
 
-      it("should return 400 for invalid data", async () => {
+      it('should return 400 for invalid data', async () => {
         const invalidData = {};
 
-        await request(app.getHttpServer()).post(basePath).send(invalidData).expect(400);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(invalidData)
+          .expect(400);
       });
 
-      it("should validate required fields", async () => {
+      it('should validate required fields', async () => {
         const incompleteData = {
           // Missing required fields
         };
@@ -2335,23 +2817,30 @@ describe("CRUD Operations", () => {
       });
     });
 
-    describe("READ", () => {
-      it("should get all EmailMessages", async () => {
+    describe('READ', () => {
+      it('should get all EmailMessages', async () => {
         // Create test data
         const testData1 = TestDataFactory.createEmailMessage();
         const testData2 = TestDataFactory.createEmailMessage();
 
-        await request(app.getHttpServer()).post(basePath).send(testData1);
-        await request(app.getHttpServer()).post(basePath).send(testData2);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
-        const response = await request(app.getHttpServer()).get(basePath).expect(200);
+        const response = await request(app.getHttpServer())
+          .get(basePath)
+          .expect(200);
 
-        expect(response.body).toHaveProperty("data");
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(Array.isArray(response.body.data)).toBe(true);
         expect(response.body.data.length).toBeGreaterThanOrEqual(2);
       });
 
-      it("should get EmailMessage by ID", async () => {
+      it('should get EmailMessage by ID', async () => {
         const testData = TestDataFactory.createEmailMessage();
 
         const createResponse = await request(app.getHttpServer())
@@ -2368,13 +2857,15 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 for non-existent EmailMessage", async () => {
+      it('should return 404 for non-existent EmailMessage', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).get(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should support pagination", async () => {
+      it('should support pagination', async () => {
         // Create multiple records
         for (let i = 0; i < 15; i++) {
           await request(app.getHttpServer())
@@ -2386,12 +2877,14 @@ describe("CRUD Operations", () => {
           .get(`${basePath}?page=1&limit=10`)
           .expect(200);
 
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(response.body.data.length).toBeLessThanOrEqual(10);
       });
     });
 
-    describe("UPDATE", () => {
-      it("should update an existing EmailMessage", async () => {
+    describe('UPDATE', () => {
+      it('should update an existing EmailMessage', async () => {
         const testData = TestDataFactory.createEmailMessage();
 
         const createResponse = await request(app.getHttpServer())
@@ -2401,11 +2894,11 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
         const updateData = {
-          contact_id: "Updated Contact Id",
-          deal_id: "Updated Deal Id",
-          thread_id: "Updated Thread Id",
-          subject: "Updated Subject",
-          direction: "Updated Direction",
+          contact_id: 'Updated Contact Id',
+          deal_id: 'Updated Deal Id',
+          thread_id: 'Updated Thread Id',
+          subject: 'Updated Subject',
+          direction: 'Updated Direction',
         };
 
         const response = await request(app.getHttpServer())
@@ -2416,10 +2909,16 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 when updating non-existent EmailMessage", async () => {
+      it('should return 404 when updating non-existent EmailMessage', async () => {
         const nonExistentId = generateTestId();
-        const updateData = TestDataFactory.createEmailMessage();
-        delete updateData.id; // id is non-updateable, would cause 400 before 404
+        // Only send string fields (no id) to avoid non-updateable field validation errors
+        const updateData = {
+          contact_id: 'Updated Contact Id',
+          deal_id: 'Updated Deal Id',
+          thread_id: 'Updated Thread Id',
+          subject: 'Updated Subject',
+          direction: 'Updated Direction',
+        };
 
         await request(app.getHttpServer())
           .patch(`${basePath}/${nonExistentId}`)
@@ -2427,7 +2926,7 @@ describe("CRUD Operations", () => {
           .expect(404);
       });
 
-      it("should validate update data", async () => {
+      it('should validate update data', async () => {
         const testData = TestDataFactory.createEmailMessage();
 
         const createResponse = await request(app.getHttpServer())
@@ -2450,7 +2949,7 @@ describe("CRUD Operations", () => {
         expect([200, 400]).toContain(response.status);
       });
 
-      it("should support ETag-based optimistic locking", async () => {
+      it('should support ETag-based optimistic locking', async () => {
         const testData = TestDataFactory.createEmailMessage();
 
         const createResponse = await request(app.getHttpServer())
@@ -2459,24 +2958,22 @@ describe("CRUD Operations", () => {
           .expect(201);
 
         const createdId = createResponse.body.id;
-        const etag = createResponse.headers["etag"];
+        const etag = createResponse.headers['etag'];
 
         if (etag) {
           // Update with correct ETag should succeed
           const response = await request(app.getHttpServer())
             .patch(`${basePath}/${createdId}`)
-            .set("If-Match", etag)
-            .send({
-              /* update data */
-            });
+            .set('If-Match', etag)
+            .send({ /* update data */ });
 
           expect([200, 204]).toContain(response.status);
         }
       });
     });
 
-    describe("DELETE", () => {
-      it("should delete an existing EmailMessage", async () => {
+    describe('DELETE', () => {
+      it('should delete an existing EmailMessage', async () => {
         const testData = TestDataFactory.createEmailMessage();
 
         const createResponse = await request(app.getHttpServer())
@@ -2486,19 +2983,25 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
 
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Verify deletion
-        await request(app.getHttpServer()).get(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${createdId}`)
+          .expect(404);
       });
 
-      it("should return 404 when deleting non-existent EmailMessage", async () => {
+      it('should return 404 when deleting non-existent EmailMessage', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).delete(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should be idempotent on repeated delete", async () => {
+      it('should be idempotent on repeated delete', async () => {
         const testData = TestDataFactory.createEmailMessage();
 
         const createResponse = await request(app.getHttpServer())
@@ -2509,65 +3012,101 @@ describe("CRUD Operations", () => {
         const createdId = createResponse.body.id;
 
         // First delete
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Second delete should return 404
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(404);
       });
     });
 
-    describe("Validation", () => {
-      it("should enforce uniqueness of id", async () => {
+    describe('Validation', () => {
+
+      it('should enforce uniqueness of id', async () => {
         const testData1 = TestDataFactory.createEmailMessage();
         const testData2 = TestDataFactory.createEmailMessage({
           id: testData1.id,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require subject field", async () => {
+
+
+
+
+
+
+      it('should require subject field', async () => {
         const testData = TestDataFactory.createEmailMessage();
         delete testData.subject;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require direction field", async () => {
+
+
+
+
+
+      it('should require direction field', async () => {
         const testData = TestDataFactory.createEmailMessage();
         delete testData.direction;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require open_count field", async () => {
+
+
+
+
+
+
+
+      it('should require open_count field', async () => {
         const testData = TestDataFactory.createEmailMessage();
         delete testData.open_count;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
+
+
     });
   });
 
-  describe("EmailTemplate CRUD", () => {
-    const basePath = "/api/bus/bus_email_template";
+  describe('EmailTemplate CRUD', () => {
+    const basePath = '/api/bus/bus_email_template';
 
-    describe("CREATE", () => {
-      it("should create a new EmailTemplate", async () => {
+    describe('CREATE', () => {
+      it('should create a new EmailTemplate', async () => {
         const testData = TestDataFactory.createEmailTemplate();
         delete testData.id; // ID should be auto-generated
 
@@ -2584,13 +3123,16 @@ describe("CRUD Operations", () => {
         expect(response.body.is_active).toBeDefined();
       });
 
-      it("should return 400 for invalid data", async () => {
+      it('should return 400 for invalid data', async () => {
         const invalidData = {};
 
-        await request(app.getHttpServer()).post(basePath).send(invalidData).expect(400);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(invalidData)
+          .expect(400);
       });
 
-      it("should validate required fields", async () => {
+      it('should validate required fields', async () => {
         const incompleteData = {
           // Missing required fields
         };
@@ -2604,23 +3146,30 @@ describe("CRUD Operations", () => {
       });
     });
 
-    describe("READ", () => {
-      it("should get all EmailTemplates", async () => {
+    describe('READ', () => {
+      it('should get all EmailTemplates', async () => {
         // Create test data
         const testData1 = TestDataFactory.createEmailTemplate();
         const testData2 = TestDataFactory.createEmailTemplate();
 
-        await request(app.getHttpServer()).post(basePath).send(testData1);
-        await request(app.getHttpServer()).post(basePath).send(testData2);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
-        const response = await request(app.getHttpServer()).get(basePath).expect(200);
+        const response = await request(app.getHttpServer())
+          .get(basePath)
+          .expect(200);
 
-        expect(response.body).toHaveProperty("data");
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(Array.isArray(response.body.data)).toBe(true);
         expect(response.body.data.length).toBeGreaterThanOrEqual(2);
       });
 
-      it("should get EmailTemplate by ID", async () => {
+      it('should get EmailTemplate by ID', async () => {
         const testData = TestDataFactory.createEmailTemplate();
 
         const createResponse = await request(app.getHttpServer())
@@ -2637,13 +3186,15 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 for non-existent EmailTemplate", async () => {
+      it('should return 404 for non-existent EmailTemplate', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).get(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should support pagination", async () => {
+      it('should support pagination', async () => {
         // Create multiple records
         for (let i = 0; i < 15; i++) {
           await request(app.getHttpServer())
@@ -2655,12 +3206,14 @@ describe("CRUD Operations", () => {
           .get(`${basePath}?page=1&limit=10`)
           .expect(200);
 
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(response.body.data.length).toBeLessThanOrEqual(10);
       });
     });
 
-    describe("UPDATE", () => {
-      it("should update an existing EmailTemplate", async () => {
+    describe('UPDATE', () => {
+      it('should update an existing EmailTemplate', async () => {
         const testData = TestDataFactory.createEmailTemplate();
 
         const createResponse = await request(app.getHttpServer())
@@ -2670,9 +3223,9 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
         const updateData = {
-          name: "Updated Name",
-          subject: "Updated Subject",
-          category: "Updated Category",
+          name: 'Updated Name',
+          subject: 'Updated Subject',
+          category: 'Updated Category',
         };
 
         const response = await request(app.getHttpServer())
@@ -2683,10 +3236,14 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 when updating non-existent EmailTemplate", async () => {
+      it('should return 404 when updating non-existent EmailTemplate', async () => {
         const nonExistentId = generateTestId();
-        const updateData = TestDataFactory.createEmailTemplate();
-        delete updateData.id; // id is non-updateable, would cause 400 before 404
+        // Only send string fields (no id) to avoid non-updateable field validation errors
+        const updateData = {
+          name: 'Updated Name',
+          subject: 'Updated Subject',
+          category: 'Updated Category',
+        };
 
         await request(app.getHttpServer())
           .patch(`${basePath}/${nonExistentId}`)
@@ -2694,7 +3251,7 @@ describe("CRUD Operations", () => {
           .expect(404);
       });
 
-      it("should validate update data", async () => {
+      it('should validate update data', async () => {
         const testData = TestDataFactory.createEmailTemplate();
 
         const createResponse = await request(app.getHttpServer())
@@ -2717,7 +3274,7 @@ describe("CRUD Operations", () => {
         expect([200, 400]).toContain(response.status);
       });
 
-      it("should support ETag-based optimistic locking", async () => {
+      it('should support ETag-based optimistic locking', async () => {
         const testData = TestDataFactory.createEmailTemplate();
 
         const createResponse = await request(app.getHttpServer())
@@ -2726,24 +3283,22 @@ describe("CRUD Operations", () => {
           .expect(201);
 
         const createdId = createResponse.body.id;
-        const etag = createResponse.headers["etag"];
+        const etag = createResponse.headers['etag'];
 
         if (etag) {
           // Update with correct ETag should succeed
           const response = await request(app.getHttpServer())
             .patch(`${basePath}/${createdId}`)
-            .set("If-Match", etag)
-            .send({
-              /* update data */
-            });
+            .set('If-Match', etag)
+            .send({ /* update data */ });
 
           expect([200, 204]).toContain(response.status);
         }
       });
     });
 
-    describe("DELETE", () => {
-      it("should delete an existing EmailTemplate", async () => {
+    describe('DELETE', () => {
+      it('should delete an existing EmailTemplate', async () => {
         const testData = TestDataFactory.createEmailTemplate();
 
         const createResponse = await request(app.getHttpServer())
@@ -2753,19 +3308,25 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
 
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Verify deletion
-        await request(app.getHttpServer()).get(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${createdId}`)
+          .expect(404);
       });
 
-      it("should return 404 when deleting non-existent EmailTemplate", async () => {
+      it('should return 404 when deleting non-existent EmailTemplate', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).delete(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should be idempotent on repeated delete", async () => {
+      it('should be idempotent on repeated delete', async () => {
         const testData = TestDataFactory.createEmailTemplate();
 
         const createResponse = await request(app.getHttpServer())
@@ -2776,75 +3337,102 @@ describe("CRUD Operations", () => {
         const createdId = createResponse.body.id;
 
         // First delete
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Second delete should return 404
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(404);
       });
     });
 
-    describe("Validation", () => {
-      it("should enforce uniqueness of id", async () => {
+    describe('Validation', () => {
+
+      it('should enforce uniqueness of id', async () => {
         const testData1 = TestDataFactory.createEmailTemplate();
         const testData2 = TestDataFactory.createEmailTemplate({
           id: testData1.id,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require name field", async () => {
+      it('should require name field', async () => {
         const testData = TestDataFactory.createEmailTemplate();
         delete testData.name;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require subject field", async () => {
+
+      it('should require subject field', async () => {
         const testData = TestDataFactory.createEmailTemplate();
         delete testData.subject;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require body_html field", async () => {
+
+      it('should require body_html field', async () => {
         const testData = TestDataFactory.createEmailTemplate();
         delete testData.body_html;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require is_active field", async () => {
+
+
+
+
+
+      it('should require is_active field', async () => {
         const testData = TestDataFactory.createEmailTemplate();
         delete testData.is_active;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
+
+
     });
   });
 
-  describe("Product CRUD", () => {
-    const basePath = "/api/bus/bus_product";
+  describe('Product CRUD', () => {
+    const basePath = '/api/bus/bus_product';
 
-    describe("CREATE", () => {
-      it("should create a new Product", async () => {
+    describe('CREATE', () => {
+      it('should create a new Product', async () => {
         const testData = TestDataFactory.createProduct();
         delete testData.id; // ID should be auto-generated
 
@@ -2862,13 +3450,16 @@ describe("CRUD Operations", () => {
         expect(response.body.is_active).toBeDefined();
       });
 
-      it("should return 400 for invalid data", async () => {
+      it('should return 400 for invalid data', async () => {
         const invalidData = {};
 
-        await request(app.getHttpServer()).post(basePath).send(invalidData).expect(400);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(invalidData)
+          .expect(400);
       });
 
-      it("should validate required fields", async () => {
+      it('should validate required fields', async () => {
         const incompleteData = {
           // Missing required fields
         };
@@ -2882,23 +3473,30 @@ describe("CRUD Operations", () => {
       });
     });
 
-    describe("READ", () => {
-      it("should get all Products", async () => {
+    describe('READ', () => {
+      it('should get all Products', async () => {
         // Create test data
         const testData1 = TestDataFactory.createProduct();
         const testData2 = TestDataFactory.createProduct();
 
-        await request(app.getHttpServer()).post(basePath).send(testData1);
-        await request(app.getHttpServer()).post(basePath).send(testData2);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
-        const response = await request(app.getHttpServer()).get(basePath).expect(200);
+        const response = await request(app.getHttpServer())
+          .get(basePath)
+          .expect(200);
 
-        expect(response.body).toHaveProperty("data");
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(Array.isArray(response.body.data)).toBe(true);
         expect(response.body.data.length).toBeGreaterThanOrEqual(2);
       });
 
-      it("should get Product by ID", async () => {
+      it('should get Product by ID', async () => {
         const testData = TestDataFactory.createProduct();
 
         const createResponse = await request(app.getHttpServer())
@@ -2915,28 +3513,34 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 for non-existent Product", async () => {
+      it('should return 404 for non-existent Product', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).get(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should support pagination", async () => {
+      it('should support pagination', async () => {
         // Create multiple records
         for (let i = 0; i < 15; i++) {
-          await request(app.getHttpServer()).post(basePath).send(TestDataFactory.createProduct());
+          await request(app.getHttpServer())
+            .post(basePath)
+            .send(TestDataFactory.createProduct());
         }
 
         const response = await request(app.getHttpServer())
           .get(`${basePath}?page=1&limit=10`)
           .expect(200);
 
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(response.body.data.length).toBeLessThanOrEqual(10);
       });
     });
 
-    describe("UPDATE", () => {
-      it("should update an existing Product", async () => {
+    describe('UPDATE', () => {
+      it('should update an existing Product', async () => {
         const testData = TestDataFactory.createProduct();
 
         const createResponse = await request(app.getHttpServer())
@@ -2946,9 +3550,9 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
         const updateData = {
-          name: "Updated Name",
-          sku: "Updated Sku",
-          currency: "Updated Currency",
+          name: 'Updated Name',
+          sku: 'Updated Sku',
+          currency: 'Updated Currency',
         };
 
         const response = await request(app.getHttpServer())
@@ -2959,10 +3563,14 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 when updating non-existent Product", async () => {
+      it('should return 404 when updating non-existent Product', async () => {
         const nonExistentId = generateTestId();
-        const updateData = TestDataFactory.createProduct();
-        delete updateData.id; // id is non-updateable, would cause 400 before 404
+        // Only send string fields (no id) to avoid non-updateable field validation errors
+        const updateData = {
+          name: 'Updated Name',
+          sku: 'Updated Sku',
+          currency: 'Updated Currency',
+        };
 
         await request(app.getHttpServer())
           .patch(`${basePath}/${nonExistentId}`)
@@ -2970,7 +3578,7 @@ describe("CRUD Operations", () => {
           .expect(404);
       });
 
-      it("should validate update data", async () => {
+      it('should validate update data', async () => {
         const testData = TestDataFactory.createProduct();
 
         const createResponse = await request(app.getHttpServer())
@@ -2993,7 +3601,7 @@ describe("CRUD Operations", () => {
         expect([200, 400]).toContain(response.status);
       });
 
-      it("should support ETag-based optimistic locking", async () => {
+      it('should support ETag-based optimistic locking', async () => {
         const testData = TestDataFactory.createProduct();
 
         const createResponse = await request(app.getHttpServer())
@@ -3002,24 +3610,22 @@ describe("CRUD Operations", () => {
           .expect(201);
 
         const createdId = createResponse.body.id;
-        const etag = createResponse.headers["etag"];
+        const etag = createResponse.headers['etag'];
 
         if (etag) {
           // Update with correct ETag should succeed
           const response = await request(app.getHttpServer())
             .patch(`${basePath}/${createdId}`)
-            .set("If-Match", etag)
-            .send({
-              /* update data */
-            });
+            .set('If-Match', etag)
+            .send({ /* update data */ });
 
           expect([200, 204]).toContain(response.status);
         }
       });
     });
 
-    describe("DELETE", () => {
-      it("should delete an existing Product", async () => {
+    describe('DELETE', () => {
+      it('should delete an existing Product', async () => {
         const testData = TestDataFactory.createProduct();
 
         const createResponse = await request(app.getHttpServer())
@@ -3029,19 +3635,25 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
 
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Verify deletion
-        await request(app.getHttpServer()).get(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${createdId}`)
+          .expect(404);
       });
 
-      it("should return 404 when deleting non-existent Product", async () => {
+      it('should return 404 when deleting non-existent Product', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).delete(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should be idempotent on repeated delete", async () => {
+      it('should be idempotent on repeated delete', async () => {
         const testData = TestDataFactory.createProduct();
 
         const createResponse = await request(app.getHttpServer())
@@ -3052,99 +3664,131 @@ describe("CRUD Operations", () => {
         const createdId = createResponse.body.id;
 
         // First delete
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Second delete should return 404
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(404);
       });
     });
 
-    describe("Validation", () => {
-      it("should enforce uniqueness of id", async () => {
+    describe('Validation', () => {
+
+      it('should enforce uniqueness of id', async () => {
         const testData1 = TestDataFactory.createProduct();
         const testData2 = TestDataFactory.createProduct({
           id: testData1.id,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require name field", async () => {
+      it('should require name field', async () => {
         const testData = TestDataFactory.createProduct();
         delete testData.name;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require sku field", async () => {
+
+      it('should require sku field', async () => {
         const testData = TestDataFactory.createProduct();
         delete testData.sku;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should enforce uniqueness of sku", async () => {
+      it('should enforce uniqueness of sku', async () => {
         const testData1 = TestDataFactory.createProduct();
         const testData2 = TestDataFactory.createProduct({
           sku: testData1.sku,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require unit_price field", async () => {
+
+
+      it('should require unit_price field', async () => {
         const testData = TestDataFactory.createProduct();
         delete testData.unit_price;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require currency field", async () => {
+
+      it('should require currency field', async () => {
         const testData = TestDataFactory.createProduct();
         delete testData.currency;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require is_active field", async () => {
+
+      it('should require is_active field', async () => {
         const testData = TestDataFactory.createProduct();
         delete testData.is_active;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
+
+
     });
   });
 
-  describe("Quote CRUD", () => {
-    const basePath = "/api/bus/bus_quote";
+  describe('Quote CRUD', () => {
+    const basePath = '/api/bus/bus_quote';
 
-    describe("CREATE", () => {
-      it("should create a new Quote", async () => {
+    describe('CREATE', () => {
+      it('should create a new Quote', async () => {
         const testData = TestDataFactory.createQuote();
         delete testData.id; // ID should be auto-generated
 
@@ -3164,13 +3808,16 @@ describe("CRUD Operations", () => {
         expect(response.body.total_amount).toBeDefined();
       });
 
-      it("should return 400 for invalid data", async () => {
+      it('should return 400 for invalid data', async () => {
         const invalidData = {};
 
-        await request(app.getHttpServer()).post(basePath).send(invalidData).expect(400);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(invalidData)
+          .expect(400);
       });
 
-      it("should validate required fields", async () => {
+      it('should validate required fields', async () => {
         const incompleteData = {
           // Missing required fields
         };
@@ -3184,23 +3831,30 @@ describe("CRUD Operations", () => {
       });
     });
 
-    describe("READ", () => {
-      it("should get all Quotes", async () => {
+    describe('READ', () => {
+      it('should get all Quotes', async () => {
         // Create test data
         const testData1 = TestDataFactory.createQuote();
         const testData2 = TestDataFactory.createQuote();
 
-        await request(app.getHttpServer()).post(basePath).send(testData1);
-        await request(app.getHttpServer()).post(basePath).send(testData2);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
-        const response = await request(app.getHttpServer()).get(basePath).expect(200);
+        const response = await request(app.getHttpServer())
+          .get(basePath)
+          .expect(200);
 
-        expect(response.body).toHaveProperty("data");
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(Array.isArray(response.body.data)).toBe(true);
         expect(response.body.data.length).toBeGreaterThanOrEqual(2);
       });
 
-      it("should get Quote by ID", async () => {
+      it('should get Quote by ID', async () => {
         const testData = TestDataFactory.createQuote();
 
         const createResponse = await request(app.getHttpServer())
@@ -3217,28 +3871,34 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 for non-existent Quote", async () => {
+      it('should return 404 for non-existent Quote', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).get(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should support pagination", async () => {
+      it('should support pagination', async () => {
         // Create multiple records
         for (let i = 0; i < 15; i++) {
-          await request(app.getHttpServer()).post(basePath).send(TestDataFactory.createQuote());
+          await request(app.getHttpServer())
+            .post(basePath)
+            .send(TestDataFactory.createQuote());
         }
 
         const response = await request(app.getHttpServer())
           .get(`${basePath}?page=1&limit=10`)
           .expect(200);
 
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(response.body.data.length).toBeLessThanOrEqual(10);
       });
     });
 
-    describe("UPDATE", () => {
-      it("should update an existing Quote", async () => {
+    describe('UPDATE', () => {
+      it('should update an existing Quote', async () => {
         const testData = TestDataFactory.createQuote();
 
         const createResponse = await request(app.getHttpServer())
@@ -3248,9 +3908,9 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
         const updateData = {
-          deal_id: "Updated Deal Id",
-          quote_number: "Updated Quote Number",
-          status: "Updated Status",
+          deal_id: 'Updated Deal Id',
+          quote_number: 'Updated Quote Number',
+          status: 'Updated Status',
         };
 
         const response = await request(app.getHttpServer())
@@ -3261,10 +3921,14 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 when updating non-existent Quote", async () => {
+      it('should return 404 when updating non-existent Quote', async () => {
         const nonExistentId = generateTestId();
-        const updateData = TestDataFactory.createQuote();
-        delete updateData.id; // id is non-updateable, would cause 400 before 404
+        // Only send string fields (no id) to avoid non-updateable field validation errors
+        const updateData = {
+          deal_id: 'Updated Deal Id',
+          quote_number: 'Updated Quote Number',
+          status: 'Updated Status',
+        };
 
         await request(app.getHttpServer())
           .patch(`${basePath}/${nonExistentId}`)
@@ -3272,7 +3936,7 @@ describe("CRUD Operations", () => {
           .expect(404);
       });
 
-      it("should validate update data", async () => {
+      it('should validate update data', async () => {
         const testData = TestDataFactory.createQuote();
 
         const createResponse = await request(app.getHttpServer())
@@ -3295,7 +3959,7 @@ describe("CRUD Operations", () => {
         expect([200, 400]).toContain(response.status);
       });
 
-      it("should support ETag-based optimistic locking", async () => {
+      it('should support ETag-based optimistic locking', async () => {
         const testData = TestDataFactory.createQuote();
 
         const createResponse = await request(app.getHttpServer())
@@ -3304,24 +3968,22 @@ describe("CRUD Operations", () => {
           .expect(201);
 
         const createdId = createResponse.body.id;
-        const etag = createResponse.headers["etag"];
+        const etag = createResponse.headers['etag'];
 
         if (etag) {
           // Update with correct ETag should succeed
           const response = await request(app.getHttpServer())
             .patch(`${basePath}/${createdId}`)
-            .set("If-Match", etag)
-            .send({
-              /* update data */
-            });
+            .set('If-Match', etag)
+            .send({ /* update data */ });
 
           expect([200, 204]).toContain(response.status);
         }
       });
     });
 
-    describe("DELETE", () => {
-      it("should delete an existing Quote", async () => {
+    describe('DELETE', () => {
+      it('should delete an existing Quote', async () => {
         const testData = TestDataFactory.createQuote();
 
         const createResponse = await request(app.getHttpServer())
@@ -3331,19 +3993,25 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
 
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Verify deletion
-        await request(app.getHttpServer()).get(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${createdId}`)
+          .expect(404);
       });
 
-      it("should return 404 when deleting non-existent Quote", async () => {
+      it('should return 404 when deleting non-existent Quote', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).delete(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should be idempotent on repeated delete", async () => {
+      it('should be idempotent on repeated delete', async () => {
         const testData = TestDataFactory.createQuote();
 
         const createResponse = await request(app.getHttpServer())
@@ -3354,119 +4022,161 @@ describe("CRUD Operations", () => {
         const createdId = createResponse.body.id;
 
         // First delete
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Second delete should return 404
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(404);
       });
     });
 
-    describe("Validation", () => {
-      it("should enforce uniqueness of id", async () => {
+    describe('Validation', () => {
+
+      it('should enforce uniqueness of id', async () => {
         const testData1 = TestDataFactory.createQuote();
         const testData2 = TestDataFactory.createQuote({
           id: testData1.id,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require deal_id field", async () => {
+      it('should require deal_id field', async () => {
         const testData = TestDataFactory.createQuote();
         delete testData.deal_id;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require quote_number field", async () => {
+
+      it('should require quote_number field', async () => {
         const testData = TestDataFactory.createQuote();
         delete testData.quote_number;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should enforce uniqueness of quote_number", async () => {
+      it('should enforce uniqueness of quote_number', async () => {
         const testData1 = TestDataFactory.createQuote();
         const testData2 = TestDataFactory.createQuote({
           quote_number: testData1.quote_number,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require status field", async () => {
+      it('should require status field', async () => {
         const testData = TestDataFactory.createQuote();
         delete testData.status;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require subtotal field", async () => {
+
+
+
+      it('should require subtotal field', async () => {
         const testData = TestDataFactory.createQuote();
         delete testData.subtotal;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require discount_amount field", async () => {
+
+      it('should require discount_amount field', async () => {
         const testData = TestDataFactory.createQuote();
         delete testData.discount_amount;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require tax_amount field", async () => {
+
+      it('should require tax_amount field', async () => {
         const testData = TestDataFactory.createQuote();
         delete testData.tax_amount;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require total_amount field", async () => {
+
+      it('should require total_amount field', async () => {
         const testData = TestDataFactory.createQuote();
         delete testData.total_amount;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
+
+
+
+
+
+
     });
   });
 
-  describe("QuoteItem CRUD", () => {
-    const basePath = "/api/bus/bus_quote_item";
+  describe('QuoteItem CRUD', () => {
+    const basePath = '/api/bus/bus_quote_item';
 
-    describe("CREATE", () => {
-      it("should create a new QuoteItem", async () => {
+    describe('CREATE', () => {
+      it('should create a new QuoteItem', async () => {
         const testData = TestDataFactory.createQuoteItem();
         delete testData.id; // ID should be auto-generated
 
@@ -3485,13 +4195,16 @@ describe("CRUD Operations", () => {
         expect(response.body.total_price).toBeDefined();
       });
 
-      it("should return 400 for invalid data", async () => {
+      it('should return 400 for invalid data', async () => {
         const invalidData = {};
 
-        await request(app.getHttpServer()).post(basePath).send(invalidData).expect(400);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(invalidData)
+          .expect(400);
       });
 
-      it("should validate required fields", async () => {
+      it('should validate required fields', async () => {
         const incompleteData = {
           // Missing required fields
         };
@@ -3505,23 +4218,30 @@ describe("CRUD Operations", () => {
       });
     });
 
-    describe("READ", () => {
-      it("should get all QuoteItems", async () => {
+    describe('READ', () => {
+      it('should get all QuoteItems', async () => {
         // Create test data
         const testData1 = TestDataFactory.createQuoteItem();
         const testData2 = TestDataFactory.createQuoteItem();
 
-        await request(app.getHttpServer()).post(basePath).send(testData1);
-        await request(app.getHttpServer()).post(basePath).send(testData2);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
-        const response = await request(app.getHttpServer()).get(basePath).expect(200);
+        const response = await request(app.getHttpServer())
+          .get(basePath)
+          .expect(200);
 
-        expect(response.body).toHaveProperty("data");
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(Array.isArray(response.body.data)).toBe(true);
         expect(response.body.data.length).toBeGreaterThanOrEqual(2);
       });
 
-      it("should get QuoteItem by ID", async () => {
+      it('should get QuoteItem by ID', async () => {
         const testData = TestDataFactory.createQuoteItem();
 
         const createResponse = await request(app.getHttpServer())
@@ -3538,28 +4258,34 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 for non-existent QuoteItem", async () => {
+      it('should return 404 for non-existent QuoteItem', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).get(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should support pagination", async () => {
+      it('should support pagination', async () => {
         // Create multiple records
         for (let i = 0; i < 15; i++) {
-          await request(app.getHttpServer()).post(basePath).send(TestDataFactory.createQuoteItem());
+          await request(app.getHttpServer())
+            .post(basePath)
+            .send(TestDataFactory.createQuoteItem());
         }
 
         const response = await request(app.getHttpServer())
           .get(`${basePath}?page=1&limit=10`)
           .expect(200);
 
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(response.body.data.length).toBeLessThanOrEqual(10);
       });
     });
 
-    describe("UPDATE", () => {
-      it("should update an existing QuoteItem", async () => {
+    describe('UPDATE', () => {
+      it('should update an existing QuoteItem', async () => {
         const testData = TestDataFactory.createQuoteItem();
 
         const createResponse = await request(app.getHttpServer())
@@ -3569,9 +4295,9 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
         const updateData = {
-          quote_id: "Updated Quote Id",
-          product_id: "Updated Product Id",
-          description: "Updated Description",
+          quote_id: 'Updated Quote Id',
+          product_id: 'Updated Product Id',
+          description: 'Updated Description',
         };
 
         const response = await request(app.getHttpServer())
@@ -3582,10 +4308,14 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 when updating non-existent QuoteItem", async () => {
+      it('should return 404 when updating non-existent QuoteItem', async () => {
         const nonExistentId = generateTestId();
-        const updateData = TestDataFactory.createQuoteItem();
-        delete updateData.id; // id is non-updateable, would cause 400 before 404
+        // Only send string fields (no id) to avoid non-updateable field validation errors
+        const updateData = {
+          quote_id: 'Updated Quote Id',
+          product_id: 'Updated Product Id',
+          description: 'Updated Description',
+        };
 
         await request(app.getHttpServer())
           .patch(`${basePath}/${nonExistentId}`)
@@ -3593,7 +4323,7 @@ describe("CRUD Operations", () => {
           .expect(404);
       });
 
-      it("should validate update data", async () => {
+      it('should validate update data', async () => {
         const testData = TestDataFactory.createQuoteItem();
 
         const createResponse = await request(app.getHttpServer())
@@ -3616,7 +4346,7 @@ describe("CRUD Operations", () => {
         expect([200, 400]).toContain(response.status);
       });
 
-      it("should support ETag-based optimistic locking", async () => {
+      it('should support ETag-based optimistic locking', async () => {
         const testData = TestDataFactory.createQuoteItem();
 
         const createResponse = await request(app.getHttpServer())
@@ -3625,24 +4355,22 @@ describe("CRUD Operations", () => {
           .expect(201);
 
         const createdId = createResponse.body.id;
-        const etag = createResponse.headers["etag"];
+        const etag = createResponse.headers['etag'];
 
         if (etag) {
           // Update with correct ETag should succeed
           const response = await request(app.getHttpServer())
             .patch(`${basePath}/${createdId}`)
-            .set("If-Match", etag)
-            .send({
-              /* update data */
-            });
+            .set('If-Match', etag)
+            .send({ /* update data */ });
 
           expect([200, 204]).toContain(response.status);
         }
       });
     });
 
-    describe("DELETE", () => {
-      it("should delete an existing QuoteItem", async () => {
+    describe('DELETE', () => {
+      it('should delete an existing QuoteItem', async () => {
         const testData = TestDataFactory.createQuoteItem();
 
         const createResponse = await request(app.getHttpServer())
@@ -3652,19 +4380,25 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
 
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Verify deletion
-        await request(app.getHttpServer()).get(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${createdId}`)
+          .expect(404);
       });
 
-      it("should return 404 when deleting non-existent QuoteItem", async () => {
+      it('should return 404 when deleting non-existent QuoteItem', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).delete(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should be idempotent on repeated delete", async () => {
+      it('should be idempotent on repeated delete', async () => {
         const testData = TestDataFactory.createQuoteItem();
 
         const createResponse = await request(app.getHttpServer())
@@ -3675,95 +4409,126 @@ describe("CRUD Operations", () => {
         const createdId = createResponse.body.id;
 
         // First delete
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Second delete should return 404
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(404);
       });
     });
 
-    describe("Validation", () => {
-      it("should enforce uniqueness of id", async () => {
+    describe('Validation', () => {
+
+      it('should enforce uniqueness of id', async () => {
         const testData1 = TestDataFactory.createQuoteItem();
         const testData2 = TestDataFactory.createQuoteItem({
           id: testData1.id,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require quote_id field", async () => {
+      it('should require quote_id field', async () => {
         const testData = TestDataFactory.createQuoteItem();
         delete testData.quote_id;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require product_id field", async () => {
+
+      it('should require product_id field', async () => {
         const testData = TestDataFactory.createQuoteItem();
         delete testData.product_id;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require quantity field", async () => {
+
+
+
+      it('should require quantity field', async () => {
         const testData = TestDataFactory.createQuoteItem();
         delete testData.quantity;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require unit_price field", async () => {
+
+      it('should require unit_price field', async () => {
         const testData = TestDataFactory.createQuoteItem();
         delete testData.unit_price;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require discount_percent field", async () => {
+
+      it('should require discount_percent field', async () => {
         const testData = TestDataFactory.createQuoteItem();
         delete testData.discount_percent;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require total_price field", async () => {
+
+      it('should require total_price field', async () => {
         const testData = TestDataFactory.createQuoteItem();
         delete testData.total_price;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
+
+
     });
   });
 
-  describe("User CRUD", () => {
-    const basePath = "/api/bus/bus_user";
+  describe('User CRUD', () => {
+    const basePath = '/api/bus/bus_user';
 
-    describe("CREATE", () => {
-      it("should create a new User", async () => {
+    describe('CREATE', () => {
+      it('should create a new User', async () => {
         const testData = TestDataFactory.createUser();
         delete testData.id; // ID should be auto-generated
 
@@ -3781,13 +4546,16 @@ describe("CRUD Operations", () => {
         expect(response.body.is_active).toBeDefined();
       });
 
-      it("should return 400 for invalid data", async () => {
+      it('should return 400 for invalid data', async () => {
         const invalidData = {};
 
-        await request(app.getHttpServer()).post(basePath).send(invalidData).expect(400);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(invalidData)
+          .expect(400);
       });
 
-      it("should validate required fields", async () => {
+      it('should validate required fields', async () => {
         const incompleteData = {
           // Missing required fields
         };
@@ -3801,23 +4569,30 @@ describe("CRUD Operations", () => {
       });
     });
 
-    describe("READ", () => {
-      it("should get all Users", async () => {
+    describe('READ', () => {
+      it('should get all Users', async () => {
         // Create test data
         const testData1 = TestDataFactory.createUser();
         const testData2 = TestDataFactory.createUser();
 
-        await request(app.getHttpServer()).post(basePath).send(testData1);
-        await request(app.getHttpServer()).post(basePath).send(testData2);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
-        const response = await request(app.getHttpServer()).get(basePath).expect(200);
+        const response = await request(app.getHttpServer())
+          .get(basePath)
+          .expect(200);
 
-        expect(response.body).toHaveProperty("data");
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(Array.isArray(response.body.data)).toBe(true);
         expect(response.body.data.length).toBeGreaterThanOrEqual(2);
       });
 
-      it("should get User by ID", async () => {
+      it('should get User by ID', async () => {
         const testData = TestDataFactory.createUser();
 
         const createResponse = await request(app.getHttpServer())
@@ -3834,28 +4609,34 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 for non-existent User", async () => {
+      it('should return 404 for non-existent User', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).get(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should support pagination", async () => {
+      it('should support pagination', async () => {
         // Create multiple records
         for (let i = 0; i < 15; i++) {
-          await request(app.getHttpServer()).post(basePath).send(TestDataFactory.createUser());
+          await request(app.getHttpServer())
+            .post(basePath)
+            .send(TestDataFactory.createUser());
         }
 
         const response = await request(app.getHttpServer())
           .get(`${basePath}?page=1&limit=10`)
           .expect(200);
 
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(response.body.data.length).toBeLessThanOrEqual(10);
       });
     });
 
-    describe("UPDATE", () => {
-      it("should update an existing User", async () => {
+    describe('UPDATE', () => {
+      it('should update an existing User', async () => {
         const testData = TestDataFactory.createUser();
 
         const createResponse = await request(app.getHttpServer())
@@ -3865,11 +4646,11 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
         const updateData = {
-          email: "Updated Email",
-          first_name: "Updated First Name",
-          last_name: "Updated Last Name",
-          role: "Updated Role",
-          team_id: "Updated Team Id",
+          email: 'Updated Email',
+          first_name: 'Updated First Name',
+          last_name: 'Updated Last Name',
+          role: 'Updated Role',
+          team_id: 'Updated Team Id',
         };
 
         const response = await request(app.getHttpServer())
@@ -3880,10 +4661,16 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 when updating non-existent User", async () => {
+      it('should return 404 when updating non-existent User', async () => {
         const nonExistentId = generateTestId();
-        const updateData = TestDataFactory.createUser();
-        delete updateData.id; // id is non-updateable, would cause 400 before 404
+        // Only send string fields (no id) to avoid non-updateable field validation errors
+        const updateData = {
+          email: 'Updated Email',
+          first_name: 'Updated First Name',
+          last_name: 'Updated Last Name',
+          role: 'Updated Role',
+          team_id: 'Updated Team Id',
+        };
 
         await request(app.getHttpServer())
           .patch(`${basePath}/${nonExistentId}`)
@@ -3891,7 +4678,7 @@ describe("CRUD Operations", () => {
           .expect(404);
       });
 
-      it("should validate update data", async () => {
+      it('should validate update data', async () => {
         const testData = TestDataFactory.createUser();
 
         const createResponse = await request(app.getHttpServer())
@@ -3914,7 +4701,7 @@ describe("CRUD Operations", () => {
         expect([200, 400]).toContain(response.status);
       });
 
-      it("should support ETag-based optimistic locking", async () => {
+      it('should support ETag-based optimistic locking', async () => {
         const testData = TestDataFactory.createUser();
 
         const createResponse = await request(app.getHttpServer())
@@ -3923,24 +4710,22 @@ describe("CRUD Operations", () => {
           .expect(201);
 
         const createdId = createResponse.body.id;
-        const etag = createResponse.headers["etag"];
+        const etag = createResponse.headers['etag'];
 
         if (etag) {
           // Update with correct ETag should succeed
           const response = await request(app.getHttpServer())
             .patch(`${basePath}/${createdId}`)
-            .set("If-Match", etag)
-            .send({
-              /* update data */
-            });
+            .set('If-Match', etag)
+            .send({ /* update data */ });
 
           expect([200, 204]).toContain(response.status);
         }
       });
     });
 
-    describe("DELETE", () => {
-      it("should delete an existing User", async () => {
+    describe('DELETE', () => {
+      it('should delete an existing User', async () => {
         const testData = TestDataFactory.createUser();
 
         const createResponse = await request(app.getHttpServer())
@@ -3950,19 +4735,25 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
 
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Verify deletion
-        await request(app.getHttpServer()).get(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${createdId}`)
+          .expect(404);
       });
 
-      it("should return 404 when deleting non-existent User", async () => {
+      it('should return 404 when deleting non-existent User', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).delete(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should be idempotent on repeated delete", async () => {
+      it('should be idempotent on repeated delete', async () => {
         const testData = TestDataFactory.createUser();
 
         const createResponse = await request(app.getHttpServer())
@@ -3973,99 +4764,133 @@ describe("CRUD Operations", () => {
         const createdId = createResponse.body.id;
 
         // First delete
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Second delete should return 404
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(404);
       });
     });
 
-    describe("Validation", () => {
-      it("should enforce uniqueness of id", async () => {
+    describe('Validation', () => {
+
+      it('should enforce uniqueness of id', async () => {
         const testData1 = TestDataFactory.createUser();
         const testData2 = TestDataFactory.createUser({
           id: testData1.id,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require email field", async () => {
+      it('should require email field', async () => {
         const testData = TestDataFactory.createUser();
         delete testData.email;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should enforce uniqueness of email", async () => {
+      it('should enforce uniqueness of email', async () => {
         const testData1 = TestDataFactory.createUser();
         const testData2 = TestDataFactory.createUser({
           email: testData1.email,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require first_name field", async () => {
+      it('should require first_name field', async () => {
         const testData = TestDataFactory.createUser();
         delete testData.first_name;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require last_name field", async () => {
+
+      it('should require last_name field', async () => {
         const testData = TestDataFactory.createUser();
         delete testData.last_name;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require role field", async () => {
+
+      it('should require role field', async () => {
         const testData = TestDataFactory.createUser();
         delete testData.role;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
 
-      it("should require is_active field", async () => {
+
+
+
+      it('should require is_active field', async () => {
         const testData = TestDataFactory.createUser();
         delete testData.is_active;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
+
+
+
+
     });
   });
 
-  describe("Team CRUD", () => {
-    const basePath = "/api/bus/bus_team";
+  describe('Team CRUD', () => {
+    const basePath = '/api/bus/bus_team';
 
-    describe("CREATE", () => {
-      it("should create a new Team", async () => {
+    describe('CREATE', () => {
+      it('should create a new Team', async () => {
         const testData = TestDataFactory.createTeam();
         delete testData.id; // ID should be auto-generated
 
@@ -4079,13 +4904,16 @@ describe("CRUD Operations", () => {
         expect(response.body.name).toBeDefined();
       });
 
-      it("should return 400 for invalid data", async () => {
+      it('should return 400 for invalid data', async () => {
         const invalidData = {};
 
-        await request(app.getHttpServer()).post(basePath).send(invalidData).expect(400);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(invalidData)
+          .expect(400);
       });
 
-      it("should validate required fields", async () => {
+      it('should validate required fields', async () => {
         const incompleteData = {
           // Missing required fields
         };
@@ -4099,23 +4927,30 @@ describe("CRUD Operations", () => {
       });
     });
 
-    describe("READ", () => {
-      it("should get all Teams", async () => {
+    describe('READ', () => {
+      it('should get all Teams', async () => {
         // Create test data
         const testData1 = TestDataFactory.createTeam();
         const testData2 = TestDataFactory.createTeam();
 
-        await request(app.getHttpServer()).post(basePath).send(testData1);
-        await request(app.getHttpServer()).post(basePath).send(testData2);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
-        const response = await request(app.getHttpServer()).get(basePath).expect(200);
+        const response = await request(app.getHttpServer())
+          .get(basePath)
+          .expect(200);
 
-        expect(response.body).toHaveProperty("data");
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(Array.isArray(response.body.data)).toBe(true);
         expect(response.body.data.length).toBeGreaterThanOrEqual(2);
       });
 
-      it("should get Team by ID", async () => {
+      it('should get Team by ID', async () => {
         const testData = TestDataFactory.createTeam();
 
         const createResponse = await request(app.getHttpServer())
@@ -4132,28 +4967,34 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 for non-existent Team", async () => {
+      it('should return 404 for non-existent Team', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).get(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should support pagination", async () => {
+      it('should support pagination', async () => {
         // Create multiple records
         for (let i = 0; i < 15; i++) {
-          await request(app.getHttpServer()).post(basePath).send(TestDataFactory.createTeam());
+          await request(app.getHttpServer())
+            .post(basePath)
+            .send(TestDataFactory.createTeam());
         }
 
         const response = await request(app.getHttpServer())
           .get(`${basePath}?page=1&limit=10`)
           .expect(200);
 
+        // List endpoint returns { data: [...], meta: { total, page, limit } }
+        expect(response.body).toHaveProperty('data');
         expect(response.body.data.length).toBeLessThanOrEqual(10);
       });
     });
 
-    describe("UPDATE", () => {
-      it("should update an existing Team", async () => {
+    describe('UPDATE', () => {
+      it('should update an existing Team', async () => {
         const testData = TestDataFactory.createTeam();
 
         const createResponse = await request(app.getHttpServer())
@@ -4163,8 +5004,8 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
         const updateData = {
-          name: "Updated Name",
-          manager_id: "Updated Manager Id",
+          name: 'Updated Name',
+          manager_id: 'Updated Manager Id',
         };
 
         const response = await request(app.getHttpServer())
@@ -4175,10 +5016,13 @@ describe("CRUD Operations", () => {
         expect(response.body.id).toBe(createdId);
       });
 
-      it("should return 404 when updating non-existent Team", async () => {
+      it('should return 404 when updating non-existent Team', async () => {
         const nonExistentId = generateTestId();
-        const updateData = TestDataFactory.createTeam();
-        delete updateData.id; // id is non-updateable, would cause 400 before 404
+        // Only send string fields (no id) to avoid non-updateable field validation errors
+        const updateData = {
+          name: 'Updated Name',
+          manager_id: 'Updated Manager Id',
+        };
 
         await request(app.getHttpServer())
           .patch(`${basePath}/${nonExistentId}`)
@@ -4186,7 +5030,7 @@ describe("CRUD Operations", () => {
           .expect(404);
       });
 
-      it("should validate update data", async () => {
+      it('should validate update data', async () => {
         const testData = TestDataFactory.createTeam();
 
         const createResponse = await request(app.getHttpServer())
@@ -4209,7 +5053,7 @@ describe("CRUD Operations", () => {
         expect([200, 400]).toContain(response.status);
       });
 
-      it("should support ETag-based optimistic locking", async () => {
+      it('should support ETag-based optimistic locking', async () => {
         const testData = TestDataFactory.createTeam();
 
         const createResponse = await request(app.getHttpServer())
@@ -4218,24 +5062,22 @@ describe("CRUD Operations", () => {
           .expect(201);
 
         const createdId = createResponse.body.id;
-        const etag = createResponse.headers["etag"];
+        const etag = createResponse.headers['etag'];
 
         if (etag) {
           // Update with correct ETag should succeed
           const response = await request(app.getHttpServer())
             .patch(`${basePath}/${createdId}`)
-            .set("If-Match", etag)
-            .send({
-              /* update data */
-            });
+            .set('If-Match', etag)
+            .send({ /* update data */ });
 
           expect([200, 204]).toContain(response.status);
         }
       });
     });
 
-    describe("DELETE", () => {
-      it("should delete an existing Team", async () => {
+    describe('DELETE', () => {
+      it('should delete an existing Team', async () => {
         const testData = TestDataFactory.createTeam();
 
         const createResponse = await request(app.getHttpServer())
@@ -4245,19 +5087,25 @@ describe("CRUD Operations", () => {
 
         const createdId = createResponse.body.id;
 
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Verify deletion
-        await request(app.getHttpServer()).get(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .get(`${basePath}/${createdId}`)
+          .expect(404);
       });
 
-      it("should return 404 when deleting non-existent Team", async () => {
+      it('should return 404 when deleting non-existent Team', async () => {
         const nonExistentId = generateTestId();
 
-        await request(app.getHttpServer()).delete(`${basePath}/${nonExistentId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${nonExistentId}`)
+          .expect(404);
       });
 
-      it("should be idempotent on repeated delete", async () => {
+      it('should be idempotent on repeated delete', async () => {
         const testData = TestDataFactory.createTeam();
 
         const createResponse = await request(app.getHttpServer())
@@ -4268,42 +5116,59 @@ describe("CRUD Operations", () => {
         const createdId = createResponse.body.id;
 
         // First delete
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(204);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(204);
 
         // Second delete should return 404
-        await request(app.getHttpServer()).delete(`${basePath}/${createdId}`).expect(404);
+        await request(app.getHttpServer())
+          .delete(`${basePath}/${createdId}`)
+          .expect(404);
       });
     });
 
-    describe("Validation", () => {
-      it("should enforce uniqueness of id", async () => {
+    describe('Validation', () => {
+
+      it('should enforce uniqueness of id', async () => {
         const testData1 = TestDataFactory.createTeam();
         const testData2 = TestDataFactory.createTeam({
           id: testData1.id,
         });
 
-        await request(app.getHttpServer()).post(basePath).send(testData1).expect(201);
+        await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData1)
+          .expect(201);
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData2);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData2);
 
         // Should fail with conflict or bad request
         expect([400, 409]).toContain(response.status);
       });
 
-      it("should require name field", async () => {
+      it('should require name field', async () => {
         const testData = TestDataFactory.createTeam();
         delete testData.name;
 
-        const response = await request(app.getHttpServer()).post(basePath).send(testData);
+        const response = await request(app.getHttpServer())
+          .post(basePath)
+          .send(testData);
 
         // Should either fail validation or accept with default
         expect([201, 400]).toContain(response.status);
       });
+
+
+
+
     });
   });
+
 });
 
-describe("Error Handling", () => {
+describe('Error Handling', () => {
   let app: NestFastifyApplication;
 
   beforeAll(async () => {
@@ -4316,22 +5181,25 @@ describe("Error Handling", () => {
     await closeTestDatabase();
   });
 
-  it("should handle malformed JSON", async () => {
+  it('should handle malformed JSON', async () => {
     const response = await request(app.getHttpServer())
-      .post("/api/bus/bus_company")
-      .set("Content-Type", "application/json")
-      .send("{ invalid json }");
+      .post('/api/bus/bus_company')
+      .set('Content-Type', 'application/json')
+      .send('{ invalid json }');
 
     expect([400, 500]).toContain(response.status);
   });
 
-  it("should handle invalid route", async () => {
-    await request(app.getHttpServer()).get("/api/nonexistent").expect(404);
+  it('should handle invalid route', async () => {
+    await request(app.getHttpServer())
+      .get('/api/nonexistent')
+      .expect(404);
   });
 
-  it("should return appropriate content-type", async () => {
-    const response = await request(app.getHttpServer()).get("/api/bus/bus_company");
+  it('should return appropriate content-type', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/api/bus/bus_company');
 
-    expect(response.headers["content-type"]).toContain("application/json");
+    expect(response.headers['content-type']).toContain('application/json');
   });
 });

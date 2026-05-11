@@ -9,14 +9,14 @@
  * Uses Trigger.dev v3 tasks which run on Trigger.dev's durable execution
  * infrastructure without requiring a self-hosted Redis instance.
  *
- * Generated: 2026-05-07T09:31:28.418Z
+ * Generated: 2026-05-11T12:52:41.194Z
  * Project: crm-app
  */
 
-import { Injectable, Logger } from "@nestjs/common";
-import { type EmailTaskPayload, sendEmailTask } from "../../trigger/email.task";
-import { generateReportTask, type ReportTaskPayload } from "../../trigger/report.task";
-import { type SyncTaskPayload, syncEntityTask } from "../../trigger/sync.task";
+import { Injectable, Logger } from '@nestjs/common';
+import { sendEmailTask, EmailTaskPayload } from '../../trigger/email.task';
+import { generateReportTask, ReportTaskPayload } from '../../trigger/report.task';
+import { syncEntityTask, SyncTaskPayload } from '../../trigger/sync.task';
 
 // Re-export payload types to preserve the existing public API surface
 export type EmailJobData = EmailTaskPayload;
@@ -68,8 +68,8 @@ export class JobQueueService {
   async getJobStatus(_queueName: string, jobId: string) {
     return {
       id: jobId,
-      status: "triggered",
-      message: "Check the Trigger.dev dashboard for real-time status and logs.",
+      status: 'triggered',
+      message: 'Check the Trigger.dev dashboard for real-time status and logs.',
     };
   }
 }
