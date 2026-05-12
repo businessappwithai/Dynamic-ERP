@@ -15,7 +15,7 @@
  *
  * Supports optimistic concurrency via ETag/version.
  *
- * Generated: 2026-05-12T09:13:16.533Z
+ * Generated: 2026-05-12T10:10:09.913Z
  * Project: crm-app
  */
 

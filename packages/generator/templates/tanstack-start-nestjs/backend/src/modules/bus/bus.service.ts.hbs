@@ -8,10 +8,11 @@
  */
 
 import { Injectable, NotFoundException, BadRequestException, ConflictException, Inject, Logger } from '@nestjs/common';
-import { Kysely } from 'kysely';
+import type { Kysely } from 'kysely';
 import { randomUUID } from 'crypto';
 import { KYSELY_CONNECTION } from '../../database/database.constants';
-import { DatabaseService, PaginationOptions, PaginatedResult } from '../../database/database.service';
+import { DatabaseService } from '../../database/database.service';
+import type { PaginationOptions, PaginatedResult } from '../../database/database.service';
 import { executeBeforeCreateHooks, executeAfterCreateHooks, executeBeforeUpdateHooks, executeAfterUpdateHooks, executeBeforeDeleteHooks, executeAfterDeleteHooks, executeBeforeReadHooks, executeAfterReadHooks, executeBeforeListHooks, executeAfterListHooks } from '../hooks/hooks';
 
 export interface FieldMetadata {

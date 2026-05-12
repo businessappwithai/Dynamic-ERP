@@ -3,17 +3,17 @@
  *
  * Protects routes by validating session tokens from BetterAuth
  *
- * Generated: 2026-05-12T09:13:14.934Z
+ * Generated: 2026-05-12T10:10:06.680Z
  */
 
-import { Injectable, type CanActivate, type ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import type { Reflector } from '@nestjs/core';
+import { Injectable, type CanActivate, type ExecutionContext, UnauthorizedException, Inject } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { auth } from '../../../lib/better-auth';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  constructor(@Inject(Reflector) private readonly reflector: Reflector) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // Check if route is marked as public

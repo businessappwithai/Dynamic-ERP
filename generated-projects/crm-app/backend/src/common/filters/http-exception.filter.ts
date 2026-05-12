@@ -1,7 +1,7 @@
 /**
  * HTTP Exception Filter
  *
- * Generated: 2026-05-12T09:13:14.932Z
+ * Generated: 2026-05-12T10:10:06.678Z
  */
 
 import {
@@ -62,7 +62,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
     let error = 'Internal Server Error';
-    let details: any = undefined;
+    let details: any ;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();

@@ -1,13 +1,12 @@
 /**
  * Database Module with Kysely
  *
- * Generated: 2026-05-12T09:13:14.981Z
+ * Generated: 2026-05-12T10:10:06.725Z
  */
 
 import { Module, Global, type OnModuleDestroy, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Kysely, PostgresDialect, SqliteDialect } from 'kysely';
-import { Pool } from 'pg';
 import { KYSELY_CONNECTION } from './database.constants';
 import { DatabaseService } from './database.service';
 
@@ -23,11 +22,15 @@ import { DatabaseService } from './database.service';
         let dialect: PostgresDialect | SqliteDialect;
 
         if (dbClient === 'better-sqlite3') {
+          // SQLite database with better-sqlite3 - Bun.js optimized
           // eslint-disable-next-line @typescript-eslint/no-var-requires
           const Database = require('better-sqlite3');
           const filename = configService.get('DATABASE_FILENAME', './data/crm-app.db');
-          dialect = new SqliteDialect({ database: new Database(filename) });
+          dialect = new SqliteDialect({ database: new Database(filename) as any });
         } else {
+          // PostgreSQL dialect - Bun.js compatible
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const { Pool } = require('pg');
           dialect = new PostgresDialect({
             pool: new Pool({
               host: configService.get('DATABASE_HOST', 'localhost'),

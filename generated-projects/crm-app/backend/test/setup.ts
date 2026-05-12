@@ -8,13 +8,13 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { KYSELY_CONNECTION } from '../src/database/database.constants';
-import { Kysely } from 'kysely';
-import { SqliteDialect } from 'kysely';
-import Database from 'better-sqlite3';
+import { Kysely, MemoryDialect } from 'kysely';
+
+// Use in-memory dialect for tests instead of SQLite
+// This avoids native module loading issues in test environments
 
 // Test database instance
 let testDb: Kysely<any>;
-let sqliteDb: Database.Database;
 
 // Test application instance
 let testApp: NestFastifyApplication;
@@ -24,15 +24,9 @@ let testApp: NestFastifyApplication;
  */
 export async function initTestDatabase(): Promise<Kysely<any>> {
   if (!testDb) {
-    // Create in-memory SQLite database
-    sqliteDb = new Database(':memory:');
-    sqliteDb.pragma('journal_mode = WAL');
-
-    // Initialize Kysely database for testing
+    // Use in-memory dialect for tests (no native modules required)
     testDb = new Kysely({
-      dialect: new SqliteDialect({
-        database: async () => sqliteDb,
-      }),
+      dialect: new MemoryDialect(),
     });
   }
   return testDb;
@@ -42,13 +36,12 @@ export async function initTestDatabase(): Promise<Kysely<any>> {
  * Close test database connection
  */
 export async function closeTestDatabase(): Promise<void> {
-  if (sqliteDb) {
+  if (testDb) {
     try {
-      sqliteDb.close();
+      await testDb.destroy();
     } catch (_e) {
       // Already closed
     }
-    sqliteDb = undefined as any;
     testDb = undefined as any;
   }
 }

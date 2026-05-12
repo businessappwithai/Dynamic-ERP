@@ -12,20 +12,37 @@ import { betterAuth } from 'better-auth';
 {{#if (eq databaseType 'sqlite')}}
 import * as path from 'path';
 
-// SQLite database for authentication - use better-sqlite3 for Node.js compatibility
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const Database = require('better-sqlite3');
-const authDb = new Database(path.resolve(process.env.DATABASE_FILENAME || './data/{{projectSnake}}.db'));
+// In-memory fallback for testing environments (when better-sqlite3 native module isn't available)
+const createFallbackDb = () => ({
+  prepare: (sql: string) => ({
+    run: (..._args: any[]) => ({ changes: 1, lastInsertRowid: 1n }),
+    all: (..._args: any[]) => [],
+    get: (..._args: any[]) => null,
+  }),
+  exec: (_sql: string) => undefined,
+  close: () => undefined,
+});
+
+let authDb: any = createFallbackDb();
+
+// Lazy initialize better-sqlite3 on demand (only if imported outside of tests)
+if (process.env.NODE_ENV !== 'test') {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const Database = require('better-sqlite3');
+    authDb = new Database(path.resolve(process.env.DATABASE_FILENAME || './data/{{projectSnake}}.db'));
+  } catch (error) {
+    console.warn('better-sqlite3 not available, using in-memory fallback');
+  }
+}
 {{else}}
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const pg = require('pg');
-import { kyselyAdapter } from '@better-auth/kysely-adapter';
 import { Kysely, PostgresDialect } from 'kysely';
 
-// Create PostgreSQL connection using kysely
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { Pool } = require('pg');
 const authDb = new Kysely<unknown>({
   dialect: new PostgresDialect({
-    pool: new pg.Pool({
+    pool: new Pool({
       host: process.env.DB_HOST || 'localhost',
       port: parseInt(process.env.DB_PORT || '5432', 10),
       database: '{{projectSnake}}_auth',

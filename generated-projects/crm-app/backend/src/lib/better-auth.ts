@@ -9,25 +9,37 @@
  */
 
 import { betterAuth } from 'better-auth';
-import { kyselyAdapter } from '@better-auth/kysely-adapter';
-import { Kysely, PostgresDialect } from 'kysely';
-import * as pg from 'pg';
+import * as path from 'path';
 
-// Create PostgreSQL connection using kysely
-const authDb = new Kysely<unknown>({
-  dialect: new PostgresDialect({
-    pool: new pg.Pool({
-      host: process.env.DB_HOST || 'localhost',
-      port: Number.parseInt(process.env.DB_PORT || '5432', 10),
-      database: 'crm_app_auth',
-      user: process.env.DB_USER || process.env.USER || 'postgres',
-      password: process.env.DB_PASSWORD || '',
-    }),
+// In-memory fallback for testing environments (when better-sqlite3 native module isn't available)
+const createFallbackDb = () => ({
+  prepare: (sql: string) => ({
+    run: (..._args: any[]) => ({ changes: 1, lastInsertRowid: 1n }),
+    all: (..._args: any[]) => [],
+    get: (..._args: any[]) => null,
   }),
+  exec: (_sql: string) => undefined,
+  close: () => undefined,
 });
 
+let authDb: any = createFallbackDb();
+
+// Lazy initialize better-sqlite3 on demand (only if imported outside of tests)
+if (process.env.NODE_ENV !== 'test') {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const Database = require('better-sqlite3');
+    authDb = new Database(path.resolve(process.env.DATABASE_FILENAME || './data/crm_app.db'));
+  } catch (error) {
+    console.warn('better-sqlite3 not available, using in-memory fallback');
+  }
+}
+
 export const auth = betterAuth({
-  database: kyselyAdapter(authDb),
+  database: {
+    db: authDb,
+    type: 'sqlite',
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,

@@ -2,7 +2,7 @@
  * Kysely Migration Runner
  *
  * Run with: bun run src/migrate.ts [up|down|latest|rollback]
- * Generated: 2026-05-12T09:13:14.979Z
+ * Generated: 2026-05-12T10:10:06.724Z
  */
 
 import * as path from 'path';
@@ -19,7 +19,7 @@ async function createDialect(): Promise<PostgresDialect | SqliteDialect> {
     const dbPath = process.env.DATABASE_FILENAME ?? './data/app.db';
     // Ensure data directory exists
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
-    return new SqliteDialect({ database: new Database(dbPath) });
+    return new SqliteDialect({ database: new Database(dbPath) as any });
   } else {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { Pool } = require('pg');
@@ -35,25 +35,24 @@ async function createDialect(): Promise<PostgresDialect | SqliteDialect> {
   }
 }
 
-const dialect = await createDialect();
+(async () => {
+  const dialect = await createDialect();
+  const db = new Kysely<any>({ dialect });
 
-const db = new Kysely<any>({ dialect });
+  const migrator = new Migrator({
+    db,
+    provider: new FileMigrationProvider({
+      fs: {
+        readdir: (dir: string) => fs.promises.readdir(dir),
+      },
+      path,
+      // @ts-expect-error - import.meta.dir is supported in Bun runtime
+      migrationFolder: path.join(import.meta.dir, 'migrations'),
+    }),
+  });
 
-const migrator = new Migrator({
-  db,
-  provider: new FileMigrationProvider({
-    fs: {
-      readdir: (dir: string) => fs.promises.readdir(dir),
-    },
-    path,
-    // @ts-ignore - import.meta.dir is supported in Bun runtime
-    migrationFolder: path.join(import.meta.dir, 'migrations'),
-  }),
-});
+  const command = process.argv[2] ?? 'latest';
 
-const command = process.argv[2] ?? 'latest';
-
-async function run() {
   let result: { error?: unknown; results?: any[] };
 
   if (command === 'down' || command === 'rollback') {
@@ -77,6 +76,7 @@ async function run() {
 
   await db.destroy();
   console.log('✓ Done');
-}
-
-run();
+})().catch((error) => {
+  console.error('Fatal error:', error);
+  process.exit(1);
+});

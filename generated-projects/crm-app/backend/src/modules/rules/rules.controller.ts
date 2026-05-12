@@ -11,17 +11,25 @@
  * - Getting rule history
  * - Migrating rules from files to database
  *
- * Generated: 2026-05-12T09:13:14.946Z
+ * Generated: 2026-05-12T10:10:06.690Z
  * Project: crm-app
  */
 
-import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, UsePipes, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { SessionAuthGuard } from '../auth/guards/session-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { RulesService } from './rules.service';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
+import {
+  CreateRuleSchema,
+  UpdateRuleSchema,
+  ValidateJdmSchema,
+  DryRunSchema,
+  EvaluateRulesSchema,
+} from './dto';
 
 @ApiTags('rules')
 @ApiBearerAuth()
@@ -58,6 +66,7 @@ export class RulesController {
 
   @Post()
   @Roles('admin')
+  @UsePipes(new ZodValidationPipe(CreateRuleSchema))
   @ApiOperation({ summary: 'Create a new business rule (admin only)' })
   @ApiResponse({ status: 201, description: 'Rule created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input' })
@@ -84,6 +93,7 @@ export class RulesController {
 
   @Put(':id')
   @Roles('admin')
+  @UsePipes(new ZodValidationPipe(UpdateRuleSchema))
   @ApiOperation({ summary: 'Update an existing rule (admin only)' })
   @ApiResponse({ status: 200, description: 'Rule updated successfully' })
   @ApiResponse({ status: 404, description: 'Rule not found' })
@@ -115,21 +125,19 @@ export class RulesController {
   }
 
   @Post('validate')
+  @UsePipes(new ZodValidationPipe(ValidateJdmSchema))
   @ApiOperation({ summary: 'Validate JDM content' })
   @ApiResponse({ status: 200, description: 'Validation result' })
-  async validate(@Body() dto: { jdm: string }) {
-    return await this.rulesService.validateJDM(dto.jdm);
+  async validate(@Body() dto: { jdmContent: string }) {
+    return await this.rulesService.validateJDM(dto.jdmContent);
   }
 
   @Post('dry-run')
+  @UsePipes(new ZodValidationPipe(DryRunSchema))
   @ApiOperation({ summary: 'Dry run rule with test context' })
   @ApiResponse({ status: 200, description: 'Dry run completed' })
-  async dryRun(@Body() dto: { jdm?: string; context?: Record<string, unknown> }) {
-    if (dto.jdm) {
-      return await this.rulesService.dryRun(dto.jdm, dto.context || {});
-    }
-
-    return { success: false, errors: ['JDM content is required'] };
+  async dryRun(@Body() dto: { ruleId: string; testData: Record<string, unknown> }) {
+    return await this.rulesService.dryRun(dto.ruleId, dto.testData);
   }
 
   @Post('migrate')
@@ -146,25 +154,34 @@ export class RulesController {
   }
 
   @Post('evaluate')
+  @UsePipes(new ZodValidationPipe(EvaluateRulesSchema))
   @ApiOperation({ summary: 'Evaluate business rules for an entity' })
   @ApiResponse({ status: 200, description: 'Rules evaluated successfully' })
   async evaluateRules(
     @Body()
     body: {
-      entityType: string;
+      entityName: string;
+      operation: 'CREATE' | 'READ' | 'UPDATE' | 'DELETE';
       data: Record<string, unknown>;
-      action: 'create' | 'update' | 'delete';
     },
   ) {
+    const operationMap: Record<string, 'create' | 'update' | 'delete'> = {
+      CREATE: 'create',
+      READ: 'create',
+      UPDATE: 'update',
+      DELETE: 'delete',
+    };
+
+    const mappedOperation: 'create' | 'update' | 'delete' = operationMap[body.operation] || 'create';
     const results = await this.rulesService.evaluate(
-      body.entityType,
+      body.entityName,
       body.data,
-      body.action,
+      mappedOperation,
     );
 
     return {
-      entityType: body.entityType,
-      action: body.action,
+      entityName: body.entityName,
+      operation: body.operation,
       results,
     };
   }

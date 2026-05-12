@@ -1,81 +1,38 @@
 /**
- * SysTable DTOs
+ * SysTable DTOs - Zod Validation Schemas
  *
- * Data Transfer Objects for sys_table entity.
+ * Data Transfer Objects for sys_table entity using Zod for runtime validation.
  *
  * Generated: {{now}}
  */
 
-import { IsString, IsOptional, IsBoolean, IsNumber, IsObject } from 'class-validator';
+import { z } from 'zod';
 
-/**
- * Create SysTable DTO
- */
-export class CreateSysTableDto {
-  @IsString()
-  table_name: string;
+export const CreateSysTableSchema = z.object({
+  table_name: z.string().min(1),
+  name: z.string().min(1),
+  description: z.string().optional(),
+  entity_type: z.string().optional(),
+  is_view: z.boolean().optional(),
+  is_active: z.boolean().optional(),
+  access_level: z.number().int().optional(),
+});
 
-  @IsString()
-  name: string;
+export type CreateSysTableDto = z.infer<typeof CreateSysTableSchema>;
 
-  @IsOptional()
-  @IsString()
-  description?: string;
+export const UpdateSysTableSchema = z.object({
+  table_name: z.string().min(1).optional(),
+  name: z.string().min(1).optional(),
+  description: z.string().optional(),
+  entity_type: z.string().optional(),
+  is_view: z.boolean().optional(),
+  is_active: z.boolean().optional(),
+  access_level: z.number().int().optional(),
+});
 
-  @IsOptional()
-  @IsString()
-  entity_type?: string;
+export type UpdateSysTableDto = z.infer<typeof UpdateSysTableSchema>;
 
-  @IsOptional()
-  @IsBoolean()
-  is_view?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
-  is_active?: boolean;
-
-  @IsOptional()
-  @IsNumber()
-  access_level?: number;
-}
-
-/**
- * Update SysTable DTO
- */
-export class UpdateSysTableDto {
-  @IsOptional()
-  @IsString()
-  table_name?: string;
-
-  @IsOptional()
-  @IsString()
-  name?: string;
-
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @IsOptional()
-  @IsString()
-  entity_type?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  is_view?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
-  is_active?: boolean;
-
-  @IsOptional()
-  @IsNumber()
-  access_level?: number;
-}
-
-/**
- * SysTable Response DTO
- */
-export class SysTableResponseDto {
+export interface SysTableResponseDto {
   sys_table_id: string;
   table_name: string;
   name: string;
@@ -88,9 +45,6 @@ export class SysTableResponseDto {
   updated_at: Date;
 }
 
-/**
- * SysTable with Columns Response DTO
- */
-export class SysTableWithColumnsResponseDto extends SysTableResponseDto {
+export interface SysTableWithColumnsResponseDto extends SysTableResponseDto {
   columns: any[];
 }

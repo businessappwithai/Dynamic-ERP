@@ -2,9 +2,9 @@
 module.exports = {
   darkMode: ['class'],
   content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/routes/**/*.{js,ts,jsx,tsx}',
+    './src/components/**/*.{js,ts,jsx,tsx}',
+    './src/styles/**/*.{css}',
   ],
   theme: {
     container: {
@@ -32,6 +32,11 @@ module.exports = {
           'serif',
         ],
         mono: [
+          'JetBrains Mono',
+          'Courier New',
+          'monospace',
+        ],
+        'mono-display': [
           'JetBrains Mono',
           'Courier New',
           'monospace',

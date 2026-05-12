@@ -11,14 +11,14 @@
  * - Server-side pagination
  * - Row actions (View, Edit, Delete)
  *
- * Generated: 2026-05-12T09:13:16.534Z
+ * Generated: 2026-05-12T10:10:09.914Z
  * Project: crm-app
  */
 
 import { useState, useMemo, useCallback } from 'react';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient, PaginatedResponse } from '@/lib/api-client';
+import { apiClient, type PaginatedResponse } from '@/lib/api-client';
 import { useGridFields, type FieldMetadata } from '@/hooks/use-entities';
 import { DynamicTable } from '@/components/tables/dynamic-table';
 import { Button } from '@/components/ui/button';
@@ -234,9 +234,9 @@ function EntityListPage() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="min-h-screen bg-background">
         <div className="container mx-auto py-8 px-4">
-          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border/60 bg-muted/30 p-12 text-center backdrop-blur-sm">
+          <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-border/60 bg-muted/30 p-12 text-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/20 mb-4">
               <RefreshCw className="h-8 w-8 text-destructive" />
             </div>
@@ -257,10 +257,10 @@ function EntityListPage() {
   const activeFilterCount = advancedFilters.filter((f) => f.field && f.value).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+    <div className="min-h-screen bg-background">
       <div className="container mx-auto py-8 px-4 space-y-6">
-        {/* Header - Enhanced Design */}
-        <div className="rounded-2xl bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5 border border-primary/20 backdrop-blur-sm p-6 shadow-lg">
+        {/* Header */}
+        <div className="border-b bg-card p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link to="/dashboard">
@@ -306,7 +306,7 @@ function EntityListPage() {
               placeholder="Quick search across all columns..."
               value={quickSearch}
               onChange={(e) => setQuickSearch(e.target.value)}
-              className="pl-10 h-10 bg-background/80 backdrop-blur-sm border-border/60 focus:border-primary/50 focus:ring-primary/20 shadow-sm"
+              className="pl-10 h-10 bg-background border-border focus:border-primary/50 focus:ring-primary/20 shadow-sm"
             />
             {quickSearch && (
               <button
@@ -343,9 +343,9 @@ function EntityListPage() {
           )}
         </div>
 
-        {/* Advanced Search Panel - Enhanced Design */}
+        {/* Advanced Search Panel */}
         {showAdvanced && (
-          <div className="rounded-xl border border-border/60 bg-gradient-to-br from-muted/40 to-muted/20 backdrop-blur-sm p-5 shadow-sm space-y-4">
+          <div className="rounded-lg border border-border bg-card p-5 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-border/40">
               <div className="flex items-center gap-2">
                 <SlidersHorizontal className="h-4.5 w-4.5 text-primary/70" />
@@ -395,7 +395,7 @@ function EntityListPage() {
                           });
                         }}
                       >
-                        <SelectTrigger className="w-[200px] bg-background/80 backdrop-blur-sm border-border/60 shadow-sm">
+                        <SelectTrigger className="w-[200px] bg-background border-border shadow-sm">
                           <SelectValue placeholder="Select field" />
                         </SelectTrigger>
                         <SelectContent>
@@ -422,7 +422,7 @@ function EntityListPage() {
                           updateFilter(filter.id, { operator: value })
                         }
                       >
-                        <SelectTrigger className="w-[140px] bg-background/80 backdrop-blur-sm border-border/60 shadow-sm">
+                        <SelectTrigger className="w-[140px] bg-background border-border shadow-sm">
                           <SelectValue placeholder="Operator" />
                         </SelectTrigger>
                         <SelectContent>
@@ -441,7 +441,7 @@ function EntityListPage() {
                         onChange={(e) =>
                           updateFilter(filter.id, { value: e.target.value })
                         }
-                        className="flex-1 bg-background/80 backdrop-blur-sm border-border/60 shadow-sm"
+                        className="flex-1 bg-background border-border shadow-sm"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             applyAdvancedSearch();

@@ -4,7 +4,7 @@
  * Dynamic controller for all bus_ prefixed tables.
  * CRUD operations are driven by the Application Dictionary metadata.
  *
- * Generated: 2026-05-12T09:13:14.954Z
+ * Generated: 2026-05-12T10:10:06.699Z
  */
 
 import {
@@ -22,12 +22,9 @@ import {
   HttpStatus,
   ParseUUIDPipe,
   Logger,
-  Inject,
-  Optional,
-  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
-import { BusService } from './bus.service';
+import type { BusService } from './bus.service';
 
 @ApiTags('bus')
 @ApiBearerAuth()
@@ -35,17 +32,8 @@ import { BusService } from './bus.service';
 export class BusController {
   private readonly logger = new Logger(BusController.name);
 
-  constructor(
-    @Inject(BusService) @Optional() private readonly busService?: BusService,
-  ) {
+  constructor(private readonly busService: BusService) {
     this.logger.log('BusController initialized');
-  }
-
-  private getBusService(): BusService {
-    if (!this.busService) {
-      throw new BadRequestException('BusService not available');
-    }
-    return this.busService;
   }
 
   /**
@@ -77,7 +65,7 @@ export class BusController {
       this.logger.debug(`[${methodName}] Filters: ${JSON.stringify(parsedFilters)}`);
     }
 
-    const result = await this.getBusService().findAll(entity, { page, limit, orderBy, orderDir }, parsedFilters);
+    const result = await this.busService.findAll(entity, { page, limit, orderBy, orderDir }, parsedFilters);
 
     this.logger.log(`[${methodName}] Success - entity: ${entity}, returned ${result.data.length} records (total: ${result.meta.total})`);
     return result;
@@ -162,7 +150,7 @@ export class BusController {
     const methodName = 'findOne';
     this.logger.debug(`[${methodName}] Request - entity: ${entity}, id: ${id}`);
 
-    const result = await this.getBusService().findById(entity, id);
+    const result = await this.busService.findById(entity, id);
 
     this.logger.log(`[${methodName}] Success - entity: ${entity}, id: ${id}`);
     return result;
@@ -186,8 +174,8 @@ export class BusController {
     this.logger.debug(`[${methodName}] Request body: ${JSON.stringify(data)}`);
 
     // Validate data against dictionary metadata
-    await this.getBusService().validateData(entity, data, 'create');
-    const result = await this.getBusService().create(entity, data);
+    await this.busService.validateData(entity, data, 'create');
+    const result = await this.busService.create(entity, data);
 
     this.logger.log(`[${methodName}] Success - entity: ${entity}, created id: ${result.id}`);
     return result;
@@ -213,15 +201,15 @@ export class BusController {
     const methodName = 'update';
     // Extract version from If-Match header
     const version = ifMatch
-      ? Number.parseInt(ifMatch.replace(/"/g, '').replace('v', ''), 10)
+      ? parseInt(ifMatch.replace(/"/g, '').replace('v', ''), 10)
       : undefined;
 
     this.logger.log(`[${methodName}] Request - entity: ${entity}, id: ${id}, expectedVersion: ${version}`);
     this.logger.debug(`[${methodName}] Request body: ${JSON.stringify(data)}`);
 
     // Validate data against dictionary metadata
-    await this.getBusService().validateData(entity, data, 'update');
-    const result = await this.getBusService().update(entity, id, data, version);
+    await this.busService.validateData(entity, data, 'update');
+    const result = await this.busService.update(entity, id, data, version);
 
     this.logger.log(`[${methodName}] Success - entity: ${entity}, id: ${id}, new version: ${result.version}`);
     return result;
@@ -246,15 +234,15 @@ export class BusController {
   ) {
     const methodName = 'patch';
     const version = ifMatch
-      ? Number.parseInt(ifMatch.replace(/"/g, '').replace('v', ''), 10)
+      ? parseInt(ifMatch.replace(/"/g, '').replace('v', ''), 10)
       : undefined;
 
     this.logger.log(`[${methodName}] Request - entity: ${entity}, id: ${id}, expectedVersion: ${version}`);
     this.logger.debug(`[${methodName}] Request body: ${JSON.stringify(data)}`);
 
     // Validate partial data against dictionary metadata
-    await this.getBusService().validateData(entity, data, 'patch');
-    const result = await this.getBusService().update(entity, id, data, version);
+    await this.busService.validateData(entity, data, 'patch');
+    const result = await this.busService.update(entity, id, data, version);
 
     this.logger.log(`[${methodName}] Success - entity: ${entity}, id: ${id}, new version: ${result.version}`);
     return result;
@@ -278,7 +266,7 @@ export class BusController {
     const methodName = 'delete';
     this.logger.log(`[${methodName}] Request - entity: ${entity}, id: ${id}`);
 
-    await this.getBusService().softDelete(entity, id);
+    await this.busService.softDelete(entity, id);
 
     this.logger.log(`[${methodName}] Success - entity: ${entity}, id: ${id}`);
   }
@@ -296,7 +284,7 @@ export class BusController {
     const methodName = 'getMetadata';
     this.logger.debug(`[${methodName}] Request - entity: ${entity}`);
 
-    const result = await this.getBusService().getEntityMetadata(entity);
+    const result = await this.busService.getEntityMetadata(entity);
 
     this.logger.debug(`[${methodName}] Success - entity: ${entity}, returned ${result.columns.length} columns`);
     return result;
@@ -313,7 +301,7 @@ export class BusController {
     const methodName = 'getFormFields';
     this.logger.debug(`[${methodName}] Request - entity: ${entity}`);
 
-    const result = await this.getBusService().getFormFields(entity);
+    const result = await this.busService.getFormFields(entity);
 
     this.logger.debug(`[${methodName}] Success - entity: ${entity}, returned ${result.length} form fields`);
     return result;
@@ -330,7 +318,7 @@ export class BusController {
     const methodName = 'getGridFields';
     this.logger.debug(`[${methodName}] Request - entity: ${entity}`);
 
-    const result = await this.getBusService().getGridFields(entity);
+    const result = await this.busService.getGridFields(entity);
 
     this.logger.debug(`[${methodName}] Success - entity: ${entity}, returned ${result.length} grid fields`);
     return result;

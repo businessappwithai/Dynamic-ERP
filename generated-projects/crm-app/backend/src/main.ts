@@ -1,7 +1,7 @@
 /**
  * NestJS Application Entry Point with Fastify Adapter
  *
- * Generated: 2026-05-12T09:13:14.930Z
+ * Generated: 2026-05-12T10:10:06.677Z
  * Project: crm-app
  */
 
@@ -85,13 +85,14 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Global validation pipe with Zod-style validation
-  // Note: forbidNonWhitelisted is disabled to support dynamic business entity endpoints
-  // that use Record<string, any>. The business service handles proper validation.
+  // Global validation pipe for fallback validation
+  // Primary validation approach: Zod schemas in sys, rules, and other structured modules
+  // This pipe handles remaining class-validator decorators and dynamic entity validation.
+  // Note: forbidNonWhitelisted is disabled to support dynamic business entity endpoints.
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
-      forbidNonWhitelisted: false, // Disabled for dynamic entities
+      forbidNonWhitelisted: false,
       transform: true,
       transformOptions: {
         enableImplicitConversion: true,

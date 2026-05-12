@@ -10,13 +10,13 @@
  * async getPatients() { ... }
  */
 
-import { Injectable, type CanActivate, type ExecutionContext, ForbiddenException } from '@nestjs/common';
-import type { Reflector } from '@nestjs/core';
+import { Injectable, type CanActivate, type ExecutionContext, ForbiddenException, Inject } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(@Inject(Reflector) private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
     // Get required roles from decorator metadata

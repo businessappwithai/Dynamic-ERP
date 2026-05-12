@@ -4,14 +4,15 @@
  * Dynamic service for all bus_ prefixed tables.
  * Validates data against Application Dictionary metadata.
  *
- * Generated: 2026-05-12T09:13:14.955Z
+ * Generated: 2026-05-12T10:10:06.700Z
  */
 
 import { Injectable, NotFoundException, BadRequestException, ConflictException, Inject, Logger } from '@nestjs/common';
 import type { Kysely } from 'kysely';
 import { randomUUID } from 'crypto';
 import { KYSELY_CONNECTION } from '../../database/database.constants';
-import type { DatabaseService, PaginationOptions, PaginatedResult } from '../../database/database.service';
+import type { DatabaseService } from '../../database/database.service';
+import type { PaginationOptions, PaginatedResult } from '../../database/database.service';
 import { executeBeforeCreateHooks, executeAfterCreateHooks, executeBeforeUpdateHooks, executeAfterUpdateHooks, executeBeforeDeleteHooks, executeAfterDeleteHooks, executeBeforeReadHooks, executeAfterReadHooks, executeBeforeListHooks, executeAfterListHooks } from '../hooks/hooks';
 
 export interface FieldMetadata {
@@ -338,10 +339,10 @@ export class BusService {
       case 15: case 16:
         if (!(value instanceof Date) && isNaN(Date.parse(value))) return `Field '${fieldName}' must be a valid date`;
         break;
-      case 13: case 18: case 19:
+      case 13: case 18: case 19: {
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
         if (typeof value !== 'string' || !uuidRegex.test(value)) return `Field '${fieldName}' must be a valid UUID`;
-        break;
+        break;}
       case 28:
         if (typeof value !== 'object') return `Field '${fieldName}' must be a JSON object`;
         break;
@@ -351,8 +352,8 @@ export class BusService {
 
   private parseDefaultValue(defaultValue: string, referenceId: number): any {
     switch (referenceId) {
-      case 11: return Number.parseInt(defaultValue, 10);
-      case 12: return Number.parseFloat(defaultValue);
+      case 11: return parseInt(defaultValue, 10);
+      case 12: return parseFloat(defaultValue);
       case 20: return defaultValue.toLowerCase() === 'true' || defaultValue === 'Y';
       case 28: try { return JSON.parse(defaultValue); } catch { return {}; }
       default: return defaultValue;

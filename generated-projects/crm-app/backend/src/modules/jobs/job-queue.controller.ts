@@ -3,7 +3,7 @@
  *
  * REST API for managing background jobs
  *
- * Generated: 2026-05-12T09:13:14.944Z
+ * Generated: 2026-05-12T10:10:06.688Z
  * Project: crm-app
  */
 

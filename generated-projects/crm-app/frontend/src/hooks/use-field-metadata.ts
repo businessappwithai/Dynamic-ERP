@@ -7,12 +7,12 @@
  * Enables runtime UI layout customization by fetching field
  * ordering and display settings from the backend.
  *
- * Generated: 2026-05-12T09:13:16.525Z
+ * Generated: 2026-05-12T10:10:09.905Z
  * Project: crm-app
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient, PaginatedResponse } from '@/lib/api-client';
+import { apiClient, type PaginatedResponse } from '@/lib/api-client';
 
 export interface FieldMetadata {
   sys_field_id: string;

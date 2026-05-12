@@ -1,83 +1,43 @@
 /**
- * SysUser DTOs
+ * SysUser DTOs - Zod Validation Schemas
  *
- * Data Transfer Objects for sys_user entity.
+ * Data Transfer Objects for sys_user entity using Zod for runtime validation.
  *
  * Generated: {{now}}
  */
 
-import { IsString, IsOptional, IsBoolean, IsEmail } from 'class-validator';
+import { z } from 'zod';
 
-/**
- * Create SysUser DTO
- */
-export class CreateSysUserDto {
-  @IsString()
-  name: string;
+export const CreateSysUserSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+  password: z.string().min(8),
+  description: z.string().optional(),
+  is_active: z.boolean().optional(),
+  is_locked: z.boolean().optional(),
+});
 
-  @IsEmail()
-  email: string;
+export type CreateSysUserDto = z.infer<typeof CreateSysUserSchema>;
 
-  @IsString()
-  password: string;
+export const UpdateSysUserSchema = z.object({
+  name: z.string().min(1).optional(),
+  email: z.string().email().optional(),
+  password: z.string().min(8).optional(),
+  description: z.string().optional(),
+  is_active: z.boolean().optional(),
+  is_locked: z.boolean().optional(),
+});
 
-  @IsOptional()
-  @IsString()
-  description?: string;
+export type UpdateSysUserDto = z.infer<typeof UpdateSysUserSchema>;
 
-  @IsOptional()
-  @IsBoolean()
-  is_active?: boolean;
+export const ChangePasswordSchema = z.object({
+  old_password: z.string().min(1),
+  new_password: z.string().min(8),
+});
 
-  @IsOptional()
-  @IsBoolean()
-  is_locked?: boolean;
-}
+export type ChangePasswordDto = z.infer<typeof ChangePasswordSchema>;
 
-/**
- * Update SysUser DTO
- */
-export class UpdateSysUserDto {
-  @IsOptional()
-  @IsString()
-  name?: string;
-
-  @IsOptional()
-  @IsEmail()
-  email?: string;
-
-  @IsOptional()
-  @IsString()
-  password?: string;
-
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  is_active?: boolean;
-
-  @IsOptional()
-  @IsBoolean()
-  is_locked?: boolean;
-}
-
-/**
- * Change Password DTO
- */
-export class ChangePasswordDto {
-  @IsString()
-  old_password: string;
-
-  @IsString()
-  new_password: string;
-}
-
-/**
- * SysUser Response DTO
- */
-export class SysUserResponseDto {
+export interface SysUserResponseDto {
   sys_user_id: string;
   name: string;
   email: string;
@@ -89,9 +49,6 @@ export class SysUserResponseDto {
   updated_at: Date;
 }
 
-/**
- * SysUser with Roles Response DTO
- */
-export class SysUserWithRolesResponseDto extends SysUserResponseDto {
+export interface SysUserWithRolesResponseDto extends SysUserResponseDto {
   roles: any[];
 }

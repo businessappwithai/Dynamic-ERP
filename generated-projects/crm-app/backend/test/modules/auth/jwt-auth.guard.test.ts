@@ -1,7 +1,7 @@
 /**
  * Unit tests for JwtAuthGuard (BetterAuth session validation)
  *
- * Generated: 2026-05-12T09:13:14.989Z
+ * Generated: 2026-05-12T10:10:06.732Z
  * Project: crm-app
  */
 

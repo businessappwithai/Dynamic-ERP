@@ -1,7 +1,7 @@
 /**
  * Unit tests for AuthController
  *
- * Generated: 2026-05-12T09:13:14.988Z
+ * Generated: 2026-05-12T10:10:06.732Z
  * Project: crm-app
  */
 

@@ -22,11 +22,13 @@ import { DatabaseService } from './database.service';
         let dialect: PostgresDialect | SqliteDialect;
 
         if (dbClient === 'better-sqlite3') {
+          // SQLite database with better-sqlite3 - Bun.js optimized
           // eslint-disable-next-line @typescript-eslint/no-var-requires
           const Database = require('better-sqlite3');
           const filename = configService.get('DATABASE_FILENAME', './data/{{snakeCase project.name}}.db');
-          dialect = new SqliteDialect({ database: new Database(filename) });
+          dialect = new SqliteDialect({ database: new Database(filename) as any });
         } else {
+          // PostgreSQL dialect - Bun.js compatible
           // eslint-disable-next-line @typescript-eslint/no-var-requires
           const { Pool } = require('pg');
           dialect = new PostgresDialect({

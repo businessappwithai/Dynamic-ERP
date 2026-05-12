@@ -4,7 +4,7 @@
  * Handles CRUD operations for all sys_ tables.
  * The sys_field endpoints are critical for runtime UI modification.
  *
- * Generated: 2026-05-12T09:13:14.953Z
+ * Generated: 2026-05-12T10:10:06.698Z
  */
 
 import {
@@ -52,8 +52,8 @@ export class SysController {
     @Query('prefix') prefix?: string,
   ) {
     return this.sysService.findAllDatabaseTables({
-      page: page ? Number.parseInt(page, 10) : 1,
-      limit: limit ? Number.parseInt(limit, 10) : 100,
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 100,
       search,
       prefix,
     });
@@ -144,7 +144,7 @@ export class SysController {
     @Body() data: Record<string, unknown>,
     @Headers('if-match') ifMatch?: string,
   ) {
-    const version = ifMatch ? Number.parseInt(ifMatch.replace(/"/g, ''), 10) : undefined;
+    const version = ifMatch ? parseInt(ifMatch.replace(/"/g, ''), 10) : undefined;
     return this.sysService.updateField(id, data, version);
   }
 
