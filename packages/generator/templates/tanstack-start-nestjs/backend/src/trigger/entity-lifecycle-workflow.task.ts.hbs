@@ -24,6 +24,7 @@ export const entityLifecycleWorkflow = task({
     entityName: string;
     entityId: string;
     operation: 'create' | 'update' | 'delete';
+    userId?: string;
   }) => {
     console.log(`[Workflow] Task triggered for ${payload.entityName}:${payload.operation}:${payload.entityId}`);
 
@@ -48,8 +49,8 @@ async function evaluateRules(
   context: Record<string, unknown>
 ): Promise<any[]> {
   try {
-    const result = await engine.evaluate(JSON.parse(jdmContent), context);
-    return result.violations ?? [];
+    const result = await engine.evaluate(JSON.parse(jdmContent), context) as any;
+    return (result && typeof result === 'object' && 'violations' in result) ? result.violations : [];
   } catch (error) {
     console.error('Rule evaluation error:', error);
     return [];

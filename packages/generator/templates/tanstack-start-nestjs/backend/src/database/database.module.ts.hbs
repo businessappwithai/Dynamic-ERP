@@ -7,7 +7,6 @@
 import { Module, Global, OnModuleDestroy, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Kysely, PostgresDialect, SqliteDialect } from 'kysely';
-import { Pool } from 'pg';
 import { KYSELY_CONNECTION } from './database.constants';
 import { DatabaseService } from './database.service';
 
@@ -28,6 +27,8 @@ import { DatabaseService } from './database.service';
           const filename = configService.get('DATABASE_FILENAME', './data/{{snakeCase project.name}}.db');
           dialect = new SqliteDialect({ database: new Database(filename) });
         } else {
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          const { Pool } = require('pg');
           dialect = new PostgresDialect({
             pool: new Pool({
               host: configService.get('DATABASE_HOST', 'localhost'),

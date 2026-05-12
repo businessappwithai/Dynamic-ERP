@@ -10,15 +10,17 @@
 
 import { betterAuth } from 'better-auth';
 {{#if (eq databaseType 'sqlite')}}
-import { Database } from 'bun:sqlite';
 import * as path from 'path';
 
-// SQLite database for authentication using Bun's native SQLite
+// SQLite database for authentication - use better-sqlite3 for Node.js compatibility
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const Database = require('better-sqlite3');
 const authDb = new Database(path.resolve(process.env.DATABASE_FILENAME || './data/{{projectSnake}}.db'));
 {{else}}
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const pg = require('pg');
 import { kyselyAdapter } from '@better-auth/kysely-adapter';
 import { Kysely, PostgresDialect } from 'kysely';
-import * as pg from 'pg';
 
 // Create PostgreSQL connection using kysely
 const authDb = new Kysely<unknown>({
