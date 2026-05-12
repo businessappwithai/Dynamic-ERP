@@ -28,7 +28,7 @@ export default defineConfig({
     },
     server: {
       middlewareMode: false,
-      port: 3001,
+      port: 3000,
       proxy: {
         '/api': {
           target: 'http://localhost:3001',
@@ -36,12 +36,6 @@ export default defineConfig({
         },
       },
     },
-    ssr: {
-      noExternal: true,
-      external: ['react', 'react-dom'],
-    },
-    optimizeDeps: {
-      include: ['react', 'react-dom'],
-    },
+    ssr: false,
   },
 })
