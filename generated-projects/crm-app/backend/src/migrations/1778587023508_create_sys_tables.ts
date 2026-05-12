@@ -178,17 +178,123 @@ export async function up(db: Kysely<any>): Promise<void> {
   `.execute(db);
 
   // ============================================================================
+  // sys_role - Role/Access Metadata
+  // ============================================================================
+  await sql`
+    CREATE TABLE IF NOT EXISTS sys_role (
+      sys_role_id TEXT PRIMARY KEY,
+      name VARCHAR(100) NOT NULL UNIQUE,
+      description TEXT,
+      user_level VARCHAR(1) NOT NULL DEFAULT 'C',
+      is_master_role INTEGER NOT NULL DEFAULT 0,
+      is_can_export INTEGER NOT NULL DEFAULT 0,
+      is_can_report INTEGER NOT NULL DEFAULT 0,
+      is_personal_lock INTEGER NOT NULL DEFAULT 0,
+      is_personal_access INTEGER NOT NULL DEFAULT 0,
+      max_query_records INTEGER NOT NULL DEFAULT 0,
+      is_show_accounting INTEGER NOT NULL DEFAULT 0,
+      entity_type VARCHAR(40) NOT NULL DEFAULT 'D',
+      is_active INTEGER NOT NULL DEFAULT 0,
+      created_by VARCHAR(100) NOT NULL,
+      updated_by VARCHAR(100) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `.execute(db);
+
+  // ============================================================================
+  // sys_user - User Metadata
+  // ============================================================================
+  await sql`
+    CREATE TABLE IF NOT EXISTS sys_user (
+      sys_user_id TEXT PRIMARY KEY,
+      email VARCHAR(255) NOT NULL UNIQUE,
+      name VARCHAR(100) NOT NULL,
+      description TEXT,
+      entity_type VARCHAR(40) NOT NULL DEFAULT 'D',
+      is_active INTEGER NOT NULL DEFAULT 0,
+      default_sys_role_id TEXT REFERENCES sys_role(sys_role_id),
+      created_by VARCHAR(100) NOT NULL,
+      updated_by VARCHAR(100) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `.execute(db);
+
+  // ============================================================================
+  // sys_user_roles - User to Role Mapping
+  // ============================================================================
+  await sql`
+    CREATE TABLE IF NOT EXISTS sys_user_roles (
+      id TEXT PRIMARY KEY,
+      sys_user_id TEXT NOT NULL REFERENCES sys_user(sys_user_id) ON DELETE CASCADE,
+      sys_role_id TEXT NOT NULL REFERENCES sys_role(sys_role_id) ON DELETE CASCADE,
+      created_by VARCHAR(100) NOT NULL,
+      updated_by VARCHAR(100) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (sys_user_id, sys_role_id)
+    )
+  `.execute(db);
+
+  // ============================================================================
+  // sys_access - Role to Table/Field Access Mapping
+  // ============================================================================
+  await sql`
+    CREATE TABLE IF NOT EXISTS sys_access (
+      sys_access_id TEXT PRIMARY KEY,
+      sys_role_id TEXT NOT NULL REFERENCES sys_role(sys_role_id) ON DELETE CASCADE,
+      sys_table_id TEXT REFERENCES sys_table(sys_table_id) ON DELETE CASCADE,
+      sys_field_id TEXT REFERENCES sys_field(sys_field_id) ON DELETE CASCADE,
+      read_access INTEGER NOT NULL DEFAULT 0,
+      create_access INTEGER NOT NULL DEFAULT 0,
+      update_access INTEGER NOT NULL DEFAULT 0,
+      delete_access INTEGER NOT NULL DEFAULT 0,
+      is_active INTEGER NOT NULL DEFAULT 0,
+      created_by VARCHAR(100) NOT NULL,
+      updated_by VARCHAR(100) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `.execute(db);
+
+  // ============================================================================
+  // sys_field_group - Field Grouping
+  // ============================================================================
+  await sql`
+    CREATE TABLE IF NOT EXISTS sys_field_group (
+      sys_field_group_id TEXT PRIMARY KEY,
+      sys_table_id TEXT NOT NULL REFERENCES sys_table(sys_table_id) ON DELETE CASCADE,
+      name VARCHAR(100) NOT NULL,
+      description TEXT,
+      seq_no INTEGER NOT NULL DEFAULT 0,
+      is_active INTEGER NOT NULL DEFAULT 0,
+      created_by VARCHAR(100) NOT NULL,
+      updated_by VARCHAR(100) NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `.execute(db);
+
+  // ============================================================================
   // Create indices for better query performance
   // ============================================================================
   await sql`CREATE INDEX IF NOT EXISTS idx_sys_column_table ON sys_column(sys_table_id)`.execute(db);
   await sql`CREATE INDEX IF NOT EXISTS idx_sys_window_table ON sys_window(sys_table_id)`.execute(db);
   await sql`CREATE INDEX IF NOT EXISTS idx_sys_tab_window ON sys_tab(sys_window_id)`.execute(db);
   await sql`CREATE INDEX IF NOT EXISTS idx_sys_field_tab ON sys_field(sys_tab_id)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_sys_user_roles ON sys_user_roles(sys_user_id)`.execute(db);
+  await sql`CREATE INDEX IF NOT EXISTS idx_sys_access_role ON sys_access(sys_role_id)`.execute(db);
 }
 
 export async function down(db: Kysely<any>): Promise<void> {
   // Drop tables in reverse order of dependencies
+  await db.schema.dropTable('sys_access').ifExists().execute();
+  await db.schema.dropTable('sys_user_roles').ifExists().execute();
+  await db.schema.dropTable('sys_user').ifExists().execute();
+  await db.schema.dropTable('sys_field_group').ifExists().execute();
   await db.schema.dropTable('sys_field').ifExists().execute();
+  await db.schema.dropTable('sys_role').ifExists().execute();
   await db.schema.dropTable('sys_tab').ifExists().execute();
   await db.schema.dropTable('sys_window').ifExists().execute();
   await db.schema.dropTable('sys_column').ifExists().execute();
