@@ -4,7 +4,7 @@
  * Generated: 2026-05-12T11:57:03.532Z
  */
 
-import { Injectable, Inject, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { Kysely, sql } from 'kysely';
 import { v4 as uuidv4 } from 'uuid';
 import { KYSELY_CONNECTION } from './database.constants';
@@ -28,6 +28,7 @@ export interface PaginatedResult<T> {
 
 @Injectable()
 export class DatabaseService {
+  private readonly logger = new Logger(DatabaseService.name);
   public readonly kysely: Kysely<any>;
 
   constructor(@Inject(KYSELY_CONNECTION) kysely: Kysely<any>) {
@@ -79,27 +80,25 @@ export class DatabaseService {
     options: PaginationOptions = {},
     filters: Record<string, any> = {},
   ): Promise<PaginatedResult<T>> {
+    const {
+      page = 1,
+      limit = 20,
+      orderBy = 'created_at',
+      orderDir = 'desc',
+    } = options;
+
+    const offset = (page - 1) * limit;
+    this.logger.debug(`findAll(${tableName}) - page=${page}, limit=${limit}, orderBy=${orderBy}`);
+
     try {
-      const {
-        page = 1,
-        limit = 20,
-        orderBy = 'created_at',
-        orderDir = 'desc',
-      } = options;
-
-      const offset = (page - 1) * limit;
-      console.log(`[findAll] table=${tableName}, page=${page}, limit=${limit}, orderBy=${orderBy}`);
-
       let query = this.kysely
         .selectFrom(tableName as any)
         .selectAll()
         .where('deleted_at' as any, 'is', null);
 
-      console.log(`[findAll] Initial query created for ${tableName}`);
-
       for (const [key, value] of Object.entries(filters)) {
-        console.log(`[findAll] Processing filter: ${key}=${JSON.stringify(value)}`);
         if (value !== undefined && value !== null && value !== '') {
+          this.logger.debug(`Adding filter: ${key}=${typeof value === 'object' ? JSON.stringify(value) : value}`);
           if (typeof value === 'object' && 'operator' in value && 'value' in value) {
             query = query.where(key as any, value.operator, value.value);
           } else if (typeof value === 'string' && value.includes('%')) {
@@ -110,22 +109,20 @@ export class DatabaseService {
         }
       }
 
-      console.log(`[findAll] Executing count query for ${tableName}`);
+      this.logger.debug(`Executing count and data queries for ${tableName}`);
       const countResult = await (query as any)
         .clearSelect()
         .select((eb: any) => eb.fn.countAll().as('count'))
         .executeTakeFirst();
       const total = Number(countResult?.count ?? 0);
-      console.log(`[findAll] Count result: ${total}`);
 
-      console.log(`[findAll] Executing data query for ${tableName}`);
       const data = await query
         .orderBy(orderBy as any, orderDir)
         .limit(Number(limit))
         .offset(Number(offset))
         .execute();
 
-      console.log(`[findAll] Data retrieved: ${data.length} records`);
+      this.logger.debug(`Query succeeded for ${tableName}: returned ${data.length}/${total} records`);
       return {
         data: data as T[],
         meta: {
@@ -136,11 +133,10 @@ export class DatabaseService {
         },
       };
     } catch (error) {
-      console.error(`[findAll] ERROR in table ${tableName}:`, error);
-      if (error instanceof Error) {
-        console.error(`[findAll] Error message: ${error.message}`);
-        console.error(`[findAll] Error stack: ${error.stack}`);
-      }
+      this.logger.error(
+        `findAll(${tableName}) failed: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw error;
     }
   }
@@ -201,12 +197,20 @@ export class DatabaseService {
       updated_at: now,
     };
 
-    const safedRecord = DatabaseService.sqliteSafe(record as any);
-    console.log('CREATE TABLE:', tableName);
-    console.log('CREATE DATA:', JSON.stringify(safedRecord, null, 2));
-    await this.kysely.insertInto(tableName as any).values(safedRecord).execute();
+    try {
+      const safedRecord = DatabaseService.sqliteSafe(record as any);
+      this.logger.debug(`create(${tableName}) - creating record with id=${id}`);
+      await this.kysely.insertInto(tableName as any).values(safedRecord).execute();
+      this.logger.debug(`create(${tableName}) - record created successfully`);
 
-    return this.findByIdOrFail<T>(tableName, id);
+      return this.findByIdOrFail<T>(tableName, id);
+    } catch (error) {
+      this.logger.error(
+        `create(${tableName}) failed: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+      throw error;
+    }
   }
 
   /**

@@ -6,7 +6,7 @@
  * Generated: 2026-05-12T11:57:03.507Z
  */
 
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { sql } from 'kysely';
 import { DatabaseService } from '../../database/database.service';
 import type { Kysely } from 'kysely';
@@ -24,6 +24,7 @@ interface CacheEntry<T> {
 
 @Injectable()
 export class SysService {
+  private readonly logger = new Logger(SysService.name);
   private fieldCache = new Map<string, CacheEntry<unknown>>();
   private readonly CACHE_TTL_MS = 5 * 60 * 1000;
 
@@ -60,38 +61,36 @@ export class SysService {
   // ============================================================
 
   async findAllTables(options: PaginationOptions & { search?: string } = {}) {
-    try {
-      const { page = 1, limit = 100, search, prefix } = options;
-      const offset = (page - 1) * limit;
-      console.log(`[SysService.findAllTables] Starting with page=${page}, limit=${limit}, search=${search}, prefix=${prefix}`);
+    const { page = 1, limit = 100, search, prefix } = options;
+    const offset = (page - 1) * limit;
 
+    this.logger.debug(`findAllTables() - page=${page}, limit=${limit}, search=${search}, prefix=${prefix}`);
+
+    try {
       let query = this.db.kysely.selectFrom('sys_table').selectAll().where('is_active', '=', 1);
-      console.log(`[SysService.findAllTables] Initial query created`);
 
       if (prefix) {
-        console.log(`[SysService.findAllTables] Adding prefix filter: ${prefix}%`);
+        this.logger.debug(`Adding prefix filter: ${prefix}%`);
         query = query.where('table_name', 'like', `${prefix}%`);
       }
       if (search) {
-        console.log(`[SysService.findAllTables] Adding search filter: %${search}%`);
+        this.logger.debug(`Adding search filter: %${search}%`);
         query = query.where('name', 'like', `%${search}%`);
       }
 
-      console.log(`[SysService.findAllTables] Executing parallel queries`);
+      this.logger.debug(`Executing parallel count and data queries`);
       const [data, countRow] = await Promise.all([
         query.orderBy('name').limit(Number(limit)).offset(Number(offset)).execute(),
         query.clearSelect().select((eb) => eb.fn.countAll().as('count')).executeTakeFirst(),
       ]);
 
-      console.log(`[SysService.findAllTables] Results: ${data.length} records, total=${countRow?.count}`);
+      this.logger.debug(`Query succeeded: ${data.length} records, total=${countRow?.count}`);
       return { data, meta: { total: Number(countRow?.count ?? 0), page, pageSize: limit } };
     } catch (error) {
-      console.error(`[SysService.findAllTables] ERROR:`, error);
-      if (error instanceof Error) {
-        console.error(`[SysService.findAllTables] Error message: ${error.message}`);
-        console.error(`[SysService.findAllTables] Error name: ${error.name}`);
-        console.error(`[SysService.findAllTables] Error stack: ${error.stack}`);
-      }
+      this.logger.error(
+        `findAllTables() failed: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
       throw error;
     }
   }

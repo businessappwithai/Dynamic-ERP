@@ -18,6 +18,7 @@ import {
   Query,
   Headers,
   ParseUUIDPipe,
+  Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { SysService } from './sys.service';
@@ -26,6 +27,8 @@ import { SysService } from './sys.service';
 @ApiBearerAuth()
 @Controller('sys')
 export class SysController {
+  private readonly logger = new Logger(SysController.name);
+
   constructor(private readonly sysService: SysService) {}
 
   // ============================================================================
@@ -35,22 +38,22 @@ export class SysController {
   @Get('tables')
   @ApiOperation({ summary: 'List all tables' })
   async findAllTables(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
     @Query('search') search?: string,
     @Query('prefix') prefix?: string,
   ) {
+    const pageNum = page ? parseInt(page, 10) : undefined;
+    const limitNum = limit ? parseInt(limit, 10) : undefined;
+
+    this.logger.debug(`findAllTables() called with page=${pageNum}, limit=${limitNum}, search=${search}, prefix=${prefix}`);
+
     try {
-      console.log(`[SysController] GET /sys/tables - page=${page}, limit=${limit}, search=${search}, prefix=${prefix}`);
-      const result = await this.sysService.findAllTables({ page, limit, search, prefix });
-      console.log(`[SysController] GET /sys/tables - SUCCESS`);
+      const result = await this.sysService.findAllTables({ page: pageNum, limit: limitNum, search, prefix });
+      this.logger.debug(`findAllTables() returned ${result.data.length} records`);
       return result;
     } catch (error) {
-      console.error(`[SysController] GET /sys/tables - ERROR:`, error);
-      if (error instanceof Error) {
-        console.error(`[SysController] Error message: ${error.message}`);
-        console.error(`[SysController] Error stack: ${error.stack}`);
-      }
+      this.logger.error(`findAllTables() failed`, error instanceof Error ? error.stack : String(error));
       throw error;
     }
   }
