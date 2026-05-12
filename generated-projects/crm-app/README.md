@@ -1,4 +1,4 @@
-# CRM Application
+# crm-app
 
 Generated application
 
@@ -60,7 +60,7 @@ bun run build
 ## Project Structure
 
 ```
-CRM Application/
+crm-app/
 ├── backend/           # NestJS API
 │   ├── src/
 │   │   ├── modules/

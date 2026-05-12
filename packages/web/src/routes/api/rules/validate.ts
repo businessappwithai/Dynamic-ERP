@@ -24,10 +24,7 @@ export async function POST(request: Request) {
 
     // Validate each node
     jdm.nodes.forEach(
-      (
-        node: { id?: string; type?: string; content?: Record<string, unknown> },
-        index: number
-      ) => {
+      (node: { id?: string; type?: string; content?: Record<string, unknown> }, index: number) => {
         if (!node.id) {
           errors.push(`Node ${index}: id is required`);
         }

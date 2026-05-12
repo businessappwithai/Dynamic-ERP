@@ -20,8 +20,42 @@
 import { type Entity, entityToBusEntity, type Relationship } from "@erdwithai/core/types";
 import * as fs from "fs/promises";
 import * as path from "path";
-import { BaseGenerator } from "../base.generator";
 import { CliExecutor } from "../../utils/cli-executor";
+import { BaseGenerator } from "../base.generator";
+
+/**
+ * Resolve template directory path, handling both dev and bundled environments
+ */
+function resolveTemplateDir(subpath: string): string {
+  const cwd = process.cwd();
+  const possiblePaths = [
+    // Dev mode: running from project root
+    path.join(cwd, "packages/generator/templates", subpath),
+    // Bundled mode: running from anywhere, find generator package
+    path.join(cwd, "../../../packages/generator/templates", subpath),
+    path.join(cwd, "../../packages/generator/templates", subpath),
+    // Fallback: current __dirname relative
+    path.join(__dirname, "../../../templates", subpath),
+  ];
+
+  for (const possiblePath of possiblePaths) {
+    try {
+      const stat = require("fs").statSync(possiblePath);
+      if (stat.isDirectory()) {
+        return possiblePath;
+      }
+    } catch {
+      // Continue to next path
+    }
+  }
+
+  // If no path found, return the __dirname relative path and let it fail with a clear error
+  const fallbackPath = path.join(__dirname, "../../../templates", subpath);
+  console.error(`Template directory not found. Tried paths:`);
+  possiblePaths.forEach((p) => console.error(`  - ${p}`));
+  console.error(`Using fallback: ${fallbackPath}`);
+  return fallbackPath;
+}
 
 export interface TanStackStartFrontendOptions {
   projectName: string;
@@ -35,11 +69,9 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
   private options: TanStackStartFrontendOptions;
 
   constructor(options: TanStackStartFrontendOptions) {
-    // Find the template directory
-    // After bun bundles the code, the class is in dist/cli/generate.js or dist/index.js
-    // We need to navigate from there to packages/generator/templates/tanstack-start-nestjs/frontend/
-
-    super(path.join(__dirname, "../../../templates/tanstack-start-nestjs/frontend"));
+    // Resolve template directory correctly regardless of bundling
+    const templateDir = resolveTemplateDir("tanstack-start-nestjs/frontend");
+    super(templateDir);
     this.options = options;
   }
 
@@ -98,24 +130,19 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
       console.log(`  Creating TanStack Start project: ${projectName}`);
       try {
         // Try with --yes flag first (works with npm/pnpm)
-        await CliExecutor.executeAsync("bun", [
-          "create",
-          "tanstack-start@latest",
-          projectName,
-          "--yes",
-        ], {
-          cwd: parentDir,
-          stdio: "inherit",
-          timeout: 600000,
-        });
+        await CliExecutor.executeAsync(
+          "bun",
+          ["create", "tanstack-start@latest", projectName, "--yes"],
+          {
+            cwd: parentDir,
+            stdio: "inherit",
+            timeout: 600000,
+          }
+        );
       } catch {
         // If --yes fails, try without it (some bun versions don't support --yes)
         console.log(`  Retrying scaffolding without --yes flag...`);
-        await CliExecutor.executeAsync("bun", [
-          "create",
-          "tanstack-start@latest",
-          projectName,
-        ], {
+        await CliExecutor.executeAsync("bun", ["create", "tanstack-start@latest", projectName], {
           cwd: parentDir,
           stdio: "inherit",
           timeout: 600000,
@@ -183,11 +210,16 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
         name: this.options.projectName,
         version: this.options.projectVersion,
         description: this.options.projectDescription,
+        id: this.options.projectName.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        snake: this.options.projectName.toLowerCase().replace(/[^a-z0-9]+/g, "_"),
       },
       config: {
         baseUrl: this.options.apiBaseUrl,
         enableDarkMode: this.options.enableDarkMode,
       },
+      projectName: this.options.projectName,
+      projectSnake: this.options.projectName.toLowerCase().replace(/[^a-z0-9]+/g, "_"),
+      projectKebab: this.options.projectName.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
       entities: busEntities,
       mainEntities,
       relationships,
@@ -244,10 +276,7 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
     await fs.writeFile(path.join(outputDir, "src/routes/index.tsx"), homePageContent);
 
     // Dashboard page (flat route file)
-    const dashboardPageContent = await this.renderTemplate(
-      "src/routes/dashboard.tsx.hbs",
-      context
-    );
+    const dashboardPageContent = await this.renderTemplate("src/routes/dashboard.tsx.hbs", context);
     await fs.writeFile(path.join(outputDir, "src/routes/dashboard.tsx"), dashboardPageContent);
 
     // Providers index (rendered template)
@@ -282,10 +311,7 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
 
     // Auth pages (login and signup)
     try {
-      const loginPageContent = await this.renderTemplate(
-        "src/routes/auth/login.tsx.hbs",
-        context
-      );
+      const loginPageContent = await this.renderTemplate("src/routes/auth/login.tsx.hbs", context);
       await fs.writeFile(path.join(outputDir, "src/routes/auth/login.tsx"), loginPageContent);
     } catch (e) {
       console.warn("Login page template not found");
@@ -508,7 +534,10 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
 
     // Reference types - renders as /admin/references via admin/references.tsx
     try {
-      const referencesContent = await this.renderTemplate("src/routes/admin/references.tsx.hbs", context);
+      const referencesContent = await this.renderTemplate(
+        "src/routes/admin/references.tsx.hbs",
+        context
+      );
       await fs.writeFile(path.join(adminDir, "references.tsx"), referencesContent);
     } catch (e) {
       console.warn("Admin references page template not found");
@@ -590,20 +619,12 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
       console.warn("Custom tsconfig template not found, keeping TanStack Start default");
     }
 
-    // Update ESLint configuration
+    // Update Biome configuration
     try {
-      const eslintContent = await this.renderTemplate(".eslintrc.cjs.hbs", context);
-      await fs.writeFile(path.join(outputDir, ".eslintrc.cjs"), eslintContent);
+      const biomeContent = await this.renderTemplate("biome.json.hbs", context);
+      await fs.writeFile(path.join(outputDir, "biome.json"), biomeContent);
     } catch (e) {
-      console.warn("Custom ESLint config template not found, keeping TanStack Start default");
-    }
-
-    // Update Prettier configuration
-    try {
-      const prettierContent = await this.renderTemplate(".prettierrc.hbs", context);
-      await fs.writeFile(path.join(outputDir, ".prettierrc"), prettierContent);
-    } catch (e) {
-      console.warn("Custom Prettier config template not found, keeping TanStack Start default");
+      console.warn("Custom Biome config template not found, using defaults");
     }
 
     // Generate environment configuration for TanStack Start

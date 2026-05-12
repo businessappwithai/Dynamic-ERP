@@ -4,8 +4,8 @@
  * Background task for synchronising entity data with external systems.
  * Triggered via syncEntityTask.trigger(payload) from JobQueueService.
  *
- * Generated: 2026-05-11T18:39:58.950Z
- * Project: CRM Application
+ * Generated: 2026-05-12T09:13:14.942Z
+ * Project: crm-app
  */
 
 import { task } from '@trigger.dev/sdk/v3';

@@ -6,8 +6,8 @@
  */
 
 import { execSync, spawn } from "child_process";
-import * as path from "path";
 import * as fs from "fs/promises";
+import * as path from "path";
 
 export interface CliExecutorOptions {
   cwd?: string;
@@ -20,11 +20,7 @@ export class CliExecutor {
   /**
    * Execute a CLI command synchronously
    */
-  static executeSync(
-    command: string,
-    args: string[],
-    options: CliExecutorOptions = {}
-  ): string {
+  static executeSync(command: string, args: string[], options: CliExecutorOptions = {}): string {
     const cwd = options.cwd || process.cwd();
     const env = { ...process.env, ...options.env };
     const fullCommand = `${command} ${args.join(" ")}`;

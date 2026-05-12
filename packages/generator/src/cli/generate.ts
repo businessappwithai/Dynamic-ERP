@@ -20,10 +20,10 @@ import { promises as fs } from "fs";
 import * as path from "path";
 import * as readline from "readline";
 import { FullStackGenerator, type StackOption } from "../generators/full-stack.generator";
-import { NestJsBackendGenerator } from "../generators/tanstack-start-nestjs/nestjs-backend.generator";
-import { TanStackStartFrontendGenerator } from "../generators/tanstack-start-nestjs/tanstack-start-frontend.generator";
 import { ODataBackendGenerator } from "../generators/openui5-odatav4/odata-backend.generator";
 import { OpenUI5FrontendGenerator } from "../generators/openui5-odatav4/openui5-frontend.generator";
+import { NestJsBackendGenerator } from "../generators/tanstack-start-nestjs/nestjs-backend.generator";
+import { TanStackStartFrontendGenerator } from "../generators/tanstack-start-nestjs/tanstack-start-frontend.generator";
 import { MermaidParser } from "../parsers/mermaid.parser";
 
 // When run via `bun --filter`, cwd is the package directory but INIT_CWD is

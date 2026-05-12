@@ -18,7 +18,7 @@ function RootLayout() {
   return (
     <html lang="en" className="dark">
       <head>
-        <title>CRM Application</title>
+        <title>crm-app</title>
         <meta name="description" content="Generated application" />
         <Meta />
       </head>

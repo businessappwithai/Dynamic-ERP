@@ -1,12 +1,12 @@
 /**
  * NestJS Application Entry Point with Fastify Adapter
  *
- * Generated: 2026-05-11T18:39:58.939Z
- * Project: CRM Application
+ * Generated: 2026-05-12T09:13:14.930Z
+ * Project: crm-app
  */
 
 import { NestFactory } from '@nestjs/core';
-import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
+import { FastifyAdapter, type NestFastifyApplication } from '@nestjs/platform-fastify';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { auth } from './lib/better-auth';

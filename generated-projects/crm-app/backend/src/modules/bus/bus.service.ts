@@ -4,14 +4,14 @@
  * Dynamic service for all bus_ prefixed tables.
  * Validates data against Application Dictionary metadata.
  *
- * Generated: 2026-05-11T18:39:58.964Z
+ * Generated: 2026-05-12T09:13:14.955Z
  */
 
 import { Injectable, NotFoundException, BadRequestException, ConflictException, Inject, Logger } from '@nestjs/common';
-import { Kysely } from 'kysely';
+import type { Kysely } from 'kysely';
 import { randomUUID } from 'crypto';
 import { KYSELY_CONNECTION } from '../../database/database.constants';
-import { DatabaseService, PaginationOptions, PaginatedResult } from '../../database/database.service';
+import type { DatabaseService, PaginationOptions, PaginatedResult } from '../../database/database.service';
 import { executeBeforeCreateHooks, executeAfterCreateHooks, executeBeforeUpdateHooks, executeAfterUpdateHooks, executeBeforeDeleteHooks, executeAfterDeleteHooks, executeBeforeReadHooks, executeAfterReadHooks, executeBeforeListHooks, executeAfterListHooks } from '../hooks/hooks';
 
 export interface FieldMetadata {
@@ -351,8 +351,8 @@ export class BusService {
 
   private parseDefaultValue(defaultValue: string, referenceId: number): any {
     switch (referenceId) {
-      case 11: return parseInt(defaultValue, 10);
-      case 12: return parseFloat(defaultValue);
+      case 11: return Number.parseInt(defaultValue, 10);
+      case 12: return Number.parseFloat(defaultValue);
       case 20: return defaultValue.toLowerCase() === 'true' || defaultValue === 'Y';
       case 28: try { return JSON.parse(defaultValue); } catch { return {}; }
       default: return defaultValue;

@@ -4,13 +4,10 @@ export async function POST(request: Request) {
     const { description } = body;
 
     if (!description) {
-      return new Response(
-        JSON.stringify({ error: "Description is required" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify({ error: "Description is required" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     // Create SSE stream for streaming conversion process
@@ -36,9 +33,7 @@ export async function POST(request: Request) {
           controller.close();
         } catch (error) {
           controller.enqueue(
-            encoder.encode(
-              `data: ${JSON.stringify({ error: "Conversion failed" })}\n\n`
-            )
+            encoder.encode(`data: ${JSON.stringify({ error: "Conversion failed" })}\n\n`)
           );
           controller.close();
         }
@@ -49,7 +44,7 @@ export async function POST(request: Request) {
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
+        Connection: "keep-alive",
       },
     });
   } catch (error) {

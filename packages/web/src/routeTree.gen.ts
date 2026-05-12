@@ -8,352 +8,350 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as DesignerRouteImport } from './routes/designer'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as ProjectsIndexRouteImport } from './routes/projects/index'
-import { Route as AdminWorkflowsIndexRouteImport } from './routes/admin/workflows/index'
-import { Route as AdminRulesIndexRouteImport } from './routes/admin/rules/index'
-import { Route as ProjectsIdInitRouteImport } from './routes/projects/$id/init'
-import { Route as ProjectsIdGenerateRouteImport } from './routes/projects/$id/generate'
-import { Route as ProjectsIdDesignRouteImport } from './routes/projects/$id/design'
-import { Route as ProjectsIdDeployRouteImport } from './routes/projects/$id/deploy'
-import { Route as AdminWorkflowsWorkflowIdRouteImport } from './routes/admin/workflows/$workflowId'
-import { Route as AdminRulesNewRouteImport } from './routes/admin/rules/new'
-import { Route as ProjectsIdEnhanceIndexRouteImport } from './routes/projects/$id/enhance/index'
-import { Route as ProjectsIdEnhanceServiceNameRouteImport } from './routes/projects/$id/enhance/$serviceName'
-import { Route as AdminRulesEntityRuleIdRouteImport } from './routes/admin/rules/$entity/$ruleId'
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as AdminRulesEntityRuleIdRouteImport } from "./routes/admin/rules/$entity/$ruleId";
+import { Route as AdminRulesIndexRouteImport } from "./routes/admin/rules/index";
+import { Route as AdminRulesNewRouteImport } from "./routes/admin/rules/new";
+import { Route as AdminWorkflowsWorkflowIdRouteImport } from "./routes/admin/workflows/$workflowId";
+import { Route as AdminWorkflowsIndexRouteImport } from "./routes/admin/workflows/index";
+import { Route as DashboardRouteImport } from "./routes/dashboard";
+import { Route as DesignerRouteImport } from "./routes/designer";
+import { Route as IndexRouteImport } from "./routes/index";
+import { Route as ProjectsIdDeployRouteImport } from "./routes/projects/$id/deploy";
+import { Route as ProjectsIdDesignRouteImport } from "./routes/projects/$id/design";
+import { Route as ProjectsIdEnhanceServiceNameRouteImport } from "./routes/projects/$id/enhance/$serviceName";
+import { Route as ProjectsIdEnhanceIndexRouteImport } from "./routes/projects/$id/enhance/index";
+import { Route as ProjectsIdGenerateRouteImport } from "./routes/projects/$id/generate";
+import { Route as ProjectsIdInitRouteImport } from "./routes/projects/$id/init";
+import { Route as ProjectsIndexRouteImport } from "./routes/projects/index";
+import { Route as SettingsRouteImport } from "./routes/settings";
 
 const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
+  id: "/settings",
+  path: "/settings",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const DesignerRoute = DesignerRouteImport.update({
-  id: '/designer',
-  path: '/designer',
+  id: "/designer",
+  path: "/designer",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+  id: "/dashboard",
+  path: "/dashboard",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
-  id: '/projects/',
-  path: '/projects/',
+  id: "/projects/",
+  path: "/projects/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AdminWorkflowsIndexRoute = AdminWorkflowsIndexRouteImport.update({
-  id: '/admin/workflows/',
-  path: '/admin/workflows/',
+  id: "/admin/workflows/",
+  path: "/admin/workflows/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AdminRulesIndexRoute = AdminRulesIndexRouteImport.update({
-  id: '/admin/rules/',
-  path: '/admin/rules/',
+  id: "/admin/rules/",
+  path: "/admin/rules/",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ProjectsIdInitRoute = ProjectsIdInitRouteImport.update({
-  id: '/projects/$id/init',
-  path: '/projects/$id/init',
+  id: "/projects/$id/init",
+  path: "/projects/$id/init",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ProjectsIdGenerateRoute = ProjectsIdGenerateRouteImport.update({
-  id: '/projects/$id/generate',
-  path: '/projects/$id/generate',
+  id: "/projects/$id/generate",
+  path: "/projects/$id/generate",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ProjectsIdDesignRoute = ProjectsIdDesignRouteImport.update({
-  id: '/projects/$id/design',
-  path: '/projects/$id/design',
+  id: "/projects/$id/design",
+  path: "/projects/$id/design",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ProjectsIdDeployRoute = ProjectsIdDeployRouteImport.update({
-  id: '/projects/$id/deploy',
-  path: '/projects/$id/deploy',
+  id: "/projects/$id/deploy",
+  path: "/projects/$id/deploy",
   getParentRoute: () => rootRouteImport,
-} as any)
-const AdminWorkflowsWorkflowIdRoute =
-  AdminWorkflowsWorkflowIdRouteImport.update({
-    id: '/admin/workflows/$workflowId',
-    path: '/admin/workflows/$workflowId',
-    getParentRoute: () => rootRouteImport,
-  } as any)
+} as any);
+const AdminWorkflowsWorkflowIdRoute = AdminWorkflowsWorkflowIdRouteImport.update({
+  id: "/admin/workflows/$workflowId",
+  path: "/admin/workflows/$workflowId",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const AdminRulesNewRoute = AdminRulesNewRouteImport.update({
-  id: '/admin/rules/new',
-  path: '/admin/rules/new',
+  id: "/admin/rules/new",
+  path: "/admin/rules/new",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ProjectsIdEnhanceIndexRoute = ProjectsIdEnhanceIndexRouteImport.update({
-  id: '/projects/$id/enhance/',
-  path: '/projects/$id/enhance/',
+  id: "/projects/$id/enhance/",
+  path: "/projects/$id/enhance/",
   getParentRoute: () => rootRouteImport,
-} as any)
-const ProjectsIdEnhanceServiceNameRoute =
-  ProjectsIdEnhanceServiceNameRouteImport.update({
-    id: '/projects/$id/enhance/$serviceName',
-    path: '/projects/$id/enhance/$serviceName',
-    getParentRoute: () => rootRouteImport,
-  } as any)
+} as any);
+const ProjectsIdEnhanceServiceNameRoute = ProjectsIdEnhanceServiceNameRouteImport.update({
+  id: "/projects/$id/enhance/$serviceName",
+  path: "/projects/$id/enhance/$serviceName",
+  getParentRoute: () => rootRouteImport,
+} as any);
 const AdminRulesEntityRuleIdRoute = AdminRulesEntityRuleIdRouteImport.update({
-  id: '/admin/rules/$entity/$ruleId',
-  path: '/admin/rules/$entity/$ruleId',
+  id: "/admin/rules/$entity/$ruleId",
+  path: "/admin/rules/$entity/$ruleId",
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
-  '/designer': typeof DesignerRoute
-  '/settings': typeof SettingsRoute
-  '/projects/': typeof ProjectsIndexRoute
-  '/admin/rules/new': typeof AdminRulesNewRoute
-  '/admin/workflows/$workflowId': typeof AdminWorkflowsWorkflowIdRoute
-  '/projects/$id/deploy': typeof ProjectsIdDeployRoute
-  '/projects/$id/design': typeof ProjectsIdDesignRoute
-  '/projects/$id/generate': typeof ProjectsIdGenerateRoute
-  '/projects/$id/init': typeof ProjectsIdInitRoute
-  '/admin/rules/': typeof AdminRulesIndexRoute
-  '/admin/workflows/': typeof AdminWorkflowsIndexRoute
-  '/admin/rules/$entity/$ruleId': typeof AdminRulesEntityRuleIdRoute
-  '/projects/$id/enhance/$serviceName': typeof ProjectsIdEnhanceServiceNameRoute
-  '/projects/$id/enhance/': typeof ProjectsIdEnhanceIndexRoute
+  "/": typeof IndexRoute;
+  "/dashboard": typeof DashboardRoute;
+  "/designer": typeof DesignerRoute;
+  "/settings": typeof SettingsRoute;
+  "/projects/": typeof ProjectsIndexRoute;
+  "/admin/rules/new": typeof AdminRulesNewRoute;
+  "/admin/workflows/$workflowId": typeof AdminWorkflowsWorkflowIdRoute;
+  "/projects/$id/deploy": typeof ProjectsIdDeployRoute;
+  "/projects/$id/design": typeof ProjectsIdDesignRoute;
+  "/projects/$id/generate": typeof ProjectsIdGenerateRoute;
+  "/projects/$id/init": typeof ProjectsIdInitRoute;
+  "/admin/rules/": typeof AdminRulesIndexRoute;
+  "/admin/workflows/": typeof AdminWorkflowsIndexRoute;
+  "/admin/rules/$entity/$ruleId": typeof AdminRulesEntityRuleIdRoute;
+  "/projects/$id/enhance/$serviceName": typeof ProjectsIdEnhanceServiceNameRoute;
+  "/projects/$id/enhance/": typeof ProjectsIdEnhanceIndexRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
-  '/designer': typeof DesignerRoute
-  '/settings': typeof SettingsRoute
-  '/projects': typeof ProjectsIndexRoute
-  '/admin/rules/new': typeof AdminRulesNewRoute
-  '/admin/workflows/$workflowId': typeof AdminWorkflowsWorkflowIdRoute
-  '/projects/$id/deploy': typeof ProjectsIdDeployRoute
-  '/projects/$id/design': typeof ProjectsIdDesignRoute
-  '/projects/$id/generate': typeof ProjectsIdGenerateRoute
-  '/projects/$id/init': typeof ProjectsIdInitRoute
-  '/admin/rules': typeof AdminRulesIndexRoute
-  '/admin/workflows': typeof AdminWorkflowsIndexRoute
-  '/admin/rules/$entity/$ruleId': typeof AdminRulesEntityRuleIdRoute
-  '/projects/$id/enhance/$serviceName': typeof ProjectsIdEnhanceServiceNameRoute
-  '/projects/$id/enhance': typeof ProjectsIdEnhanceIndexRoute
+  "/": typeof IndexRoute;
+  "/dashboard": typeof DashboardRoute;
+  "/designer": typeof DesignerRoute;
+  "/settings": typeof SettingsRoute;
+  "/projects": typeof ProjectsIndexRoute;
+  "/admin/rules/new": typeof AdminRulesNewRoute;
+  "/admin/workflows/$workflowId": typeof AdminWorkflowsWorkflowIdRoute;
+  "/projects/$id/deploy": typeof ProjectsIdDeployRoute;
+  "/projects/$id/design": typeof ProjectsIdDesignRoute;
+  "/projects/$id/generate": typeof ProjectsIdGenerateRoute;
+  "/projects/$id/init": typeof ProjectsIdInitRoute;
+  "/admin/rules": typeof AdminRulesIndexRoute;
+  "/admin/workflows": typeof AdminWorkflowsIndexRoute;
+  "/admin/rules/$entity/$ruleId": typeof AdminRulesEntityRuleIdRoute;
+  "/projects/$id/enhance/$serviceName": typeof ProjectsIdEnhanceServiceNameRoute;
+  "/projects/$id/enhance": typeof ProjectsIdEnhanceIndexRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
-  '/designer': typeof DesignerRoute
-  '/settings': typeof SettingsRoute
-  '/projects/': typeof ProjectsIndexRoute
-  '/admin/rules/new': typeof AdminRulesNewRoute
-  '/admin/workflows/$workflowId': typeof AdminWorkflowsWorkflowIdRoute
-  '/projects/$id/deploy': typeof ProjectsIdDeployRoute
-  '/projects/$id/design': typeof ProjectsIdDesignRoute
-  '/projects/$id/generate': typeof ProjectsIdGenerateRoute
-  '/projects/$id/init': typeof ProjectsIdInitRoute
-  '/admin/rules/': typeof AdminRulesIndexRoute
-  '/admin/workflows/': typeof AdminWorkflowsIndexRoute
-  '/admin/rules/$entity/$ruleId': typeof AdminRulesEntityRuleIdRoute
-  '/projects/$id/enhance/$serviceName': typeof ProjectsIdEnhanceServiceNameRoute
-  '/projects/$id/enhance/': typeof ProjectsIdEnhanceIndexRoute
+  __root__: typeof rootRouteImport;
+  "/": typeof IndexRoute;
+  "/dashboard": typeof DashboardRoute;
+  "/designer": typeof DesignerRoute;
+  "/settings": typeof SettingsRoute;
+  "/projects/": typeof ProjectsIndexRoute;
+  "/admin/rules/new": typeof AdminRulesNewRoute;
+  "/admin/workflows/$workflowId": typeof AdminWorkflowsWorkflowIdRoute;
+  "/projects/$id/deploy": typeof ProjectsIdDeployRoute;
+  "/projects/$id/design": typeof ProjectsIdDesignRoute;
+  "/projects/$id/generate": typeof ProjectsIdGenerateRoute;
+  "/projects/$id/init": typeof ProjectsIdInitRoute;
+  "/admin/rules/": typeof AdminRulesIndexRoute;
+  "/admin/workflows/": typeof AdminWorkflowsIndexRoute;
+  "/admin/rules/$entity/$ruleId": typeof AdminRulesEntityRuleIdRoute;
+  "/projects/$id/enhance/$serviceName": typeof ProjectsIdEnhanceServiceNameRoute;
+  "/projects/$id/enhance/": typeof ProjectsIdEnhanceIndexRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
+  fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
-    | '/'
-    | '/dashboard'
-    | '/designer'
-    | '/settings'
-    | '/projects/'
-    | '/admin/rules/new'
-    | '/admin/workflows/$workflowId'
-    | '/projects/$id/deploy'
-    | '/projects/$id/design'
-    | '/projects/$id/generate'
-    | '/projects/$id/init'
-    | '/admin/rules/'
-    | '/admin/workflows/'
-    | '/admin/rules/$entity/$ruleId'
-    | '/projects/$id/enhance/$serviceName'
-    | '/projects/$id/enhance/'
-  fileRoutesByTo: FileRoutesByTo
+    | "/"
+    | "/dashboard"
+    | "/designer"
+    | "/settings"
+    | "/projects/"
+    | "/admin/rules/new"
+    | "/admin/workflows/$workflowId"
+    | "/projects/$id/deploy"
+    | "/projects/$id/design"
+    | "/projects/$id/generate"
+    | "/projects/$id/init"
+    | "/admin/rules/"
+    | "/admin/workflows/"
+    | "/admin/rules/$entity/$ruleId"
+    | "/projects/$id/enhance/$serviceName"
+    | "/projects/$id/enhance/";
+  fileRoutesByTo: FileRoutesByTo;
   to:
-    | '/'
-    | '/dashboard'
-    | '/designer'
-    | '/settings'
-    | '/projects'
-    | '/admin/rules/new'
-    | '/admin/workflows/$workflowId'
-    | '/projects/$id/deploy'
-    | '/projects/$id/design'
-    | '/projects/$id/generate'
-    | '/projects/$id/init'
-    | '/admin/rules'
-    | '/admin/workflows'
-    | '/admin/rules/$entity/$ruleId'
-    | '/projects/$id/enhance/$serviceName'
-    | '/projects/$id/enhance'
+    | "/"
+    | "/dashboard"
+    | "/designer"
+    | "/settings"
+    | "/projects"
+    | "/admin/rules/new"
+    | "/admin/workflows/$workflowId"
+    | "/projects/$id/deploy"
+    | "/projects/$id/design"
+    | "/projects/$id/generate"
+    | "/projects/$id/init"
+    | "/admin/rules"
+    | "/admin/workflows"
+    | "/admin/rules/$entity/$ruleId"
+    | "/projects/$id/enhance/$serviceName"
+    | "/projects/$id/enhance";
   id:
-    | '__root__'
-    | '/'
-    | '/dashboard'
-    | '/designer'
-    | '/settings'
-    | '/projects/'
-    | '/admin/rules/new'
-    | '/admin/workflows/$workflowId'
-    | '/projects/$id/deploy'
-    | '/projects/$id/design'
-    | '/projects/$id/generate'
-    | '/projects/$id/init'
-    | '/admin/rules/'
-    | '/admin/workflows/'
-    | '/admin/rules/$entity/$ruleId'
-    | '/projects/$id/enhance/$serviceName'
-    | '/projects/$id/enhance/'
-  fileRoutesById: FileRoutesById
+    | "__root__"
+    | "/"
+    | "/dashboard"
+    | "/designer"
+    | "/settings"
+    | "/projects/"
+    | "/admin/rules/new"
+    | "/admin/workflows/$workflowId"
+    | "/projects/$id/deploy"
+    | "/projects/$id/design"
+    | "/projects/$id/generate"
+    | "/projects/$id/init"
+    | "/admin/rules/"
+    | "/admin/workflows/"
+    | "/admin/rules/$entity/$ruleId"
+    | "/projects/$id/enhance/$serviceName"
+    | "/projects/$id/enhance/";
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  DashboardRoute: typeof DashboardRoute
-  DesignerRoute: typeof DesignerRoute
-  SettingsRoute: typeof SettingsRoute
-  ProjectsIndexRoute: typeof ProjectsIndexRoute
-  AdminRulesNewRoute: typeof AdminRulesNewRoute
-  AdminWorkflowsWorkflowIdRoute: typeof AdminWorkflowsWorkflowIdRoute
-  ProjectsIdDeployRoute: typeof ProjectsIdDeployRoute
-  ProjectsIdDesignRoute: typeof ProjectsIdDesignRoute
-  ProjectsIdGenerateRoute: typeof ProjectsIdGenerateRoute
-  ProjectsIdInitRoute: typeof ProjectsIdInitRoute
-  AdminRulesIndexRoute: typeof AdminRulesIndexRoute
-  AdminWorkflowsIndexRoute: typeof AdminWorkflowsIndexRoute
-  AdminRulesEntityRuleIdRoute: typeof AdminRulesEntityRuleIdRoute
-  ProjectsIdEnhanceServiceNameRoute: typeof ProjectsIdEnhanceServiceNameRoute
-  ProjectsIdEnhanceIndexRoute: typeof ProjectsIdEnhanceIndexRoute
+  IndexRoute: typeof IndexRoute;
+  DashboardRoute: typeof DashboardRoute;
+  DesignerRoute: typeof DesignerRoute;
+  SettingsRoute: typeof SettingsRoute;
+  ProjectsIndexRoute: typeof ProjectsIndexRoute;
+  AdminRulesNewRoute: typeof AdminRulesNewRoute;
+  AdminWorkflowsWorkflowIdRoute: typeof AdminWorkflowsWorkflowIdRoute;
+  ProjectsIdDeployRoute: typeof ProjectsIdDeployRoute;
+  ProjectsIdDesignRoute: typeof ProjectsIdDesignRoute;
+  ProjectsIdGenerateRoute: typeof ProjectsIdGenerateRoute;
+  ProjectsIdInitRoute: typeof ProjectsIdInitRoute;
+  AdminRulesIndexRoute: typeof AdminRulesIndexRoute;
+  AdminWorkflowsIndexRoute: typeof AdminWorkflowsIndexRoute;
+  AdminRulesEntityRuleIdRoute: typeof AdminRulesEntityRuleIdRoute;
+  ProjectsIdEnhanceServiceNameRoute: typeof ProjectsIdEnhanceServiceNameRoute;
+  ProjectsIdEnhanceIndexRoute: typeof ProjectsIdEnhanceIndexRoute;
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/designer': {
-      id: '/designer'
-      path: '/designer'
-      fullPath: '/designer'
-      preLoaderRoute: typeof DesignerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/projects/': {
-      id: '/projects/'
-      path: '/projects'
-      fullPath: '/projects/'
-      preLoaderRoute: typeof ProjectsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/workflows/': {
-      id: '/admin/workflows/'
-      path: '/admin/workflows'
-      fullPath: '/admin/workflows/'
-      preLoaderRoute: typeof AdminWorkflowsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/rules/': {
-      id: '/admin/rules/'
-      path: '/admin/rules'
-      fullPath: '/admin/rules/'
-      preLoaderRoute: typeof AdminRulesIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/projects/$id/init': {
-      id: '/projects/$id/init'
-      path: '/projects/$id/init'
-      fullPath: '/projects/$id/init'
-      preLoaderRoute: typeof ProjectsIdInitRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/projects/$id/generate': {
-      id: '/projects/$id/generate'
-      path: '/projects/$id/generate'
-      fullPath: '/projects/$id/generate'
-      preLoaderRoute: typeof ProjectsIdGenerateRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/projects/$id/design': {
-      id: '/projects/$id/design'
-      path: '/projects/$id/design'
-      fullPath: '/projects/$id/design'
-      preLoaderRoute: typeof ProjectsIdDesignRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/projects/$id/deploy': {
-      id: '/projects/$id/deploy'
-      path: '/projects/$id/deploy'
-      fullPath: '/projects/$id/deploy'
-      preLoaderRoute: typeof ProjectsIdDeployRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/workflows/$workflowId': {
-      id: '/admin/workflows/$workflowId'
-      path: '/admin/workflows/$workflowId'
-      fullPath: '/admin/workflows/$workflowId'
-      preLoaderRoute: typeof AdminWorkflowsWorkflowIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/rules/new': {
-      id: '/admin/rules/new'
-      path: '/admin/rules/new'
-      fullPath: '/admin/rules/new'
-      preLoaderRoute: typeof AdminRulesNewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/projects/$id/enhance/': {
-      id: '/projects/$id/enhance/'
-      path: '/projects/$id/enhance'
-      fullPath: '/projects/$id/enhance/'
-      preLoaderRoute: typeof ProjectsIdEnhanceIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/projects/$id/enhance/$serviceName': {
-      id: '/projects/$id/enhance/$serviceName'
-      path: '/projects/$id/enhance/$serviceName'
-      fullPath: '/projects/$id/enhance/$serviceName'
-      preLoaderRoute: typeof ProjectsIdEnhanceServiceNameRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin/rules/$entity/$ruleId': {
-      id: '/admin/rules/$entity/$ruleId'
-      path: '/admin/rules/$entity/$ruleId'
-      fullPath: '/admin/rules/$entity/$ruleId'
-      preLoaderRoute: typeof AdminRulesEntityRuleIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+    "/settings": {
+      id: "/settings";
+      path: "/settings";
+      fullPath: "/settings";
+      preLoaderRoute: typeof SettingsRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/designer": {
+      id: "/designer";
+      path: "/designer";
+      fullPath: "/designer";
+      preLoaderRoute: typeof DesignerRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/dashboard": {
+      id: "/dashboard";
+      path: "/dashboard";
+      fullPath: "/dashboard";
+      preLoaderRoute: typeof DashboardRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/": {
+      id: "/";
+      path: "/";
+      fullPath: "/";
+      preLoaderRoute: typeof IndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/projects/": {
+      id: "/projects/";
+      path: "/projects";
+      fullPath: "/projects/";
+      preLoaderRoute: typeof ProjectsIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/admin/workflows/": {
+      id: "/admin/workflows/";
+      path: "/admin/workflows";
+      fullPath: "/admin/workflows/";
+      preLoaderRoute: typeof AdminWorkflowsIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/admin/rules/": {
+      id: "/admin/rules/";
+      path: "/admin/rules";
+      fullPath: "/admin/rules/";
+      preLoaderRoute: typeof AdminRulesIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/projects/$id/init": {
+      id: "/projects/$id/init";
+      path: "/projects/$id/init";
+      fullPath: "/projects/$id/init";
+      preLoaderRoute: typeof ProjectsIdInitRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/projects/$id/generate": {
+      id: "/projects/$id/generate";
+      path: "/projects/$id/generate";
+      fullPath: "/projects/$id/generate";
+      preLoaderRoute: typeof ProjectsIdGenerateRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/projects/$id/design": {
+      id: "/projects/$id/design";
+      path: "/projects/$id/design";
+      fullPath: "/projects/$id/design";
+      preLoaderRoute: typeof ProjectsIdDesignRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/projects/$id/deploy": {
+      id: "/projects/$id/deploy";
+      path: "/projects/$id/deploy";
+      fullPath: "/projects/$id/deploy";
+      preLoaderRoute: typeof ProjectsIdDeployRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/admin/workflows/$workflowId": {
+      id: "/admin/workflows/$workflowId";
+      path: "/admin/workflows/$workflowId";
+      fullPath: "/admin/workflows/$workflowId";
+      preLoaderRoute: typeof AdminWorkflowsWorkflowIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/admin/rules/new": {
+      id: "/admin/rules/new";
+      path: "/admin/rules/new";
+      fullPath: "/admin/rules/new";
+      preLoaderRoute: typeof AdminRulesNewRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/projects/$id/enhance/": {
+      id: "/projects/$id/enhance/";
+      path: "/projects/$id/enhance";
+      fullPath: "/projects/$id/enhance/";
+      preLoaderRoute: typeof ProjectsIdEnhanceIndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/projects/$id/enhance/$serviceName": {
+      id: "/projects/$id/enhance/$serviceName";
+      path: "/projects/$id/enhance/$serviceName";
+      fullPath: "/projects/$id/enhance/$serviceName";
+      preLoaderRoute: typeof ProjectsIdEnhanceServiceNameRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
+    "/admin/rules/$entity/$ruleId": {
+      id: "/admin/rules/$entity/$ruleId";
+      path: "/admin/rules/$entity/$ruleId";
+      fullPath: "/admin/rules/$entity/$ruleId";
+      preLoaderRoute: typeof AdminRulesEntityRuleIdRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
   }
 }
 
@@ -374,16 +372,17 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRulesEntityRuleIdRoute: AdminRulesEntityRuleIdRoute,
   ProjectsIdEnhanceServiceNameRoute: ProjectsIdEnhanceServiceNameRoute,
   ProjectsIdEnhanceIndexRoute: ProjectsIdEnhanceIndexRoute,
-}
+};
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();
 
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
+import type { createStart } from "@tanstack/react-start";
+import type { getRouter } from "./router.tsx";
+
+declare module "@tanstack/react-start" {
   interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
+    ssr: true;
+    router: Awaited<ReturnType<typeof getRouter>>;
   }
 }

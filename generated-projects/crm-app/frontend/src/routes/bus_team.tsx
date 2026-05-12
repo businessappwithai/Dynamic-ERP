@@ -11,8 +11,8 @@
  * - Server-side pagination
  * - Row actions (View, Edit, Delete)
  *
- * Generated: 2026-05-11T18:40:00.675Z
- * Project: CRM Application
+ * Generated: 2026-05-12T09:13:16.534Z
+ * Project: crm-app
  */
 
 import { useState, useMemo, useCallback } from 'react';

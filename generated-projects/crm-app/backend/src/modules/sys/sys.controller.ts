@@ -4,7 +4,7 @@
  * Handles CRUD operations for all sys_ tables.
  * The sys_field endpoints are critical for runtime UI modification.
  *
- * Generated: 2026-05-11T18:39:58.962Z
+ * Generated: 2026-05-12T09:13:14.953Z
  */
 
 import {
@@ -20,7 +20,7 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { SysService } from './sys.service';
+import type { SysService } from './sys.service';
 
 @ApiTags('sys')
 @ApiBearerAuth()
@@ -52,8 +52,8 @@ export class SysController {
     @Query('prefix') prefix?: string,
   ) {
     return this.sysService.findAllDatabaseTables({
-      page: page ? parseInt(page, 10) : 1,
-      limit: limit ? parseInt(limit, 10) : 100,
+      page: page ? Number.parseInt(page, 10) : 1,
+      limit: limit ? Number.parseInt(limit, 10) : 100,
       search,
       prefix,
     });
@@ -144,7 +144,7 @@ export class SysController {
     @Body() data: Record<string, unknown>,
     @Headers('if-match') ifMatch?: string,
   ) {
-    const version = ifMatch ? parseInt(ifMatch.replace(/"/g, ''), 10) : undefined;
+    const version = ifMatch ? Number.parseInt(ifMatch.replace(/"/g, ''), 10) : undefined;
     return this.sysService.updateField(id, data, version);
   }
 

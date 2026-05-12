@@ -9,8 +9,8 @@
  * Tasks are defined in src/trigger/ and executed on Trigger.dev's
  * durable infrastructure. No Redis required.
  *
- * Generated: 2026-05-11T18:39:58.951Z
- * Project: CRM Application
+ * Generated: 2026-05-12T09:13:14.943Z
+ * Project: crm-app
  */
 
 import { Module } from '@nestjs/common';

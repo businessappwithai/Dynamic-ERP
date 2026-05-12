@@ -272,7 +272,9 @@ export class RulesEngineService implements IRulesEngineService {
       .where({ rule_id: ruleId })
       .orderBy("version", "desc")) as RuleDefinitionRow[] | any[];
 
-    return (rows as RuleDefinitionRow[]).map((row: RuleDefinitionRow) => this.mapVersionRowToDefinition(row));
+    return (rows as RuleDefinitionRow[]).map((row: RuleDefinitionRow) =>
+      this.mapVersionRowToDefinition(row)
+    );
   }
 
   /**

@@ -1,7 +1,7 @@
 import { defineConfig } from "@trigger.dev/sdk/v3";
 
 export default defineConfig({
-  project: process.env.TRIGGER_PROJECT_ID ?? "c-r-m-application",
+  project: process.env.TRIGGER_PROJECT_ID ?? "crm-app",
   dirs: ["./src/trigger"],
   retries: {
     enabledInDev: false,

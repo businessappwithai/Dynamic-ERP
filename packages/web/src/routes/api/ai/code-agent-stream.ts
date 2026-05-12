@@ -4,13 +4,10 @@ export async function POST(request: Request) {
     const { task, erdCode, stack } = body;
 
     if (!task) {
-      return new Response(
-        JSON.stringify({ error: "Task is required" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify({ error: "Task is required" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const encoder = new TextEncoder();
@@ -45,9 +42,7 @@ export async function POST(request: Request) {
           controller.close();
         } catch (error) {
           controller.enqueue(
-            encoder.encode(
-              `data: ${JSON.stringify({ error: "Code generation failed" })}\n\n`
-            )
+            encoder.encode(`data: ${JSON.stringify({ error: "Code generation failed" })}\n\n`)
           );
           controller.close();
         }
@@ -58,7 +53,7 @@ export async function POST(request: Request) {
       headers: {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
+        Connection: "keep-alive",
       },
     });
   } catch (error) {

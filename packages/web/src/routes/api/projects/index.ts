@@ -80,12 +80,9 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("Error creating project:", error);
-    return new Response(
-      JSON.stringify({ error: "Failed to create project" }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+    return new Response(JSON.stringify({ error: "Failed to create project" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }

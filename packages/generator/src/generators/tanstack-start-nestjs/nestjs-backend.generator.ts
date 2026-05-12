@@ -24,8 +24,42 @@ import {
 } from "@erdwithai/core/types";
 import * as fs from "fs/promises";
 import * as path from "path";
-import { BaseGenerator } from "../base.generator";
 import { CliExecutor } from "../../utils/cli-executor";
+import { BaseGenerator } from "../base.generator";
+
+/**
+ * Resolve template directory path, handling both dev and bundled environments
+ */
+function resolveTemplateDir(subpath: string): string {
+  const cwd = process.cwd();
+  const possiblePaths = [
+    // Dev mode: running from project root
+    path.join(cwd, "packages/generator/templates", subpath),
+    // Bundled mode: running from anywhere, find generator package
+    path.join(cwd, "../../../packages/generator/templates", subpath),
+    path.join(cwd, "../../packages/generator/templates", subpath),
+    // Fallback: current __dirname relative
+    path.join(__dirname, "../../../templates", subpath),
+  ];
+
+  for (const possiblePath of possiblePaths) {
+    try {
+      const stat = require("fs").statSync(possiblePath);
+      if (stat.isDirectory()) {
+        return possiblePath;
+      }
+    } catch {
+      // Continue to next path
+    }
+  }
+
+  // If no path found, return the __dirname relative path and let it fail with a clear error
+  const fallbackPath = path.join(__dirname, "../../../templates", subpath);
+  console.error(`Template directory not found. Tried paths:`);
+  possiblePaths.forEach((p) => console.error(`  - ${p}`));
+  console.error(`Using fallback: ${fallbackPath}`);
+  return fallbackPath;
+}
 
 export interface NestJsBackendOptions {
   projectName: string;
@@ -41,7 +75,9 @@ export class NestJsBackendGenerator extends BaseGenerator {
   private options: NestJsBackendOptions;
 
   constructor(options: NestJsBackendOptions) {
-    super(path.join(__dirname, "../../../templates/tanstack-start-nestjs/backend"));
+    // Resolve template directory correctly regardless of bundling
+    const templateDir = resolveTemplateDir("tanstack-start-nestjs/backend");
+    super(templateDir);
     this.options = options;
   }
 
@@ -100,19 +136,15 @@ export class NestJsBackendGenerator extends BaseGenerator {
       // Run nest new with --package-manager bun and --skip-git flag
       // This creates the base scaffolding structure
       console.log(`  Creating NestJS project: ${projectName}`);
-      await CliExecutor.executeAsync("bun", [
-        "x",
-        "nest",
-        "new",
-        projectName,
-        "--package-manager",
+      await CliExecutor.executeAsync(
         "bun",
-        "--skip-git",
-      ], {
-        cwd: parentDir,
-        stdio: "inherit",
-        timeout: 300000,
-      });
+        ["x", "nest", "new", projectName, "--package-manager", "bun", "--skip-git"],
+        {
+          cwd: parentDir,
+          stdio: "inherit",
+          timeout: 300000,
+        }
+      );
 
       console.log(`  ✅ NestJS scaffolding complete`);
     } catch (error) {
@@ -214,6 +246,8 @@ export class NestJsBackendGenerator extends BaseGenerator {
         name: this.options.projectName,
         version: this.options.projectVersion,
         description: this.options.projectDescription,
+        id: this.options.projectName.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+        snake: this.options.projectName.toLowerCase().replace(/[^a-z0-9]+/g, "_"),
       },
       config: {
         databaseType: this.options.databaseType,
@@ -222,6 +256,10 @@ export class NestJsBackendGenerator extends BaseGenerator {
         enableCors: this.options.enableCors,
         dbUser: dbUser,
       },
+      databaseType: this.options.databaseType,
+      projectName: this.options.projectName,
+      projectSnake: this.options.projectName.toLowerCase().replace(/[^a-z0-9]+/g, "_"),
+      projectKebab: this.options.projectName.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
       entities: busEntities,
       relationships,
       sysTables,
@@ -778,21 +816,26 @@ export async function executeAfterListHooks(
       // Directory may not exist yet, that's fine
     }
 
+    // Select database-specific migration templates
+    const dbType = this.options.databaseType;
+    const sysMigrationTemplate =
+      dbType === "sqlite"
+        ? "../../common/migrations/sys-tables.sqlite.migration.ts.hbs"
+        : "../../common/migrations/sys-tables.migration.ts.hbs";
+    const busMigrationTemplate =
+      dbType === "sqlite"
+        ? "../../common/migrations/bus-tables.sqlite.migration.ts.hbs"
+        : "../../common/migrations/bus-tables.migration.ts.hbs";
+
     // sys tables migration
-    const sysMigrationContent = await this.renderTemplate(
-      "../../common/migrations/sys-tables.migration.ts.hbs",
-      context
-    );
+    const sysMigrationContent = await this.renderTemplate(sysMigrationTemplate, context);
     await fs.writeFile(
       path.join(outputDir, `src/migrations/${timestamp}_create_sys_tables.ts`),
       sysMigrationContent
     );
 
     // bus tables migration - creates all business entity tables
-    const busMigrationContent = await this.renderTemplate(
-      "../../common/migrations/bus-tables.migration.ts.hbs",
-      context
-    );
+    const busMigrationContent = await this.renderTemplate(busMigrationTemplate, context);
     await fs.writeFile(
       path.join(outputDir, `src/migrations/${timestamp + 1}_create_bus_tables.ts`),
       busMigrationContent
@@ -850,20 +893,12 @@ export async function executeAfterListHooks(
     await fs.writeFile(path.join(outputDir, ".env.example"), envContent);
     await fs.writeFile(path.join(outputDir, ".env"), envContent);
 
-    // Update ESLint configuration
+    // Update Biome configuration
     try {
-      const eslintContent = await this.renderTemplate(".eslintrc.cjs.hbs", context);
-      await fs.writeFile(path.join(outputDir, ".eslintrc.cjs"), eslintContent);
+      const biomeContent = await this.renderTemplate("biome.json.hbs", context);
+      await fs.writeFile(path.join(outputDir, "biome.json"), biomeContent);
     } catch (e) {
-      console.warn("Custom ESLint config template not found, keeping NestJS default");
-    }
-
-    // Update Prettier configuration
-    try {
-      const prettierContent = await this.renderTemplate(".prettierrc.hbs", context);
-      await fs.writeFile(path.join(outputDir, ".prettierrc"), prettierContent);
-    } catch (e) {
-      console.warn("Custom Prettier config template not found, keeping NestJS default");
+      console.warn("Custom Biome config template not found, using defaults");
     }
 
     // Database module

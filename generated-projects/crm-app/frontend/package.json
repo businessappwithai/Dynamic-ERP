@@ -1,5 +1,5 @@
 {
-  "name": "c-r-m-application-frontend",
+  "name": "crm-app-frontend",
   "version": "1.0.0",
   "description": "Generated application - TanStack Start Frontend",
   "private": true,
@@ -8,12 +8,16 @@
     "dev": "vinxi dev",
     "build": "vinxi build",
     "start": "vinxi start",
-    "lint": "eslint src --ext .ts,.tsx",
-    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "lint": "biome lint --write src",
+    "lint:fix": "biome lint --write src",
+    "format": "biome format --write src",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:cov": "vitest run --coverage"
+    "test:cov": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug"
   },
   "dependencies": {
     "@tanstack/react-router": "1.97.1",
@@ -54,10 +58,7 @@
     "vinxi": "0.5.1",
     "@tanstack/react-query-devtools": "^5.17.0",
     "autoprefixer": "^10.4.17",
-    "@tanstack/eslint-plugin-router": "^1.0.0",
-    "eslint": "^8.56.0",
-    "@typescript-eslint/parser": "^7.0.0",
-    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@biomejs/biome": "^1.9.4",
     "postcss": "^8.4.33",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.0",

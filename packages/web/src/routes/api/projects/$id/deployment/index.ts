@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const pathname = url.pathname;
-    const id = pathname.split('/')[3];
+    const id = pathname.split("/")[3];
     const result = await deploymentApi.getDeployment(id);
     return new Response(JSON.stringify(result), {
       headers: { "Content-Type": "application/json" },
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
   try {
     const url = new URL(request.url);
     const pathname = url.pathname;
-    const id = pathname.split('/')[3];
+    const id = pathname.split("/")[3];
     const body = await request.json();
     const { status, port } = body;
 
@@ -60,7 +60,7 @@ export async function DELETE(request: Request) {
   try {
     const url = new URL(request.url);
     const pathname = url.pathname;
-    const id = pathname.split('/')[3];
+    const id = pathname.split("/")[3];
     const result = await deploymentApi.stop(id);
     return new Response(JSON.stringify(result), {
       headers: { "Content-Type": "application/json" },

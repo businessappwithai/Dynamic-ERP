@@ -3,8 +3,8 @@
  *
  * User registration with email, password, and name
  *
- * Generated: 2026-05-11T18:40:00.661Z
- * Project: CRM Application
+ * Generated: 2026-05-12T09:13:16.523Z
+ * Project: crm-app
  */
 
 import { useState } from 'react';
@@ -121,7 +121,7 @@ function SignupPage() {
             <Shield className="w-10 h-10" />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">Create Account</h1>
-          <p className="text-muted-foreground">Join CRM Application</p>
+          <p className="text-muted-foreground">Join crm-app</p>
         </div>
 
         {/* Signup Form Card */}

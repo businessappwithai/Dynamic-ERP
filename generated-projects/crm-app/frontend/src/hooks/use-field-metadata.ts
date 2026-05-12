@@ -7,8 +7,8 @@
  * Enables runtime UI layout customization by fetching field
  * ordering and display settings from the backend.
  *
- * Generated: 2026-05-11T18:40:00.663Z
- * Project: CRM Application
+ * Generated: 2026-05-12T09:13:16.525Z
+ * Project: crm-app
  */
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

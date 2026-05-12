@@ -27,7 +27,9 @@ interface CodeAgentPanelProps {
 
 export function CodeAgentPanel({ erdCode }: CodeAgentPanelProps) {
   const [task, setTask] = useState("");
-  const [stack, setStack] = useState<"tanstack-start-nestjs" | "openui5-odata">("tanstack-start-nestjs");
+  const [stack, setStack] = useState<"tanstack-start-nestjs" | "openui5-odata">(
+    "tanstack-start-nestjs"
+  );
   const [includeTests, setIncludeTests] = useState(true);
   const [includeMigrations, setIncludeMigrations] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);

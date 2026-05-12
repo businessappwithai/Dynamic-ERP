@@ -4,11 +4,11 @@
  * Provides user profile endpoints. Actual auth routes (sign-in, sign-up,
  * sign-out, session) are handled by better-auth at /api/auth/*.
  *
- * Generated: 2026-05-11T18:39:58.945Z
+ * Generated: 2026-05-12T09:13:14.935Z
  */
 
 import { Controller, Get, UseGuards, Req } from '@nestjs/common';
-import { FastifyRequest } from 'fastify';
+import type { FastifyRequest } from 'fastify';
 import { SessionAuthGuard } from './guards/session-auth.guard';
 import { Public } from './decorators/public.decorator';
 

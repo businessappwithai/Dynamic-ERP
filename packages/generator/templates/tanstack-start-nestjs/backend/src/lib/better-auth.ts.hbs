@@ -10,10 +10,10 @@
 
 import { betterAuth } from 'better-auth';
 {{#if (eq databaseType 'sqlite')}}
-import Database from 'better-sqlite3';
+import { Database } from 'bun:sqlite';
 import * as path from 'path';
 
-// SQLite database for authentication
+// SQLite database for authentication using Bun's native SQLite
 const authDb = new Database(path.resolve(process.env.DATABASE_FILENAME || './data/{{projectSnake}}.db'));
 {{else}}
 import { kyselyAdapter } from '@better-auth/kysely-adapter';

@@ -169,27 +169,112 @@ return users.map(user => ({
 }));`,
 };
 
-const HOOK_TYPES: { type: HookType; label: string; description: string; category: string; color: string }[] = [
-  { type: "beforeCreate", label: "Before Create", description: "Validate & transform data before saving a new record", category: "Create", color: "bg-blue-500" },
-  { type: "afterCreate", label: "After Create", description: "Run actions after a new record is saved (emails, logging, etc.)", category: "Create", color: "bg-green-500" },
-  { type: "beforeUpdate", label: "Before Update", description: "Validate & transform data before updating a record", category: "Update", color: "bg-yellow-500" },
-  { type: "afterUpdate", label: "After Update", description: "Run actions after a record is updated", category: "Update", color: "bg-orange-500" },
-  { type: "beforeDelete", label: "Before Delete", description: "Prevent deletion based on conditions (soft delete, audit trail)", category: "Delete", color: "bg-red-500" },
-  { type: "afterDelete", label: "After Delete", description: "Clean up related data or trigger downstream actions", category: "Delete", color: "bg-slate-500" },
-  { type: "beforeQuery", label: "Before Query", description: "Add filters or permissions before executing a search", category: "Read", color: "bg-purple-500" },
-  { type: "afterQuery", label: "After Query", description: "Transform or enrich query results", category: "Read", color: "bg-indigo-500" },
-  { type: "customValidate", label: "Custom Validation", description: "Add business rules validation beyond standard fields", category: "Validation", color: "bg-pink-500" },
-  { type: "beforeRead", label: "Before Read", description: "Add permissions or filters before fetching a single record", category: "Read", color: "bg-cyan-500" },
-  { type: "afterRead", label: "After Read", description: "Transform or mask data before returning to client", category: "Read", color: "bg-teal-500" },
-  { type: "beforeList", label: "Before List", description: "Add filters or permissions before loading a list", category: "Read", color: "bg-lime-500" },
-  { type: "afterList", label: "After List", description: "Sort, filter, or transform list results", category: "Read", color: "bg-emerald-500" },
+const HOOK_TYPES: {
+  type: HookType;
+  label: string;
+  description: string;
+  category: string;
+  color: string;
+}[] = [
+  {
+    type: "beforeCreate",
+    label: "Before Create",
+    description: "Validate & transform data before saving a new record",
+    category: "Create",
+    color: "bg-blue-500",
+  },
+  {
+    type: "afterCreate",
+    label: "After Create",
+    description: "Run actions after a new record is saved (emails, logging, etc.)",
+    category: "Create",
+    color: "bg-green-500",
+  },
+  {
+    type: "beforeUpdate",
+    label: "Before Update",
+    description: "Validate & transform data before updating a record",
+    category: "Update",
+    color: "bg-yellow-500",
+  },
+  {
+    type: "afterUpdate",
+    label: "After Update",
+    description: "Run actions after a record is updated",
+    category: "Update",
+    color: "bg-orange-500",
+  },
+  {
+    type: "beforeDelete",
+    label: "Before Delete",
+    description: "Prevent deletion based on conditions (soft delete, audit trail)",
+    category: "Delete",
+    color: "bg-red-500",
+  },
+  {
+    type: "afterDelete",
+    label: "After Delete",
+    description: "Clean up related data or trigger downstream actions",
+    category: "Delete",
+    color: "bg-slate-500",
+  },
+  {
+    type: "beforeQuery",
+    label: "Before Query",
+    description: "Add filters or permissions before executing a search",
+    category: "Read",
+    color: "bg-purple-500",
+  },
+  {
+    type: "afterQuery",
+    label: "After Query",
+    description: "Transform or enrich query results",
+    category: "Read",
+    color: "bg-indigo-500",
+  },
+  {
+    type: "customValidate",
+    label: "Custom Validation",
+    description: "Add business rules validation beyond standard fields",
+    category: "Validation",
+    color: "bg-pink-500",
+  },
+  {
+    type: "beforeRead",
+    label: "Before Read",
+    description: "Add permissions or filters before fetching a single record",
+    category: "Read",
+    color: "bg-cyan-500",
+  },
+  {
+    type: "afterRead",
+    label: "After Read",
+    description: "Transform or mask data before returning to client",
+    category: "Read",
+    color: "bg-teal-500",
+  },
+  {
+    type: "beforeList",
+    label: "Before List",
+    description: "Add filters or permissions before loading a list",
+    category: "Read",
+    color: "bg-lime-500",
+  },
+  {
+    type: "afterList",
+    label: "After List",
+    description: "Sort, filter, or transform list results",
+    category: "Read",
+    color: "bg-emerald-500",
+  },
 ];
 
 function ServiceWorkflowPage() {
   const navigate = useNavigate();
   const { id: projectId, serviceName } = Route.useParams();
 
-  const { getProject, loadProject, setCurrentStep, goToNextStep, currentProject, isLoading } = useProjectStore();
+  const { getProject, loadProject, setCurrentStep, goToNextStep, currentProject, isLoading } =
+    useProjectStore();
   const project = getProject(projectId) || currentProject;
 
   useEffect(() => {
@@ -228,19 +313,19 @@ function ServiceWorkflowPage() {
 
   const entities = useMemo(() => {
     if (!project?.erdCode) return [];
-    const lines = project.erdCode.split('\n');
+    const lines = project.erdCode.split("\n");
     const entityList: Array<{ name: string; attributes: string[] }> = [];
     let currentEntity: { name: string; attributes: string[] } | null = null;
 
     lines.forEach((line) => {
       const trimmed = line.trim();
       const entityMatch = trimmed.match(/^(\w+)\s*\{/);
-      if (entityMatch?.[1] && !trimmed.startsWith('erDiagram')) {
+      if (entityMatch?.[1] && !trimmed.startsWith("erDiagram")) {
         currentEntity = {
           name: entityMatch[1],
-          attributes: []
+          attributes: [],
         };
-      } else if (trimmed === '}' && currentEntity) {
+      } else if (trimmed === "}" && currentEntity) {
         entityList.push({ ...currentEntity });
         currentEntity = null;
       } else if (currentEntity && trimmed && !trimmed.match(/^\{/)) {
@@ -257,9 +342,7 @@ function ServiceWorkflowPage() {
         setCurrentStep("enhance");
 
         try {
-          const response = await fetch(
-            `/api/projects/${projectId}/workflows/${serviceName}`
-          );
+          const response = await fetch(`/api/projects/${projectId}/workflows/${serviceName}`);
           const data = await response.json();
 
           if (data.success && data.workflow) {
@@ -351,9 +434,7 @@ function ServiceWorkflowPage() {
 
   const loadGeneratedFiles = async () => {
     try {
-      const response = await fetch(
-        `/api/projects/${projectId}/workflows/${serviceName}/files`
-      );
+      const response = await fetch(`/api/projects/${projectId}/workflows/${serviceName}/files`);
       const data = await response.json();
 
       if (data.success && data.files) {
@@ -456,9 +537,7 @@ function ServiceWorkflowPage() {
       console.error("Validation error:", error);
       setIsValidating(false);
       setWorkflowState("draft");
-      alert(
-        `Validation failed: \${error instanceof Error ? error.message : "Unknown error"}`
-      );
+      alert(`Validation failed: \${error instanceof Error ? error.message : "Unknown error"}`);
     }
   };
 
@@ -470,18 +549,15 @@ function ServiceWorkflowPage() {
 
     setIsSaving(true);
     try {
-      const response = await fetch(
-        `/api/projects/\${projectId}/workflows/\${serviceName}/apply`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            hooks: selectedHooks,
-            flowchartCode,
-            description: `\${serviceName} hooks workflow`,
-          }),
-        }
-      );
+      const response = await fetch(`/api/projects/\${projectId}/workflows/\${serviceName}/apply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hooks: selectedHooks,
+          flowchartCode,
+          description: `\${serviceName} hooks workflow`,
+        }),
+      });
 
       const data = await response.json();
 
@@ -587,9 +663,7 @@ function ServiceWorkflowPage() {
       }
     } catch (error) {
       console.error("Save file error:", error);
-      alert(
-        `Failed to save file: \${error instanceof Error ? error.message : "Unknown error"}`
-      );
+      alert(`Failed to save file: \${error instanceof Error ? error.message : "Unknown error"}`);
     }
   };
 
@@ -607,7 +681,7 @@ function ServiceWorkflowPage() {
 
   const handleContinue = async () => {
     goToNextStep();
-    navigate({ to: '/projects/\$id/deploy', params: { id: projectId } });
+    navigate({ to: "/projects/$id/deploy", params: { id: projectId } });
   };
 
   const getStateBadge = () => {
@@ -669,15 +743,13 @@ function ServiceWorkflowPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => navigate({ to: '/projects/\$id/enhance', params: { id: projectId } })}
+                onClick={() => navigate({ to: "/projects/$id/enhance", params: { id: projectId } })}
                 className="p-2 hover:bg-muted rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5 text-muted-foreground" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">
-                  {serviceName} Hooks
-                </h1>
+                <h1 className="text-2xl font-bold text-foreground">{serviceName} Hooks</h1>
                 <p className="text-sm text-muted-foreground">
                   Define business logic hooks for {serviceName}
                 </p>
@@ -694,7 +766,10 @@ function ServiceWorkflowPage() {
                 </div>
               )}
               {!isAutoSaving && lastSaved && (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground" title={lastSaved.toLocaleString()}>
+                <div
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground"
+                  title={lastSaved.toLocaleString()}
+                >
                   <Clock className="w-3 h-3" />
                   Saved {getTimeSince(lastSaved)}
                 </div>
@@ -772,15 +847,15 @@ function ServiceWorkflowPage() {
             currentStep="enhance"
             onStepClick={(step) => {
               if (step === "init") {
-                navigate({ to: '/projects/\$id/init', params: { id: projectId } });
+                navigate({ to: "/projects/$id/init", params: { id: projectId } });
               } else if (step === "design") {
-                navigate({ to: '/projects/\$id/design', params: { id: projectId } });
+                navigate({ to: "/projects/$id/design", params: { id: projectId } });
               } else if (step === "generate") {
-                navigate({ to: '/projects/\$id/generate', params: { id: projectId } });
+                navigate({ to: "/projects/$id/generate", params: { id: projectId } });
               } else if (step === "deploy") {
-                navigate({ to: '/projects/\$id/deploy', params: { id: projectId } });
+                navigate({ to: "/projects/$id/deploy", params: { id: projectId } });
               } else if (step === "enhance") {
-                navigate({ to: '/projects/\$id/enhance', params: { id: projectId } });
+                navigate({ to: "/projects/$id/enhance", params: { id: projectId } });
               }
             }}
           />
@@ -810,7 +885,9 @@ function ServiceWorkflowPage() {
                     ? "border-primary text-primary"
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
-                style={activeTab === "workflows" ? { borderColor: "#FF8400", color: "#FF8400" } : {}}
+                style={
+                  activeTab === "workflows" ? { borderColor: "#FF8400", color: "#FF8400" } : {}
+                }
               >
                 <Settings className="w-4 h-4 inline mr-2" />
                 Trigger.dev Workflows
@@ -824,172 +901,178 @@ function ServiceWorkflowPage() {
         <div className="flex-1 flex overflow-hidden">
           {activeTab === "hooks" ? (
             <>
-          <div className="w-1/3 border-r border-border flex flex-col bg-card">
-            <div className="flex-1 p-4 border-b border-border overflow-y-auto">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <GitBranch className="w-4 h-4" />
-                  Available Hooks
-                </h3>
-                <button
-                  onClick={() => setShowHooksList(!showHooksList)}
-                  className="text-xs text-muted-foreground hover:text-foreground"
-                >
-                  {showHooksList ? "Hide" : "Show"}
-                </button>
-              </div>
+              <div className="w-1/3 border-r border-border flex flex-col bg-card">
+                <div className="flex-1 p-4 border-b border-border overflow-y-auto">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <GitBranch className="w-4 h-4" />
+                      Available Hooks
+                    </h3>
+                    <button
+                      onClick={() => setShowHooksList(!showHooksList)}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      {showHooksList ? "Hide" : "Show"}
+                    </button>
+                  </div>
 
-              {showHooksList && (
-                <div className="space-y-4 mb-4">
-                  {["Create", "Update", "Delete", "Read", "Validation"].map((category) => {
-                    const categoryHooks = HOOK_TYPES.filter((h) => h.category === category);
-                    return (
-                      <div key={category}>
-                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                          {category}
-                        </h4>
-                        <div className="space-y-2">
-                          {categoryHooks.map((hook) => {
-                            const isActive = selectedHooks.some((h) => h.type === hook.type);
-                            return (
-                              <button
-                                key={hook.type}
-                                onClick={() => !isActive && handleAddHook(hook.type)}
-                                disabled={isActive}
-                                className={`w-full flex items-start gap-2 px-3 py-2.5 rounded-lg text-sm transition-all \${
+                  {showHooksList && (
+                    <div className="space-y-4 mb-4">
+                      {["Create", "Update", "Delete", "Read", "Validation"].map((category) => {
+                        const categoryHooks = HOOK_TYPES.filter((h) => h.category === category);
+                        return (
+                          <div key={category}>
+                            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                              {category}
+                            </h4>
+                            <div className="space-y-2">
+                              {categoryHooks.map((hook) => {
+                                const isActive = selectedHooks.some((h) => h.type === hook.type);
+                                return (
+                                  <button
+                                    key={hook.type}
+                                    onClick={() => !isActive && handleAddHook(hook.type)}
+                                    disabled={isActive}
+                                    className={`w-full flex items-start gap-2 px-3 py-2.5 rounded-lg text-sm transition-all \${
                                   isActive
                                     ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
                                     : "bg-secondary hover:bg-secondary/80 text-foreground border border-border hover:border-primary/40"
                                 }`}
-                                title={hook.description}
-                              >
-                                <div className={`w-2 h-2 rounded-full \${hook.color} flex-shrink-0 mt-1`} />
-                                <div className="text-left flex-1 min-w-0">
-                                  <div className="font-medium text-foreground">{hook.label}</div>
-                                  <div className="text-xs text-muted-foreground line-clamp-2">
-                                    {hook.description}
-                                  </div>
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              <h4 className="text-xs font-semibold text-muted-foreground mb-2 mt-4">
-                Active Hooks ({selectedHooks.length})
-              </h4>
-
-              <div className="space-y-2">
-                {selectedHooks.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    No active hooks. Select hooks from above to add them.
-                  </p>
-                ) : (
-                  selectedHooks.map((hook, index) => {
-                    const hookDef = HOOK_TYPES.find((h) => h.type === hook.type);
-                    return (
-                      <div
-                        key={`\${hook.type}-\${index}`}
-                        className="bg-secondary rounded-lg p-3 border border-border"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <div className={`w-2 h-2 rounded-full \${hookDef?.color || "bg-gray-500"} flex-shrink-0`} />
-                            <div className="flex-1 min-w-0">
-                              <span className="text-sm font-medium text-foreground block">
-                                {hookDef?.label || hook.type}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {hook.name ? `Named: \${hook.name}` : "Unnamed hook"}
-                              </span>
+                                    title={hook.description}
+                                  >
+                                    <div
+                                      className={`w-2 h-2 rounded-full \${hook.color} flex-shrink-0 mt-1`}
+                                    />
+                                    <div className="text-left flex-1 min-w-0">
+                                      <div className="font-medium text-foreground">
+                                        {hook.label}
+                                      </div>
+                                      <div className="text-xs text-muted-foreground line-clamp-2">
+                                        {hook.description}
+                                      </div>
+                                    </div>
+                                  </button>
+                                );
+                              })}
                             </div>
                           </div>
-                          <button
-                            onClick={() => handleRemoveHook(index)}
-                            className="p-1 hover:bg-red-100 dark:hover:bg-red-950/30 rounded transition-colors flex-shrink-0 ml-2"
-                          >
-                            <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
-                          </button>
-                        </div>
-                        <textarea
-                          value={hook.code}
-                          onChange={(e) => handleHookCodeChange(index, e.target.value)}
-                          placeholder={`// Implement \${hookDef?.label || hook.type} logic here`}
-                          className="w-full h-24 p-2 text-xs font-mono bg-background border border-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary"
-                        />
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex-1 flex flex-col bg-muted">
-            <div className="flex-1 p-6 bg-card">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                  <FileCode className="w-4 h-4" />
-                  Flowchart Code
-                </h3>
-                <button
-                  onClick={() => setShowFlowchartPreview(!showFlowchartPreview)}
-                  className="flex items-center gap-1 px-3 py-1.5 text-xs bg-secondary hover:bg-secondary/80 text-foreground rounded-lg transition-colors"
-                >
-                  {showFlowchartPreview ? (
-                    <>
-                      <EyeOff className="w-3 h-3" />
-                      Hide Preview
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="w-3 h-3" />
-                      Show Preview
-                    </>
+                        );
+                      })}
+                    </div>
                   )}
-                </button>
-              </div>
-              <textarea
-                value={flowchartCode}
-                onChange={(e) => setFlowchartCode(e.target.value)}
-                className="w-full h-full p-4 bg-muted border border-border rounded-xl text-sm font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                spellCheck={false}
-                placeholder="Enter Mermaid flowchart syntax here..."
-              />
-            </div>
 
-            {showFlowchartPreview && (
-              <div className="h-96 border-t border-border bg-card p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                    <GitBranch className="w-4 h-4" />
-                    Flowchart Preview
-                  </h3>
-                  <button
-                    onClick={() => setShowFlowchartPreview(false)}
-                    className="p-1 hover:bg-secondary rounded transition-colors"
-                  >
-                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                  </button>
+                  <h4 className="text-xs font-semibold text-muted-foreground mb-2 mt-4">
+                    Active Hooks ({selectedHooks.length})
+                  </h4>
+
+                  <div className="space-y-2">
+                    {selectedHooks.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No active hooks. Select hooks from above to add them.
+                      </p>
+                    ) : (
+                      selectedHooks.map((hook, index) => {
+                        const hookDef = HOOK_TYPES.find((h) => h.type === hook.type);
+                        return (
+                          <div
+                            key={`\${hook.type}-\${index}`}
+                            className="bg-secondary rounded-lg p-3 border border-border"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <div
+                                  className={`w-2 h-2 rounded-full \${hookDef?.color || "bg-gray-500"} flex-shrink-0`}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <span className="text-sm font-medium text-foreground block">
+                                    {hookDef?.label || hook.type}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {hook.name ? `Named: \${hook.name}` : "Unnamed hook"}
+                                  </span>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleRemoveHook(index)}
+                                className="p-1 hover:bg-red-100 dark:hover:bg-red-950/30 rounded transition-colors flex-shrink-0 ml-2"
+                              >
+                                <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
+                              </button>
+                            </div>
+                            <textarea
+                              value={hook.code}
+                              onChange={(e) => handleHookCodeChange(index, e.target.value)}
+                              placeholder={`// Implement \${hookDef?.label || hook.type} logic here`}
+                              className="w-full h-24 p-2 text-xs font-mono bg-background border border-border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+                            />
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
-                <div className="h-[calc(100%-2rem)] overflow-hidden rounded-lg border border-border bg-muted">
-                  <FlowchartPreview
-                    flowchartCode={flowchartCode}
-                    showZoomControls={true}
-                    showDownloadButton={false}
-                    onError={setValidationErrors}
-                    className="h-full"
+              </div>
+
+              <div className="flex-1 flex flex-col bg-muted">
+                <div className="flex-1 p-6 bg-card">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <FileCode className="w-4 h-4" />
+                      Flowchart Code
+                    </h3>
+                    <button
+                      onClick={() => setShowFlowchartPreview(!showFlowchartPreview)}
+                      className="flex items-center gap-1 px-3 py-1.5 text-xs bg-secondary hover:bg-secondary/80 text-foreground rounded-lg transition-colors"
+                    >
+                      {showFlowchartPreview ? (
+                        <>
+                          <EyeOff className="w-3 h-3" />
+                          Hide Preview
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-3 h-3" />
+                          Show Preview
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <textarea
+                    value={flowchartCode}
+                    onChange={(e) => setFlowchartCode(e.target.value)}
+                    className="w-full h-full p-4 bg-muted border border-border rounded-xl text-sm font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                    spellCheck={false}
+                    placeholder="Enter Mermaid flowchart syntax here..."
                   />
                 </div>
+
+                {showFlowchartPreview && (
+                  <div className="h-96 border-t border-border bg-card p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <GitBranch className="w-4 h-4" />
+                        Flowchart Preview
+                      </h3>
+                      <button
+                        onClick={() => setShowFlowchartPreview(false)}
+                        className="p-1 hover:bg-secondary rounded transition-colors"
+                      >
+                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </div>
+                    <div className="h-[calc(100%-2rem)] overflow-hidden rounded-lg border border-border bg-muted">
+                      <FlowchartPreview
+                        flowchartCode={flowchartCode}
+                        showZoomControls={true}
+                        showDownloadButton={false}
+                        onError={setValidationErrors}
+                        className="h-full"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </>
+            </>
           ) : (
             <WorkflowEditor
               serviceName={serviceName}
@@ -1023,7 +1106,9 @@ function ServiceWorkflowPage() {
                     <span className="text-sm font-medium text-slate-900 dark:text-white">
                       {file.fileName}
                     </span>
-                    <div className={`w-2 h-2 rounded-full \${HOOK_TYPES.find((h) => h.type === file.hookType)?.color || "bg-gray-500"}`} />
+                    <div
+                      className={`w-2 h-2 rounded-full \${HOOK_TYPES.find((h) => h.type === file.hookType)?.color || "bg-gray-500"}`}
+                    />
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-400">
                     {file.hookType}: {file.hookName}

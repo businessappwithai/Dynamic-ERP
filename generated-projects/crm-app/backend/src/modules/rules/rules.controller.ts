@@ -11,8 +11,8 @@
  * - Getting rule history
  * - Migrating rules from files to database
  *
- * Generated: 2026-05-11T18:39:58.954Z
- * Project: CRM Application
+ * Generated: 2026-05-12T09:13:14.946Z
+ * Project: crm-app
  */
 
 import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, Logger } from '@nestjs/common';
@@ -21,7 +21,7 @@ import { SessionAuthGuard } from '../auth/guards/session-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { RulesService } from './rules.service';
+import type { RulesService } from './rules.service';
 
 @ApiTags('rules')
 @ApiBearerAuth()

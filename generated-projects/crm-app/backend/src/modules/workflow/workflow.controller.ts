@@ -7,8 +7,8 @@
  * - Retrying failed workflows
  * - Monitoring workflow execution
  *
- * Generated: 2026-05-11T18:39:58.957Z
- * Project: CRM Application
+ * Generated: 2026-05-12T09:13:14.948Z
+ * Project: crm-app
  */
 
 import { Controller, Get, Post, Param, Query, UseGuards, Logger } from '@nestjs/common';
@@ -16,7 +16,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { SessionAuthGuard } from '../auth/guards/session-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { WorkflowService } from './workflow.service';
+import type { WorkflowService } from './workflow.service';
 
 @ApiTags('workflows')
 @ApiBearerAuth()
@@ -46,7 +46,7 @@ export class WorkflowController {
     return await this.workflowService.getEntityWorkflows(
       entityName,
       entityId,
-      limit ? parseInt(limit, 10) : 10
+      limit ? Number.parseInt(limit, 10) : 10
     );
   }
 
@@ -62,7 +62,7 @@ export class WorkflowController {
     return await this.workflowService.getAllWorkflows({
       status,
       entityName,
-      limit: limit ? parseInt(limit, 10) : 100,
+      limit: limit ? Number.parseInt(limit, 10) : 100,
     });
   }
 

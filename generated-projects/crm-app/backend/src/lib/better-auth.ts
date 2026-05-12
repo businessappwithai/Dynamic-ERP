@@ -1,7 +1,7 @@
 /**
  * BetterAuth Configuration
  *
- * Modern authentication for 
+ * Modern authentication for crm-app
  * - Email/Password authentication
  * - Session management
  * - Role-based access control
@@ -18,8 +18,8 @@ const authDb = new Kysely<unknown>({
   dialect: new PostgresDialect({
     pool: new pg.Pool({
       host: process.env.DB_HOST || 'localhost',
-      port: parseInt(process.env.DB_PORT || '5432', 10),
-      database: '_auth',
+      port: Number.parseInt(process.env.DB_PORT || '5432', 10),
+      database: 'crm_app_auth',
       user: process.env.DB_USER || process.env.USER || 'postgres',
       password: process.env.DB_PASSWORD || '',
     }),
@@ -67,7 +67,7 @@ export const auth = betterAuth({
     },
   },
   advanced: {
-    cookiePrefix: '_app',
+    cookiePrefix: 'crm_app_app',
     crossSubDomainCookies: {
       enabled: false,
     },

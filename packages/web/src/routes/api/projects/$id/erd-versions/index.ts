@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const pathname = url.pathname;
-    const id = pathname.split('/')[3];
+    const id = pathname.split("/")[3];
 
     const versions = await erdVersionDb.getVersions(id);
 
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   try {
     const url = new URL(request.url);
     const pathname = url.pathname;
-    const id = pathname.split('/')[3];
+    const id = pathname.split("/")[3];
     const body = await request.json();
     const { mermaidCode, description, createdBy, validationErrors } = body;
 

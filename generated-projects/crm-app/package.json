@@ -1,5 +1,5 @@
 {
-  "name": "CRM Application",
+  "name": "crm-app",
   "version": "1.0.0",
   "description": "Generated application",
   "private": true,
@@ -15,7 +15,12 @@
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm run build",
     "db:migrate": "cd backend && npm run migrate",
-    "db:seed": "cd backend && npm run seed"
+    "db:seed": "cd backend && npm run seed",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm run test",
+    "test:frontend": "cd frontend && npm run test",
+    "test:e2e": "cd frontend && npm run test:e2e",
+    "test:all": "npm run test && npm run test:e2e"
   },
   "devDependencies": {
     "concurrently": "^8.2.0"

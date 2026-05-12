@@ -2,34 +2,40 @@
  * Kysely Migration Runner
  *
  * Run with: bun run src/migrate.ts [up|down|latest|rollback]
- * Generated: 2026-05-11T18:39:58.988Z
+ * Generated: 2026-05-12T09:13:14.979Z
  */
 
 import * as path from 'path';
 import * as fs from 'fs';
 import { Kysely, Migrator, FileMigrationProvider, PostgresDialect, SqliteDialect } from 'kysely';
-import { Pool } from 'pg';
 import 'dotenv/config';
 
 const dbClient = process.env.DATABASE_CLIENT ?? 'pg';
 
-let dialect: PostgresDialect | SqliteDialect;
-
-if (dbClient === 'better-sqlite3') {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const Database = require('better-sqlite3');
-  dialect = new SqliteDialect({ database: new Database(process.env.DATABASE_FILENAME ?? './data/app.db') });
-} else {
-  dialect = new PostgresDialect({
-    pool: new Pool({
-      host: process.env.DATABASE_HOST ?? 'localhost',
-      port: Number(process.env.DATABASE_PORT ?? 5432),
-      user: process.env.DATABASE_USER ?? 'postgres',
-      password: process.env.DATABASE_PASSWORD ?? '',
-      database: process.env.DATABASE_NAME ?? 'c_r_m _application',
-    }),
-  });
+async function createDialect(): Promise<PostgresDialect | SqliteDialect> {
+  if (dbClient === 'better-sqlite3') {
+    // Use Bun's native SQLite support
+    const { Database } = await import('bun:sqlite');
+    const dbPath = process.env.DATABASE_FILENAME ?? './data/app.db';
+    // Ensure data directory exists
+    fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+    return new SqliteDialect({ database: new Database(dbPath) });
+  } else {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { Pool } = require('pg');
+    return new PostgresDialect({
+      pool: new Pool({
+        host: process.env.DATABASE_HOST ?? 'localhost',
+        port: Number(process.env.DATABASE_PORT ?? 5432),
+        user: process.env.DATABASE_USER ?? 'postgres',
+        password: process.env.DATABASE_PASSWORD ?? '',
+        database: process.env.DATABASE_NAME ?? 'crm-app',
+      }),
+    });
+  }
 }
+
+const dialect = await createDialect();
 
 const db = new Kysely<any>({ dialect });
 

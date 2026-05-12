@@ -217,7 +217,6 @@ export class AuthService implements IAuthService {
 
     return roles as UserRole[];
   }
-
 }
 
 /**

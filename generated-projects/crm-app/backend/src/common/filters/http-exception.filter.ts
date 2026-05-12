@@ -1,18 +1,18 @@
 /**
  * HTTP Exception Filter
  *
- * Generated: 2026-05-11T18:39:58.941Z
+ * Generated: 2026-05-12T09:13:14.932Z
  */
 
 import {
-  ExceptionFilter,
+  type ExceptionFilter,
   Catch,
-  ArgumentsHost,
+  type ArgumentsHost,
   HttpException,
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 
 export interface ErrorResponse {
   statusCode: number;

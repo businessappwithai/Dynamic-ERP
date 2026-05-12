@@ -6,8 +6,8 @@
  * Generated: {{now}}
  */
 
-import { Bell, LogOut, Search, Settings, User } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+import { Bell, LogOut, Search, Settings, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {

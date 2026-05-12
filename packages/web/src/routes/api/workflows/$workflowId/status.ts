@@ -2,7 +2,7 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const pathname = url.pathname;
-    const workflowId = pathname.split('/')[3];
+    const workflowId = pathname.split("/")[3];
     const timeoutMsParam = url.searchParams.get("timeoutMs");
     const intervalMsParam = url.searchParams.get("intervalMs");
 

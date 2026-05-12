@@ -12,8 +12,8 @@
  *
  * This workflow runs asynchronously after CRUD operations.
  *
- * Generated: 2026-05-11T18:39:58.951Z
- * Project: CRM Application
+ * Generated: 2026-05-12T09:13:14.942Z
+ * Project: crm-app
  */
 
 import { task } from '@trigger.dev/sdk/v3';
@@ -23,8 +23,8 @@ import { ZenEngine } from '@gorules/zen-engine';
 // Initialize database connection
 const dbClient = process.env.DATABASE_CLIENT || 'better-sqlite3';
 const knexConfig = dbClient === 'better-sqlite3'
-  ? { client: 'better-sqlite3', connection: { filename: process.env.DATABASE_FILENAME || './data/.db' }, useNullAsDefault: true }
-  : { client: 'pg', connection: { host: process.env.DB_HOST || 'localhost', port: parseInt(process.env.DB_PORT || '5432', 10), database: process.env.DB_NAME || '', user: process.env.DB_USER || 'postgres', password: process.env.DB_PASSWORD || '' } };
+  ? { client: 'better-sqlite3', connection: { filename: process.env.DATABASE_FILENAME || './data/crm-app.db' }, useNullAsDefault: true }
+  : { client: 'pg', connection: { host: process.env.DB_HOST || 'localhost', port: Number.parseInt(process.env.DB_PORT || '5432', 10), database: process.env.DB_NAME || 'crm-app', user: process.env.DB_USER || 'postgres', password: process.env.DB_PASSWORD || '' } };
 const knex = Knex(knexConfig);
 
 // Create ZenEngine instance

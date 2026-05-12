@@ -35,13 +35,10 @@ export async function POST(request: Request) {
     const { entityName, ruleName, operation, jdmContent } = body;
 
     if (!entityName || !ruleName || !operation || !jdmContent) {
-      return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify({ error: "Missing required fields" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const errors: string[] = [];
@@ -53,13 +50,10 @@ export async function POST(request: Request) {
     }
 
     if (errors.length > 0) {
-      return new Response(
-        JSON.stringify({ error: "Invalid JDM content", errors }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      return new Response(JSON.stringify({ error: "Invalid JDM content", errors }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     // TODO: Use RulesEngineService to create rule

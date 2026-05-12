@@ -13,14 +13,6 @@ import type { Entity, Relationship } from "@erdwithai/core/types";
 import * as fs from "fs/promises";
 import * as path from "path";
 import {
-  NestJsBackendGenerator,
-  type NestJsBackendOptions,
-} from "./tanstack-start-nestjs/nestjs-backend.generator";
-import {
-  TanStackStartFrontendGenerator,
-  type TanStackStartFrontendOptions,
-} from "./tanstack-start-nestjs/tanstack-start-frontend.generator";
-import {
   ODataBackendGenerator,
   type ODataBackendOptions,
 } from "./openui5-odatav4/odata-backend.generator";
@@ -28,6 +20,14 @@ import {
   OpenUI5FrontendGenerator,
   type OpenUI5FrontendOptions,
 } from "./openui5-odatav4/openui5-frontend.generator";
+import {
+  NestJsBackendGenerator,
+  type NestJsBackendOptions,
+} from "./tanstack-start-nestjs/nestjs-backend.generator";
+import {
+  TanStackStartFrontendGenerator,
+  type TanStackStartFrontendOptions,
+} from "./tanstack-start-nestjs/tanstack-start-frontend.generator";
 
 export type StackOption = "tanstackjs-nestjs" | "openui5-odatav4";
 export type AIAddonOption = "none" | "basic" | "advanced";
@@ -220,6 +220,11 @@ export class FullStackGenerator {
         "build:frontend": "cd frontend && npm run build",
         "db:migrate": "cd backend && npm run migrate",
         "db:seed": "cd backend && npm run seed",
+        test: "npm run test:backend && npm run test:frontend",
+        "test:backend": "cd backend && npm run test",
+        "test:frontend": "cd frontend && npm run test",
+        "test:e2e": "cd frontend && npm run test:e2e",
+        "test:all": "npm run test && npm run test:e2e",
       },
       devDependencies: {
         concurrently: "^8.2.0",
@@ -277,6 +282,118 @@ npm-debug.log*
 *.sqlite
 `;
     await fs.writeFile(path.join(outputDir, ".gitignore"), gitignore);
+
+    // Copy GitHub Actions workflows
+    await this.copyGitHubWorkflows(outputDir);
+  }
+
+  /**
+   * Copy GitHub Actions workflow templates to the output directory
+   */
+  private async copyGitHubWorkflows(outputDir: string): Promise<void> {
+    const workflowsDir = path.join(outputDir, ".github", "workflows");
+    await fs.mkdir(workflowsDir, { recursive: true });
+
+    if (this.options.stackOption === "tanstackjs-nestjs") {
+      console.log("📋 Setting up GitHub Actions workflows...");
+
+      // Find the templates directory by traversing up from the dist directory
+      let templatesDir = path.resolve(__dirname, "../../../templates");
+
+      // If __dirname doesn't point to the right place, try to find the root
+      if (!(await this.directoryExists(templatesDir))) {
+        // Try alternate paths
+        const currentDir = process.cwd();
+        const possiblePaths = [
+          path.join(currentDir, "packages/generator/templates"),
+          path.join(currentDir, "../packages/generator/templates"),
+          path.join(currentDir, "../../packages/generator/templates"),
+        ];
+
+        for (const possiblePath of possiblePaths) {
+          if (await this.directoryExists(possiblePath)) {
+            templatesDir = possiblePath;
+            break;
+          }
+        }
+      }
+
+      // Copy frontend workflows
+      try {
+        const frontendWorkflowsSource = path.join(
+          templatesDir,
+          "tanstack-start-nestjs/frontend/.github/workflows"
+        );
+
+        if (await this.directoryExists(frontendWorkflowsSource)) {
+          const entries = await fs.readdir(frontendWorkflowsSource);
+          for (const entry of entries) {
+            if (entry.endsWith(".hbs")) {
+              const source = path.join(frontendWorkflowsSource, entry);
+              const destName = entry.replace(".hbs", "");
+              const dest = path.join(workflowsDir, destName);
+              const content = await fs.readFile(source, "utf-8");
+              const rendered = this.renderWorkflowTemplate(content);
+              await fs.writeFile(dest, rendered);
+              console.log(`   ✓ Created frontend workflow: ${destName}`);
+            }
+          }
+        }
+      } catch (e) {
+        // Workflows may not exist yet
+      }
+
+      // Copy backend workflows
+      try {
+        const backendWorkflowsSource = path.join(
+          templatesDir,
+          "tanstack-start-nestjs/backend/.github/workflows"
+        );
+
+        if (await this.directoryExists(backendWorkflowsSource)) {
+          const entries = await fs.readdir(backendWorkflowsSource);
+          for (const entry of entries) {
+            if (entry.endsWith(".hbs")) {
+              const source = path.join(backendWorkflowsSource, entry);
+              const destName = `backend-${entry.replace(".hbs", "")}`;
+              const dest = path.join(workflowsDir, destName);
+              const content = await fs.readFile(source, "utf-8");
+              const rendered = this.renderWorkflowTemplate(content);
+              await fs.writeFile(dest, rendered);
+              console.log(`   ✓ Created backend workflow: ${destName}`);
+            }
+          }
+        }
+      } catch (e) {
+        // Workflows may not exist yet
+      }
+    }
+  }
+
+  /**
+   * Check if a directory exists
+   */
+  private async directoryExists(dir: string): Promise<boolean> {
+    try {
+      const stat = await fs.stat(dir);
+      return stat.isDirectory();
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Render template variables in workflow files
+   */
+  private renderWorkflowTemplate(content: string): string {
+    return content
+      .replace(/\{\{project\.name\}\}/g, this.options.projectName)
+      .replace(
+        /\{\{project\.id\}\}/g,
+        this.options.projectName.toLowerCase().replace(/[^a-z0-9]+/g, "-")
+      )
+      .replace(/\{\{project\.version\}\}/g, this.options.projectVersion)
+      .replace(/\{\{project\.description\}\}/g, this.options.projectDescription);
   }
 
   /**

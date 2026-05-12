@@ -15,8 +15,8 @@
  *
  * Supports optimistic concurrency via ETag/version.
  *
- * Generated: 2026-05-11T18:40:00.674Z
- * Project: CRM Application
+ * Generated: 2026-05-12T09:13:16.534Z
+ * Project: crm-app
  */
 
 import { useState } from 'react';

@@ -2,10 +2,10 @@
  * Hook Registry
  *
  * Manages registration and retrieval of hooks for entity lifecycle events.
- * Generated: 2026-05-11T18:39:58.948Z
+ * Generated: 2026-05-12T09:13:14.938Z
  */
 
-import { Hook, HookLifecycle } from './hook.types';
+import type { Hook, HookLifecycle } from './hook.types';
 
 export class HookRegistry {
   private hooks: Map<string, Hook[]> = new Map();

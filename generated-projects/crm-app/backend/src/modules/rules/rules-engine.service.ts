@@ -24,11 +24,11 @@
  * Decision tables use hitPolicy "collect" so all matching rows are
  * returned, enabling multiple validation errors in a single call.
  *
- * Generated: 2026-05-11T18:39:58.956Z
- * Project: CRM Application
+ * Generated: 2026-05-12T09:13:14.947Z
+ * Project: crm-app
  */
 
-import { Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger, type OnModuleDestroy } from '@nestjs/common';
 import { ZenEngine } from '@gorules/zen-engine';
 import { readFileSync } from 'fs';
 import { join } from 'path';

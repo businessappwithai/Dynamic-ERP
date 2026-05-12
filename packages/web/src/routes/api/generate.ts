@@ -84,8 +84,7 @@ export async function POST(request: Request) {
           stackOption: finalStackOption,
           projectName: project.name || `Project ${projectId}`,
           projectVersion: "1.0.0",
-          projectDescription:
-            project.description || `Generated ${finalStackType} application`,
+          projectDescription: project.description || `Generated ${finalStackType} application`,
         });
 
         // TODO: Complete generation logic
@@ -105,7 +104,7 @@ export async function POST(request: Request) {
     headers: {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache",
-      "Connection": "keep-alive",
+      Connection: "keep-alive",
     },
   });
 }

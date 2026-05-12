@@ -2,8 +2,8 @@
  * Better Auth database adapter using Kysely
  */
 
-import { Kysely } from "kysely";
 import type { Adapter } from "better-auth";
+import type { Kysely } from "kysely";
 
 interface AuthUser {
   id: string;

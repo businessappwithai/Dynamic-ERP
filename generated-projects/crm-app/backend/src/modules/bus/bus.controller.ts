@@ -4,7 +4,7 @@
  * Dynamic controller for all bus_ prefixed tables.
  * CRUD operations are driven by the Application Dictionary metadata.
  *
- * Generated: 2026-05-11T18:39:58.963Z
+ * Generated: 2026-05-12T09:13:14.954Z
  */
 
 import {
@@ -213,7 +213,7 @@ export class BusController {
     const methodName = 'update';
     // Extract version from If-Match header
     const version = ifMatch
-      ? parseInt(ifMatch.replace(/"/g, '').replace('v', ''), 10)
+      ? Number.parseInt(ifMatch.replace(/"/g, '').replace('v', ''), 10)
       : undefined;
 
     this.logger.log(`[${methodName}] Request - entity: ${entity}, id: ${id}, expectedVersion: ${version}`);
@@ -246,7 +246,7 @@ export class BusController {
   ) {
     const methodName = 'patch';
     const version = ifMatch
-      ? parseInt(ifMatch.replace(/"/g, '').replace('v', ''), 10)
+      ? Number.parseInt(ifMatch.replace(/"/g, '').replace('v', ''), 10)
       : undefined;
 
     this.logger.log(`[${methodName}] Request - entity: ${entity}, id: ${id}, expectedVersion: ${version}`);

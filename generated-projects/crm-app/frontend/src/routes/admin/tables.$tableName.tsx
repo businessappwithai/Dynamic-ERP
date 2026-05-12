@@ -3,8 +3,8 @@
  *
  * Swiss Clean Design - Editorial layout with minimalist aesthetic
  *
- * Generated: 2026-05-11T18:40:00.679Z
- * Project: CRM Application
+ * Generated: 2026-05-12T09:13:16.538Z
+ * Project: crm-app
  */
 
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';

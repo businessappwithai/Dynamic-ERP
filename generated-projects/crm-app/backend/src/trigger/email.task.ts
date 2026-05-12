@@ -6,8 +6,8 @@
  *
  * Configure your email provider (SendGrid, Resend, etc.) in the run() body.
  *
- * Generated: 2026-05-11T18:39:58.950Z
- * Project: CRM Application
+ * Generated: 2026-05-12T09:13:14.941Z
+ * Project: crm-app
  */
 
 import { task } from '@trigger.dev/sdk/v3';
@@ -32,7 +32,7 @@ export const sendEmailTask = task({
     // TODO: integrate with your email provider (e.g. Resend, SendGrid, Nodemailer)
     // Example with Resend:
     //   const resend = new Resend(process.env.RESEND_API_KEY);
-    //   await resend.emails.send({ from: 'noreply@c-r-m-application.com', to: payload.to, subject: payload.subject, ... });
+    //   await resend.emails.send({ from: 'noreply@crm-app.com', to: payload.to, subject: payload.subject, ... });
 
     const messageId = `msg_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
