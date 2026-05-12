@@ -9,7 +9,7 @@ import { Kysely } from 'kysely';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function seed(db: Kysely<any>): Promise<void> {
-  const now = new Date();
+  const now = new Date().toISOString();
 
   // Company (bus_company)
   await db.deleteFrom('bus_company').execute();

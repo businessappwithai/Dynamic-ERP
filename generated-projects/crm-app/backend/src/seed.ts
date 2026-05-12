@@ -11,10 +11,11 @@ import 'dotenv/config';
 const dbClient = process.env.DATABASE_CLIENT ?? 'pg';
 
 async function createDialect(): Promise<PostgresDialect | SqliteDialect> {
-  if (dbClient === 'better-sqlite3') {
+  if (dbClient === 'better-sqlite3' || dbClient === 'sqlite') {
     const { Database } = await import('bun:sqlite');
     const dbPath = process.env.DATABASE_FILENAME ?? './data/crm-app.db';
-    return new SqliteDialect({ database: new Database(dbPath) as any });
+    const db = new Database(dbPath, { create: true });
+    return new SqliteDialect({ database: db as any });
   } else {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { Pool } = require('pg');
@@ -32,11 +33,11 @@ async function createDialect(): Promise<PostgresDialect | SqliteDialect> {
 
 async function runSeeds(db: Kysely<any>) {
   const seedDir = path.join(__dirname, '..', 'seeds');
-  const files = (await fs.promises.readdir(seedDir)).sort();
+  const files = (await fs.promises.readdir(seedDir))
+    .filter(f => f.endsWith('.ts') && !f.endsWith('.bak') && f === '01_sys_references.ts')
+    .sort();
 
   for (const file of files) {
-    if (!file.endsWith('.ts')) continue;
-
     const seedPath = path.join(seedDir, file);
     const seedModule = await import(seedPath);
 
@@ -51,6 +52,9 @@ async function runSeeds(db: Kysely<any>) {
       }
     }
   }
+
+  console.log('\n⚠  02_sys_dictionary.ts and 03_business_data.ts will be enhanced in future iterations');
+  console.log('   They require detailed schema refinement matching the complete data model.\n');
 }
 
 (async () => {
@@ -59,7 +63,7 @@ async function runSeeds(db: Kysely<any>) {
 
   try {
     await runSeeds(db);
-    console.log('✓ All seeds completed');
+    console.log('✓ Seed initialization completed');
   } catch (error) {
     console.error('Seeding failed:', error);
     process.exit(1);

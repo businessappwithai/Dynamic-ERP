@@ -16,7 +16,7 @@ import { Kysely } from 'kysely';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function seed(db: Kysely<any>): Promise<void> {
-  const now = new Date();
+  const now = new Date().toISOString();
   const createdBy = '';
 
   // ============================================================================
@@ -66,13 +66,13 @@ export async function seed(db: Kysely<any>): Promise<void> {
       name: 'Administrator',
       description: 'System administrator with full access',
       user_level: 'S',
-      is_master_role: true,
-      is_can_export: true,
-      is_can_report: true,
-      is_personal_lock: false,
-      is_personal_access: false,
+      is_master_role: 1,
+      is_can_export: 1,
+      is_can_report: 1,
+      is_personal_lock: 0,
+      is_personal_access: 0,
       max_query_records: 0,
-      is_show_accounting: true,
+      is_show_accounting: 1,
       entity_type: 'D',
       is_active: 1,
       created_by: createdBy,
@@ -85,13 +85,13 @@ export async function seed(db: Kysely<any>): Promise<void> {
       name: 'User',
       description: 'Standard user with limited access',
       user_level: 'C',
-      is_master_role: false,
-      is_can_export: true,
-      is_can_report: true,
-      is_personal_lock: false,
-      is_personal_access: false,
+      is_master_role: 0,
+      is_can_export: 1,
+      is_can_report: 1,
+      is_personal_lock: 0,
+      is_personal_access: 0,
       max_query_records: 1000,
-      is_show_accounting: false,
+      is_show_accounting: 0,
       entity_type: 'D',
       is_active: 1,
       created_by: createdBy,
@@ -112,11 +112,11 @@ export async function seed(db: Kysely<any>): Promise<void> {
     email: 'admin@localhost',
     password_hash: '$2b$10$rIC/7qZmzCi9F4g4OKL8wO4k5XYzJ5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5', // placeholder
     description: 'Default system administrator',
-    is_system_user: true,
-    is_sales_rep: false,
+    is_system_user: 1,
+    is_sales_rep: 0,
     login_failure_count: 0,
-    is_locked: false,
-    is_account_verified: true,
+    is_locked: 0,
+    is_account_verified: 1,
     default_sys_role_id: adminRoleId,
     entity_type: 'D',
     is_active: 1,
@@ -128,7 +128,7 @@ export async function seed(db: Kysely<any>): Promise<void> {
 
   // Assign admin role to admin user
   await db.insertInto('sys_user_roles').values({
-    sys_user_roles_id: uuidv4(),
+    id: uuidv4(),
     sys_user_id: adminUserId,
     sys_role_id: adminRoleId,
     entity_type: 'D',
