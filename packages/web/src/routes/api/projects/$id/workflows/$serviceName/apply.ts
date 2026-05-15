@@ -1,28 +1,31 @@
-export async function POST(request: Request) {
-  try {
-    const url = new URL(request.url);
-    const body = await request.json();
+import { createAPIFileRoute } from "@tanstack/start/api";
 
-    // TODO: Implement workflow apply logic
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Workflow applied successfully",
-      }),
-      {
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-  } catch (error) {
-    console.error("Error applying workflow:", error);
-    return new Response(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : "Failed to apply workflow",
-      }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      }
-    );
-  }
-}
+export const Route = createAPIFileRoute("/api/projects/$id/workflows/$serviceName/apply")({
+  POST: async ({ request, params }) => {
+    try {
+      const body = await request.json();
+
+      // TODO: Implement workflow apply logic
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Workflow applied successfully",
+        }),
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    } catch (error) {
+      console.error("Error applying workflow:", error);
+      return new Response(
+        JSON.stringify({
+          error: error instanceof Error ? error.message : "Failed to apply workflow",
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+  },
+});

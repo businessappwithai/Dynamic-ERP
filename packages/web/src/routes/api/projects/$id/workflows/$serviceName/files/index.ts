@@ -1,13 +1,17 @@
+import { createAPIFileRoute } from "@tanstack/start/api";
 import { readdir, readFile } from "fs/promises";
 import { join } from "path";
 
 const GENERATED_HOOKS_BASE_PATH = join(process.cwd(), "generated-projects");
 
-export async function GET(request: Request, params: Record<string, unknown>) {
-  try {
-    const projectId = params.id;
-    const serviceName = params.serviceName;
-    const entityName = serviceName.replace("Service", "");
+export const Route = createAPIFileRoute(
+  "/api/projects/$id/workflows/$serviceName/files"
+)({
+  GET: async ({ request, params }) => {
+    try {
+      const projectId = params.id as string;
+      const serviceName = params.serviceName as string;
+      const entityName = (serviceName as string).replace("Service", "");
 
     const hooksDir = join(
       GENERATED_HOOKS_BASE_PATH,
@@ -75,4 +79,5 @@ export async function GET(request: Request, params: Record<string, unknown>) {
       }
     );
   }
-}
+  },
+});

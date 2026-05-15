@@ -1,7 +1,10 @@
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { jdm } = body;
+import { createAPIFileRoute } from "@tanstack/start/api";
+
+export const Route = createAPIFileRoute("/api/rules/validate")({
+  POST: async ({ request, params }) => {
+    try {
+      const body = await request.json();
+      const { jdm } = body;
 
     if (!jdm) {
       return new Response(JSON.stringify({ error: "Missing JDM content" }), {
@@ -86,4 +89,5 @@ export async function POST(request: Request) {
       headers: { "Content-Type": "application/json" },
     });
   }
-}
+  },
+});
