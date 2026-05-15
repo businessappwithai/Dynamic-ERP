@@ -9,11 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TestRouteImport } from './routes/test'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as DesignerRouteImport } from './routes/designer'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ProjectsIndexRouteImport } from './routes/projects/index'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiGenerateRouteImport } from './routes/api/generate'
 import { Route as ApiDeployRouteImport } from './routes/api/deploy'
 import { Route as ApiCopilotkitRouteImport } from './routes/api/copilotkit'
@@ -54,6 +56,11 @@ import { Route as ApiProjectsIdErdVersionsVersionIdRestoreRouteImport } from './
 import { Route as ApiProjectsIdWorkflowsServiceNameFilesIndexRouteImport } from './routes/api/projects/$id/workflows/$serviceName/files/index'
 import { Route as ApiProjectsIdWorkflowsServiceNameFilesFileNameRouteImport } from './routes/api/projects/$id/workflows/$serviceName/files/$fileName'
 
+const TestRoute = TestRouteImport.update({
+  id: '/test',
+  path: '/test',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -77,6 +84,11 @@ const IndexRoute = IndexRouteImport.update({
 const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
   id: '/projects/',
   path: '/projects/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiGenerateRoute = ApiGenerateRouteImport.update({
@@ -297,9 +309,11 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/designer': typeof DesignerRoute
   '/settings': typeof SettingsRoute
+  '/test': typeof TestRoute
   '/api/copilotkit': typeof ApiCopilotkitRoute
   '/api/deploy': typeof ApiDeployRoute
   '/api/generate': typeof ApiGenerateRoute
+  '/api/health': typeof ApiHealthRoute
   '/projects/': typeof ProjectsIndexRoute
   '/admin/rules/new': typeof AdminRulesNewRoute
   '/admin/workflows/$workflowId': typeof AdminWorkflowsWorkflowIdRoute
@@ -343,9 +357,11 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/designer': typeof DesignerRoute
   '/settings': typeof SettingsRoute
+  '/test': typeof TestRoute
   '/api/copilotkit': typeof ApiCopilotkitRoute
   '/api/deploy': typeof ApiDeployRoute
   '/api/generate': typeof ApiGenerateRoute
+  '/api/health': typeof ApiHealthRoute
   '/projects': typeof ProjectsIndexRoute
   '/admin/rules/new': typeof AdminRulesNewRoute
   '/admin/workflows/$workflowId': typeof AdminWorkflowsWorkflowIdRoute
@@ -390,9 +406,11 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/designer': typeof DesignerRoute
   '/settings': typeof SettingsRoute
+  '/test': typeof TestRoute
   '/api/copilotkit': typeof ApiCopilotkitRoute
   '/api/deploy': typeof ApiDeployRoute
   '/api/generate': typeof ApiGenerateRoute
+  '/api/health': typeof ApiHealthRoute
   '/projects/': typeof ProjectsIndexRoute
   '/admin/rules/new': typeof AdminRulesNewRoute
   '/admin/workflows/$workflowId': typeof AdminWorkflowsWorkflowIdRoute
@@ -438,9 +456,11 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/designer'
     | '/settings'
+    | '/test'
     | '/api/copilotkit'
     | '/api/deploy'
     | '/api/generate'
+    | '/api/health'
     | '/projects/'
     | '/admin/rules/new'
     | '/admin/workflows/$workflowId'
@@ -484,9 +504,11 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/designer'
     | '/settings'
+    | '/test'
     | '/api/copilotkit'
     | '/api/deploy'
     | '/api/generate'
+    | '/api/health'
     | '/projects'
     | '/admin/rules/new'
     | '/admin/workflows/$workflowId'
@@ -530,9 +552,11 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/designer'
     | '/settings'
+    | '/test'
     | '/api/copilotkit'
     | '/api/deploy'
     | '/api/generate'
+    | '/api/health'
     | '/projects/'
     | '/admin/rules/new'
     | '/admin/workflows/$workflowId'
@@ -577,9 +601,11 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   DesignerRoute: typeof DesignerRoute
   SettingsRoute: typeof SettingsRoute
+  TestRoute: typeof TestRoute
   ApiCopilotkitRoute: typeof ApiCopilotkitRoute
   ApiDeployRoute: typeof ApiDeployRoute
   ApiGenerateRoute: typeof ApiGenerateRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
   AdminRulesNewRoute: typeof AdminRulesNewRoute
   AdminWorkflowsWorkflowIdRoute: typeof AdminWorkflowsWorkflowIdRoute
@@ -621,6 +647,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/test': {
+      id: '/test'
+      path: '/test'
+      fullPath: '/test'
+      preLoaderRoute: typeof TestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -654,6 +687,13 @@ declare module '@tanstack/react-router' {
       path: '/projects'
       fullPath: '/projects/'
       preLoaderRoute: typeof ProjectsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/generate': {
@@ -937,9 +977,11 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   DesignerRoute: DesignerRoute,
   SettingsRoute: SettingsRoute,
+  TestRoute: TestRoute,
   ApiCopilotkitRoute: ApiCopilotkitRoute,
   ApiDeployRoute: ApiDeployRoute,
   ApiGenerateRoute: ApiGenerateRoute,
+  ApiHealthRoute: ApiHealthRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
   AdminRulesNewRoute: AdminRulesNewRoute,
   AdminWorkflowsWorkflowIdRoute: AdminWorkflowsWorkflowIdRoute,
