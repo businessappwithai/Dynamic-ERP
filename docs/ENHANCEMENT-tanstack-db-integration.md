@@ -815,7 +815,8 @@ In generated applications, the choice is clear by data type:
 
 **Pagination strategy:**
 - sys_* tables: No pagination (typically <100 rows)
-- Audit logs: Cursor-based pagination with `limit 100` per fetch
+- Audit logs: Cursor-based pagination wno fail, everything should work properly
+h `limit 100` per fetch
 - Business entities: Server-side pagination in grid views; ElectricSQL for single-record forms
 
 ---
