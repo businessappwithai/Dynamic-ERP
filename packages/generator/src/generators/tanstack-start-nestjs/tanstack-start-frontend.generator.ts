@@ -63,6 +63,7 @@ export interface TanStackStartFrontendOptions {
   projectDescription: string;
   apiBaseUrl: string;
   enableDarkMode: boolean;
+  stackOption?: "tanstackjs-nestjs" | "tanstack-start-nestjs";
 }
 
 export class TanStackStartFrontendGenerator extends BaseGenerator {
@@ -70,7 +71,8 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
 
   constructor(options: TanStackStartFrontendOptions) {
     // Resolve template directory correctly regardless of bundling
-    const templateDir = resolveTemplateDir("tanstack-start-nestjs/frontend");
+    const stack = options.stackOption || "tanstack-start-nestjs";
+    const templateDir = resolveTemplateDir(`${stack}/frontend`);
     super(templateDir);
     this.options = options;
   }

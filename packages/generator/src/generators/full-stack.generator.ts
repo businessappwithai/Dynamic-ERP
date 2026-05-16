@@ -137,6 +137,7 @@ export class FullStackGenerator {
       projectDescription: this.options.projectDescription,
       apiBaseUrl: `http://localhost:${this.options.port}`,
       enableDarkMode: true,
+      stackOption: this.options.stackOption,
       ...aiConfig,
       ...this.options.tanstackStartNestjs?.frontend,
     };
