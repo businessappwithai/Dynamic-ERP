@@ -25,6 +25,12 @@ export async function initAuth(sharedKysely: Kysely<any>) {
       database: kyselyAdapter(kysely),
       baseURL: process.env.BETTER_AUTH_URL || 'http://localhost:3000',
       secret: process.env.BETTER_AUTH_SECRET || 'crm_regenerated_2-dev-secret',
+      trustedOrigins: [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:3050',
+        process.env.CORS_ORIGIN || '',
+      ].filter(Boolean),
       emailAndPassword: {
         enabled: true,
         requireEmailVerification: false,
