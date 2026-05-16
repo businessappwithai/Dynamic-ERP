@@ -50,3 +50,19 @@ export function useTranslation() {
   if (!context) throw new Error('useTranslation must be used within TranslationProvider');
   return context;
 }
+
+// Standalone translate for use outside of components (e.g. mutation callbacks)
+export function translate(key: string, params?: Record<string, string>): string {
+  const parts = key.split('.');
+  let value: any = translations.en;
+  for (const part of parts) {
+    value = value?.[part];
+  }
+  let result = typeof value === 'string' ? value : key;
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      result = result.replace(`{${k}}`, v);
+    }
+  }
+  return result;
+}
