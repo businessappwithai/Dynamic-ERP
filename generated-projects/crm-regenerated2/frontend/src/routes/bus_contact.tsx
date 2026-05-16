@@ -16,7 +16,7 @@
  */
 
 import { useState, useMemo, useCallback } from 'react'
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate, Outlet, useChildMatches } from '@tanstack/react-router'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient, PaginatedResponse } from '@/lib/api-client'
 import { useGridFields, type FieldMetadata } from '@/hooks/use-entities'
@@ -136,6 +136,8 @@ function matchesQuickSearch(
 }
 
 function EntityListPage() {
+  const childMatches = useChildMatches()
+  if (childMatches.length > 0) return <Outlet />
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
