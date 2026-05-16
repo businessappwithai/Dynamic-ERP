@@ -5,7 +5,7 @@
 ### Prerequisites
 
 - Node.js >= 18.0.0
-- Bun >= 1.0.0 (recommended) or npm
+- Bun >= 1.0.0
 - PostgreSQL 13+ (required for BetterAuth authentication)
 
 ### Installation
@@ -13,9 +13,6 @@
 ```bash
 # Install dependencies
 bun install
-
-# or with npm
-npm install
 ```
 
 ### Database Setup
@@ -49,9 +46,6 @@ Update the following values in `.env`:
 ```bash
 # Run all migrations
 bun run migrate
-
-# or with npm
-npm run migrate
 ```
 
 #### 4. Seed Database (Optional)
@@ -59,9 +53,6 @@ npm run migrate
 ```bash
 # Seed initial data
 bun run seed
-
-# or with npm
-npm run seed
 ```
 
 ### Start Development Server
@@ -69,9 +60,6 @@ npm run seed
 ```bash
 # Start with hot-reload
 bun run start:dev
-
-# or with npm
-npm run start:dev
 ```
 
 The API will be available at `http://localhost:{{config.port}}`

@@ -110,7 +110,7 @@ function WidgetRenderer({ widgetId }: { widgetId: string }) {
 ```
 
 **Benefits:**
-- `CrossFilterProvider` context wrapper can be removed or thinned to just initialise the collection
+- `CrossFilterProvider` cont/ext wrapper can be removed or thinned to just initialise the collection
 - Any component anywhere in the tree can subscribe without needing the context chain
 - Filter mutations (add, remove, clear) update all subscribers in one tick
 
