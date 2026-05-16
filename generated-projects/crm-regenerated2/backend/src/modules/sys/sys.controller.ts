@@ -35,12 +35,17 @@ export class SysController {
   @Get('tables')
   @ApiOperation({ summary: 'List all tables' })
   async findAllTables(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
     @Query('search') search?: string,
     @Query('prefix') prefix?: string,
   ) {
-    return this.sysService.findAllTables({ page, limit, search, prefix });
+    return this.sysService.findAllTables({
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 100,
+      search,
+      prefix,
+    });
   }
 
   @Get('tables/all')
@@ -88,10 +93,14 @@ export class SysController {
   @ApiOperation({ summary: 'List all columns' })
   async findAllColumns(
     @Query('tableId') tableId?: string,
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    return this.sysService.findAllColumns({ tableId, page, limit });
+    return this.sysService.findAllColumns({
+      tableId,
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 100,
+    });
   }
 
   @Get('columns/:id')
@@ -125,10 +134,16 @@ export class SysController {
     @Query('tabId') tabId?: string,
     @Query('tableId') tableId?: string,
     @Query('view') view?: 'form' | 'grid',
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
   ) {
-    return this.sysService.findAllFields({ tabId, tableId, view, page, limit });
+    return this.sysService.findAllFields({
+      tabId,
+      tableId,
+      view,
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 100,
+    });
   }
 
   @Get('fields/:id')
