@@ -39,7 +39,7 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
     ThrottlerModule.forRoot([
       {
         ttl: 60000,
-        limit: process.env.NODE_ENV === 'production' ? 100 : 1000,
+        limit: process.env.NODE_ENV === 'production' ? 100 : 10000,
       },
     ]),
 

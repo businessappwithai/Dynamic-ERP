@@ -216,12 +216,7 @@ export class BusService {
 
     const columns = await this.kysely
       .selectFrom('sys_column')
-      .innerJoin('sys_tab', 'sys_tab.sys_table_id', 'sys_column.sys_table_id')
-      .leftJoin('sys_field', (join) =>
-        join
-          .onRef('sys_field.sys_column_id', '=', 'sys_column.sys_column_id')
-          .onRef('sys_field.sys_tab_id', '=', 'sys_tab.sys_tab_id'),
-      )
+      .leftJoin('sys_field', 'sys_field.sys_column_id', 'sys_column.sys_column_id')
       .select([
         'sys_column.sys_column_id',
         'sys_column.column_name',
