@@ -6,6 +6,10 @@
  */
 
 import { defineConfig } from '@tanstack/start/config';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   tsr: {
@@ -23,6 +27,11 @@ export default defineConfig({
     jsxImportSource: 'react',
   },
   vite: {
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
+      },
+    },
     esbuild: {
       jsx: 'automatic',
       jsxImportSource: 'react',

@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Package Manager Rule
+
+**CRITICAL**: Always use `bun` or `bun.js` for all package management and script execution. NEVER use `npm` or `pnpm`.
+
+- Use `bun install` instead of `npm install`
+- Use `bun run <script>` instead of `npm run <script>`
+- Use `bun --filter @package build` for monorepo packages
+- Generated projects must also use bun exclusively
+
+---
+
 ## gstack
 
 Use the `/browse` skill from gstack for all web browsing. Never use `mcp__claude-in-chrome__*` tools.
