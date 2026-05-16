@@ -177,7 +177,9 @@ function FieldRenderer({ field, form, serverErrors = {}, tableName, readOnlyFiel
   // For new record creation, ignore is_read_only to allow filling required fields
   // Otherwise respect the is_read_only flag from database
   // Also check if field is in readOnlyFields (for child edits where parent_id should be read-only)
-  const isDisabled = field.is_read_only && formMode !== 'create' || readOnlyFields.includes(field.column_name);
+  const SYSTEM_COLUMNS = new Set(['id', 'created_at', 'updated_at', 'deleted_at', 'version'])
+  const isSystemCol = SYSTEM_COLUMNS.has(field.column_name)
+  const isDisabled = isFormReadOnly || field.is_read_only || (formMode === 'edit' && isSystemCol) || readOnlyFields.includes(field.column_name);
 
   // Fetch reference list values for dropdown fields (sys_reference_id >= 1000)
   const { data: refListValues, isLoading: isLoadingRefList } = useRefList(
@@ -677,7 +679,7 @@ export function DynamicForm({
                 {fieldsInGroup.map((field: FieldMetadata) => {
                   return (
                     <div
-                      key={field.sys_field_id}
+                      key={field.sys_field_id || field.column_name}
                       className={cn(
                         // Apply custom column span if specified (max span is groupColumns)
                         field.col_span && field.col_span > 1 && `md:col-span-${Math.min(groupColumns, field.col_span)}`
