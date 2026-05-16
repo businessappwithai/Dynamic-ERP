@@ -42,7 +42,7 @@ import {
 } from 'lucide-react'
 
 export const Route = createFileRoute('/bus_activity')({
-  component: EntityListPage,
+  component: EntityListWrapper,
 })
 
 interface Activity {
@@ -135,9 +135,13 @@ function matchesQuickSearch(
   })
 }
 
-function EntityListPage() {
+function EntityListWrapper() {
   const childMatches = useChildMatches()
   if (childMatches.length > 0) return <Outlet />
+  return <EntityListPage />
+}
+
+function EntityListPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 

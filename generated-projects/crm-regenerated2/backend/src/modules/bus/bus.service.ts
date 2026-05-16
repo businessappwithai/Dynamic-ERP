@@ -281,11 +281,16 @@ export class BusService {
     return metadata.columns.filter((col) => col.is_displayed_grid).sort((a, b) => a.seq_no_grid - b.seq_no_grid);
   }
 
+  private static readonly AUTO_MANAGED_COLUMNS = new Set(['id', 'created_at', 'updated_at', 'deleted_at', 'version']);
+
   async validateData(entity: string, data: Record<string, any>, mode: 'create' | 'update' | 'patch'): Promise<void> {
     const metadata = await this.getEntityMetadata(entity);
     const errors: string[] = [];
 
     for (const column of metadata.columns) {
+      // Skip auto-managed system columns in create mode
+      if (mode === 'create' && BusService.AUTO_MANAGED_COLUMNS.has(column.column_name)) continue;
+
       const value = data[column.column_name];
 
       if (mode !== 'patch' && column.is_mandatory && !column.default_value) {

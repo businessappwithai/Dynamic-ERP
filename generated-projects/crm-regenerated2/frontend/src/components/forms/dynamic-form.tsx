@@ -100,10 +100,13 @@ export function DynamicForm({
     })
   }, [])
 
+  const SYSTEM_COLUMNS = new Set(['id', 'created_at', 'updated_at', 'deleted_at', 'version'])
+
   const validate = (): boolean => {
     if (!formFields) return true
     const errors: Record<string, string> = {}
     for (const field of formFields) {
+      if (SYSTEM_COLUMNS.has(field.column_name)) continue
       if (
         field.is_mandatory &&
         field.is_displayed &&
@@ -143,16 +146,17 @@ export function DynamicForm({
     )
   }
 
+  const SYSTEM_COLUMNS_SET = new Set(['id', 'created_at', 'updated_at', 'deleted_at', 'version'])
   const displayedFields = formFields
-    .filter((f) => f.is_displayed)
+    .filter((f) => f.is_displayed && (mode !== 'create' || !SYSTEM_COLUMNS_SET.has(f.column_name)))
     .sort((a, b) => a.seq_no - b.seq_no)
 
   const groups = groupFields(displayedFields)
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {groups.map((group) => (
-        <div key={group.name} className="space-y-4">
+      {groups.map((group, groupIdx) => (
+        <div key={group.name || `group-${groupIdx}`} className="space-y-4">
           {group.name && (
             <div className="pb-2 border-b border-border/60">
               <h3 className="text-sm font-semibold text-foreground/80">{group.name}</h3>
@@ -161,12 +165,13 @@ export function DynamicForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {group.fields.map((field) => {
               const fieldError = allErrors[field.column_name]
-              const isDisabled = isReadOnly || field.is_read_only
+              const isSystemCol = SYSTEM_COLUMNS.has(field.column_name)
+              const isDisabled = isReadOnly || field.is_read_only || (mode === 'edit' && isSystemCol)
               const colSpan = field.col_span === 2 ? 'md:col-span-2' : ''
 
               if (isBoolean(field)) {
                 return (
-                  <div key={field.sys_field_id} className={`flex items-center gap-3 ${colSpan}`}>
+                  <div key={field.sys_field_id || field.column_name} className={`flex items-center gap-3 ${colSpan}`}>
                     <Checkbox
                       id={field.column_name}
                       checked={Boolean(formData[field.column_name])}
@@ -191,7 +196,7 @@ export function DynamicForm({
 
               if (isTextArea(field)) {
                 return (
-                  <div key={field.sys_field_id} className={`space-y-1.5 ${colSpan || 'md:col-span-2'}`}>
+                  <div key={field.sys_field_id || field.column_name} className={`space-y-1.5 ${colSpan || 'md:col-span-2'}`}>
                     <Label htmlFor={field.column_name} className="text-sm font-medium">
                       {field.name || field.column_name}
                       {field.is_mandatory && !isReadOnly && (
@@ -224,7 +229,7 @@ export function DynamicForm({
               }
 
               return (
-                <div key={field.sys_field_id} className={`space-y-1.5 ${colSpan}`}>
+                <div key={field.sys_field_id || field.column_name} className={`space-y-1.5 ${colSpan}`}>
                   <Label htmlFor={field.column_name} className="text-sm font-medium">
                     {field.name || field.column_name}
                     {field.is_mandatory && !isReadOnly && (
