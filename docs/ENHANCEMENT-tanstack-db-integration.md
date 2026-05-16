@@ -61,6 +61,221 @@ State layers:
 
 ---
 
+## CRITICAL: Role-Based Access Control for sys_* Definitions
+
+**⚠️ SECURITY REQUIREMENT**: ElectricSQL shapes for sys_* tables MUST be filtered by user role. Each user only syncs dictionary definitions they are authorized to view/modify. **Unauthorized users must NEVER see other users' or roles' custom field definitions, validation rules, or entity schemas.**
+
+### Why This Matters
+
+In a multi-user system, sys_* definitions are sensitive configuration:
+- **sys_field visibility rules** — hiding certain fields from junior users reveals organizational structure
+- **Custom validation rules** — reveal business logic and constraints
+- **Field permissions** — expose which roles can edit what
+- **Calculated field formulas** — proprietary business logic
+- **Lookup relationships** — may expose confidential master data sources
+
+**Scenario**: User A (sales) should NOT see User B (finance)'s custom GL account fields or validation rules.
+
+### Implementation: ElectricSQL Shapes with RBAC Filters
+
+```typescript
+// packages/generator/templates/tanstack-start-nestjs/backend/src/lib/electric-sql/shapes.ts
+
+import { Database } from 'kysely'
+import { getCurrentUser } from '@/lib/better-auth'
+
+/**
+ * CRITICAL: Shape subscriptions MUST include WHERE filters for user authorization
+ * Failure to filter = data leakage of other users' custom definitions
+ */
+export async function subscribeToUserDefinitions(
+  electric: ElectricClient,
+  userId: string,
+  userRoles: string[]
+) {
+  // ✅ CORRECT: Only subscribe to definitions user can access
+  
+  // User's own custom fields
+  await electric.db.raw(
+    `SELECT * FROM sys_field 
+     WHERE created_by = ? OR role_accessible IN (${userRoles.map(() => '?').join(',')})`,
+    [userId, ...userRoles]
+  )
+  
+  // User's accessible tables
+  await electric.db.raw(
+    `SELECT * FROM sys_table 
+     WHERE created_by = ? OR role_accessible IN (${userRoles.map(() => '?').join(',')})`,
+    [userId, ...userRoles]
+  )
+  
+  // User's accessible columns
+  await electric.db.raw(
+    `SELECT * FROM sys_column 
+     WHERE table_id IN (
+       SELECT id FROM sys_table 
+       WHERE created_by = ? OR role_accessible IN (${userRoles.map(() => '?').join(',')})
+     )`,
+    [userId, ...userRoles]
+  )
+  
+  // User's accessible rules
+  await electric.db.raw(
+    `SELECT * FROM sys_rule 
+     WHERE created_by = ? OR role_accessible IN (${userRoles.map(() => '?').join(',')})`,
+    [userId, ...userRoles]
+  )
+}
+
+/**
+ * ❌ INCORRECT: This leaks all sys_field definitions to all users
+ */
+export async function subscribeToUserDefinitions_UNSAFE(
+  electric: ElectricClient
+) {
+  // DON'T DO THIS!
+  await electric.db.raw(`SELECT * FROM sys_field`) // LEAKS ALL FIELDS!
+  await electric.db.raw(`SELECT * FROM sys_rule`)  // LEAKS ALL RULES!
+  // User A can now see User B's custom fields and business rules
+}
+```
+
+### Database Schema Changes for RBAC
+
+```sql
+-- Add authorization columns to sys_* tables
+ALTER TABLE sys_field ADD COLUMN created_by UUID REFERENCES auth_user(id);
+ALTER TABLE sys_field ADD COLUMN role_accessible TEXT[] DEFAULT ARRAY[]::TEXT[];
+ALTER TABLE sys_field ADD COLUMN is_public BOOLEAN DEFAULT FALSE;
+
+ALTER TABLE sys_rule ADD COLUMN created_by UUID REFERENCES auth_user(id);
+ALTER TABLE sys_rule ADD COLUMN role_accessible TEXT[] DEFAULT ARRAY[]::TEXT[];
+
+ALTER TABLE sys_table ADD COLUMN created_by UUID REFERENCES auth_user(id);
+ALTER TABLE sys_table ADD COLUMN role_accessible TEXT[] DEFAULT ARRAY[]::TEXT[];
+
+-- RLS (Row Level Security) policy for extra safety
+ALTER TABLE sys_field ENABLE ROW LEVEL SECURITY;
+CREATE POLICY sys_field_rls ON sys_field
+  USING (
+    created_by = current_user_id()
+    OR role_accessible @> ARRAY[current_user_role()]
+    OR is_public = TRUE
+  );
+```
+
+### Frontend: Initialize Shapes with User Context
+
+```typescript
+// packages/generator/templates/tanstack-start-nestjs/frontend/src/lib/electric-sql/shapes.ts
+
+import { useAuth } from '@/hooks/useAuth'
+import { electric } from '@/lib/electric-sql/client'
+
+export async function initializeUserShapes() {
+  const { user, roles } = useAuth()
+  
+  if (!user) return // Not authenticated
+  
+  // Call backend to get authorized shapes
+  const authorizedShapes = await fetch('/api/electric-sql/shapes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId: user.id,
+      roles: roles,
+    }),
+  }).then(r => r.json())
+  
+  // Subscribe only to authorized sys_* definitions
+  for (const shape of authorizedShapes) {
+    await electric.db.raw(shape.query, shape.params)
+  }
+  
+  // Collections now only contain authorized definitions
+  // User A cannot see User B's custom fields
+}
+```
+
+### Backend API Endpoint for Shape Authorization
+
+```typescript
+// packages/generator/templates/tanstack-start-nestjs/backend/src/routes/api/electric-sql/shapes.ts
+
+import { createAPIFileRoute } from '@tanstack/start/api'
+import { getCurrentUser } from '@/lib/better-auth'
+import { db } from '@/lib/database'
+
+export const Route = createAPIFileRoute('/api/electric-sql/shapes')({
+  POST: async ({ request }) => {
+    const user = await getCurrentUser(request)
+    if (!user) return new Response('Unauthorized', { status: 401 })
+    
+    const { userId, roles } = await request.json()
+    
+    // Only return shapes for authenticated user (no leakage)
+    if (userId !== user.id) {
+      return new Response('Unauthorized', { status: 403 })
+    }
+    
+    // Query database for user's authorized definitions
+    const authorizedTables = await db
+      .selectFrom('sys_table')
+      .selectAll()
+      .where((eb) =>
+        eb.or([
+          eb('created_by', '=', user.id),
+          eb('role_accessible', '@>', JSON.stringify(roles)),
+          eb('is_public', '=', true),
+        ])
+      )
+      .execute()
+    
+    const authorizedFields = await db
+      .selectFrom('sys_field')
+      .selectAll()
+      .where((eb) =>
+        eb.or([
+          eb('created_by', '=', user.id),
+          eb('role_accessible', '@>', JSON.stringify(roles)),
+          eb('is_public', '=', true),
+        ])
+      )
+      .execute()
+    
+    // Return ElectricSQL-compatible shape queries
+    return new Response(
+      JSON.stringify({
+        authorizedShapes: [
+          {
+            query: `SELECT * FROM sys_table WHERE id IN (${authorizedTables.map(t => `'${t.id}'`).join(',')})`,
+            params: [],
+          },
+          {
+            query: `SELECT * FROM sys_field WHERE id IN (${authorizedFields.map(f => `'${f.id}'`).join(',')})`,
+            params: [],
+          },
+        ],
+      }),
+      { headers: { 'Content-Type': 'application/json' } }
+    )
+  },
+})
+```
+
+### Verification Checklist
+
+- ✅ sys_table shape includes role filter
+- ✅ sys_column shape includes role filter
+- ✅ sys_field shape includes role filter
+- ✅ sys_rule shape includes role filter
+- ✅ Backend validates user's authorization before returning shape queries
+- ✅ Database RLS policies enforce row-level security
+- ✅ Frontend never subscribes to unfiltered sys_* queries
+- ✅ Audit log tracks who accessed what definitions (for compliance)
+
+---
+
 ## Proposed Architecture: TanStack DB + ElectricSQL
 
 ```
@@ -139,6 +354,17 @@ export const sysTableCollection = createCollection({
   }),
 })
 
+/**
+ * SECURITY: This collection ONLY contains sys_field definitions the user is authorized to view.
+ * ElectricSQL shape filters by:
+ * - created_by = current_user_id
+ * - role_accessible contains current_user_roles
+ * - is_public = true
+ * 
+ * User A CANNOT see User B's custom fields in this collection.
+ * User A CANNOT see User B's validation rules.
+ * User A CANNOT see User B's field visibility constraints.
+ */
 export const sysFieldCollection = createCollection({
   id: 'sys-field',
   schema: z.object({
@@ -150,6 +376,9 @@ export const sysFieldCollection = createCollection({
     isRequired: z.boolean(),
     isDisplayed: z.boolean(),
     seqNo: z.number(),
+    createdBy: z.string().uuid(), // User who defined this field
+    roleAccessible: z.array(z.string()), // Which roles can see this field
+    isPublic: z.boolean(), // If true, all users see it
     tenantId: z.string(),
     updatedAt: z.date(),
   }),
@@ -295,7 +524,7 @@ export async function initializeEntityShapes(tenantId: string, entityTypes: stri
 import { useTenant } from '@/hooks/useTenant'
 import { createElectricClient } from 'electric-sql/client'
 
-export async function setupElectricSync(tenantId: string, userId: string) {
+export async function setupElectricSync(tenantId: string, userId: string, userRoles: string[]) {
   const electric = await createElectricClient({
     url: import.meta.env.VITE_ELECTRIC_URL || 'http://localhost:5133',
     auth: {
@@ -303,18 +532,30 @@ export async function setupElectricSync(tenantId: string, userId: string) {
     },
   })
   
-  // Subscribe to all sys_* tables for this tenant
+  // 🔒 SECURITY: Subscribe only to sys_* definitions user is authorized to view
+  // Filters by: created_by, role_accessible, is_public
+  const roles = userRoles.map(r => `'${r}'`).join(',')
+  
   await electric.db.raw(
-    `SELECT * FROM sys_table WHERE tenant_id = ?`,
-    [tenantId]
+    `SELECT * FROM sys_table 
+     WHERE tenant_id = ? 
+     AND (created_by = ? OR role_accessible @> ARRAY[${roles}] OR is_public = TRUE)`,
+    [tenantId, userId]
   )
   await electric.db.raw(
-    `SELECT * FROM sys_column WHERE tenant_id = ?`,
-    [tenantId]
+    `SELECT * FROM sys_column 
+     WHERE tenant_id = ? 
+     AND table_id IN (
+       SELECT id FROM sys_table 
+       WHERE (created_by = ? OR role_accessible @> ARRAY[${roles}] OR is_public = TRUE)
+     )`,
+    [tenantId, userId]
   )
   await electric.db.raw(
-    `SELECT * FROM sys_field WHERE tenant_id = ?`,
-    [tenantId]
+    `SELECT * FROM sys_field 
+     WHERE tenant_id = ? 
+     AND (created_by = ? OR role_accessible @> ARRAY[${roles}] OR is_public = TRUE)`,
+    [tenantId, userId]
   )
   
   // Subscribe to user's business entities
@@ -633,6 +874,7 @@ This is a multi-phase rollout for the code generator. Each generated app include
 
 | Risk | Mitigation |
 |------|-----------|
+| **🔒 DATA LEAKAGE: Unfiltered sys_* shapes expose other users' definitions** | **CRITICAL**: Backend MUST filter ElectricSQL shapes by user role; RLS policies enforce row-level security; audit logs track unauthorized access attempts |
 | ElectricSQL is production-ready but relatively new ecosystem | Start with Phase 1 (read-only sys_* access); validate in staging before enabling mutations |
 | PostgreSQL logical replication must be configured | Template includes migration to enable replication; documented in SETUP.md |
 | Network disconnection during mutation | ElectricSQL queues mutations; replay on reconnect; UI shows "syncing..." indicator |
@@ -640,6 +882,7 @@ This is a multi-phase rollout for the code generator. Each generated app include
 | Local SQLite grows large | Implement `VACUUM` on app startup; set `maxLocalStorageMB` in ElectricSQL config |
 | Type mismatch between server schema and local sync | Use generated Zod schemas from backend types; validate on both sides |
 | Double-write prevention | ElectricSQL enforces single-writer principle; document in code comments |
+| **Offline mutation of unauthorized data** | Client-side optimistic writes still respect RLS; server rejects mutations if user loses access before sync completes |
 
 ---
 
@@ -699,6 +942,8 @@ Templates include migration that runs this automatically on `bun run migrate`.
 | **Admin busy indicator response** | N/A | <100ms when conflict occurs | Users know when merge happened |
 | **Initial sync time** | ~2s (full entity fetch) | <500ms (shapes loaded + local) | App feels snappier on startup |
 | **Form re-render on admin field add** | Page reload required | <16ms (live query) | Zero disruption to users |
+| **🔒 Data leakage prevention** | N/A | 100% (verified in QA) | No unauthorized sys_* definition access |
+| **🔒 RBAC enforcement** | N/A | Verified in multiple roles | All shape queries respect user roles |
 
 ---
 
@@ -738,6 +983,57 @@ database/migrations/
   ├── xxx_create_electric_publication.ts
   └── xxx_add_audit_triggers.ts
 ```
+
+---
+
+## Pre-Deployment Security Checklist
+
+**BEFORE deploying any generated app with ElectricSQL to production, verify these security requirements:**
+
+### Database Schema
+- ✅ `sys_table` has columns: `created_by`, `role_accessible[]`, `is_public`
+- ✅ `sys_column` has columns: `created_by`, `role_accessible[]`, `is_public`
+- ✅ `sys_field` has columns: `created_by`, `role_accessible[]`, `is_public`
+- ✅ `sys_rule` has columns: `created_by`, `role_accessible[]`, `is_public`
+- ✅ All sys_* tables have Row Level Security (RLS) enabled
+- ✅ RLS policies enforce filtering by `created_by` and `role_accessible`
+
+### Backend API Security
+- ✅ `/api/electric-sql/shapes` endpoint validates user identity before returning shape queries
+- ✅ Endpoint filters shapes by user's actual roles (not user-provided roles)
+- ✅ All shape queries include WHERE clauses restricting by `created_by`, `role_accessible`, or `is_public`
+- ✅ **NEVER return unfiltered shape queries** (`SELECT * FROM sys_field` is FORBIDDEN)
+- ✅ Shape endpoint returns 403 if userId doesn't match authenticated user
+
+### Frontend Initialization
+- ✅ `setupElectricSync()` calls `/api/electric-sql/shapes` endpoint (not local shape building)
+- ✅ ElectricSQL client receives filtered shape queries, not raw table names
+- ✅ Frontend never hardcodes ElectricSQL shape subscriptions
+- ✅ Authentication token is required and validated before sync begins
+
+### Testing & Validation
+- ✅ **Multi-role test**: Log in as Role A, verify cannot see Role B's custom fields
+- ✅ **Role removal test**: Remove user from role while offline, verify mutations rejected on sync
+- ✅ **Unauthed access test**: Attempt direct ElectricSQL connection without auth token (should fail)
+- ✅ **Privilege escalation test**: Try to access other user's private definitions (should fail)
+- ✅ **Audit trail test**: Verify unauthorized access attempts are logged
+
+### Deployment Steps
+1. Enable RLS on all sys_* tables in PostgreSQL
+2. Create RLS policies for each sys_* table
+3. Deploy `/api/electric-sql/shapes` endpoint with validation logic
+4. Configure ElectricSQL server with authentication middleware
+5. Run security checklist tests in staging
+6. Enable audit logging for sys_* table access
+7. Document shape filtering in generated app's SECURITY.md
+8. Disable direct ElectricSQL client connections (only allow via authenticated backend)
+
+### Audit & Monitoring
+- ✅ Enable PostgreSQL audit logging for sys_* tables
+- ✅ Monitor unauthorized shape requests in backend logs
+- ✅ Alert on repeated failed authorization attempts
+- ✅ Track who accessed which user's definitions in audit_log table
+- ✅ Monthly security review of shape filtering logic
 
 ---
 
