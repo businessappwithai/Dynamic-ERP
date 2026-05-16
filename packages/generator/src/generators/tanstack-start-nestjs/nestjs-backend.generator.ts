@@ -173,6 +173,7 @@ export class NestJsBackendGenerator extends BaseGenerator {
       "src/modules/sys",
       "src/modules/bus",
       "src/modules/jobs",
+      "src/modules/rules/dto",
       "src/modules/rules/jdm",
       "src/modules/workflow",
       "src/trigger",
