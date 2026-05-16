@@ -10,13 +10,12 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { initAuth, getAuth } from './lib/better-auth';
+import { KYSELY_CONNECTION } from './database/database.constants';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
 
-  // Initialize authentication system
-  await initAuth();
-
+  // Create NestJS app first so DatabaseModule opens the single PGLite connection
   // Create NestJS app with Fastify adapter for high performance
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
@@ -27,6 +26,11 @@ async function bootstrap() {
 
   // Global prefix for API routes
   app.setGlobalPrefix('api');
+
+  // Initialize auth using the shared Kysely connection from DatabaseModule
+  // This avoids opening a second PGLite instance to the same database directory
+  const sharedKysely = app.get(KYSELY_CONNECTION);
+  await initAuth(sharedKysely);
 
   // Mount better-auth HTTP handler at /api/auth/*
   // This handles all auth routes (sign-in, sign-up, sign-out, session, etc.)

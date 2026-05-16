@@ -17,16 +17,61 @@ import {
   Param,
   Query,
   Headers,
+  Req,
+  Res,
   ParseUUIDPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import { SysService } from './sys.service';
+import { SessionAuthGuard } from '../auth/guards/session-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('sys')
 @ApiBearerAuth()
 @Controller('sys')
 export class SysController {
   constructor(private readonly sysService: SysService) {}
+
+  // ============================================================================
+  // TanStack DB Sync Endpoints (RBAC-filtered shapes + SSE real-time events)
+  // ============================================================================
+
+  @Get('shapes')
+  @UseGuards(SessionAuthGuard)
+  @ApiOperation({ summary: 'Get RBAC-filtered sys_* shapes for TanStack DB sync' })
+  async getShapes(@CurrentUser() user: any) {
+    const roles: string[] = user?.roles ?? [];
+    return this.sysService.getShapesForUser(roles);
+  }
+
+  @Get('events')
+  @UseGuards(SessionAuthGuard)
+  @ApiOperation({ summary: 'SSE stream for real-time sys_* change events' })
+  async subscribeEvents(@Req() req: FastifyRequest, @Res() reply: FastifyReply) {
+    const rawReply = reply.raw;
+    rawReply.setHeader('Content-Type', 'text/event-stream');
+    rawReply.setHeader('Cache-Control', 'no-cache');
+    rawReply.setHeader('Connection', 'keep-alive');
+    rawReply.setHeader('X-Accel-Buffering', 'no');
+    rawReply.flushHeaders();
+
+    rawReply.write('event: connected\ndata: {"status":"connected"}\n\n');
+
+    const keepAlive = setInterval(() => {
+      rawReply.write(':keepalive\n\n');
+    }, 25000);
+
+    const removeListener = this.sysService.addSseListener((event) => {
+      rawReply.write(`event: sys-change\ndata: ${JSON.stringify(event)}\n\n`);
+    });
+
+    req.raw.on('close', () => {
+      clearInterval(keepAlive);
+      removeListener();
+    });
+  }
 
   // ============================================================================
   // SYS_TABLE Endpoints

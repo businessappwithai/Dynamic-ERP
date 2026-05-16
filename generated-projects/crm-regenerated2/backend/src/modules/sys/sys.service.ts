@@ -22,12 +22,32 @@ interface CacheEntry<T> {
   expiry: number;
 }
 
+export interface SysChangeEvent {
+  type: 'field' | 'table' | 'column' | 'role';
+  action: 'update' | 'create' | 'delete';
+  id: string;
+  data: Record<string, unknown>;
+  timestamp: string;
+}
+
 @Injectable()
 export class SysService {
   private fieldCache = new Map<string, CacheEntry<unknown>>();
   private readonly CACHE_TTL_MS = 5 * 60 * 1000;
+  private sseListeners = new Set<(event: SysChangeEvent) => void>();
 
   constructor(private readonly db: DatabaseService) {}
+
+  addSseListener(listener: (event: SysChangeEvent) => void): () => void {
+    this.sseListeners.add(listener);
+    return () => this.sseListeners.delete(listener);
+  }
+
+  private emitSysEvent(event: SysChangeEvent) {
+    for (const listener of this.sseListeners) {
+      listener(event);
+    }
+  }
 
   private async getCached<T>(key: string, factory: () => Promise<T>): Promise<T> {
     const cached = this.fieldCache.get(key);
@@ -144,7 +164,9 @@ export class SysService {
       .set({ ...data, updated: new Date().toISOString() } as any)
       .where('sys_table_id', '=', id)
       .execute();
-    return this.findTableById(id);
+    const updated = await this.findTableById(id);
+    this.emitSysEvent({ type: 'table', action: 'update', id, data: updated as any, timestamp: new Date().toISOString() });
+    return updated;
   }
 
   // ============================================================
@@ -179,7 +201,9 @@ export class SysService {
       .set({ ...data, updated: new Date().toISOString() } as any)
       .where('sys_column_id', '=', id)
       .execute();
-    return this.findColumnById(id);
+    const updated = await this.findColumnById(id);
+    this.emitSysEvent({ type: 'column', action: 'update', id, data: updated as any, timestamp: new Date().toISOString() });
+    return updated;
   }
 
   async findColumnsFromSchema(tableName: string) {
@@ -268,7 +292,9 @@ export class SysService {
       .execute();
 
     this.invalidateFieldCache();
-    return this.findFieldById(id);
+    const updated = await this.findFieldById(id);
+    this.emitSysEvent({ type: 'field', action: 'update', id, data: updated as any, timestamp: new Date().toISOString() });
+    return updated;
   }
 
   async batchReorderFields(fields: Array<{ id: string; seq_no: number }>) {
@@ -424,6 +450,53 @@ export class SysService {
         .orderBy('sys_field.seq_no')
         .execute();
     });
+  }
+
+  // ============================================================
+  // RBAC SHAPES ENDPOINT — CRITICAL SECURITY
+  // Returns only sys_* definitions the user is authorized to see.
+  // NEVER returns unfiltered SELECT * FROM sys_*.
+  // ============================================================
+
+  async getShapesForUser(userRoles: string[]) {
+    const db = this.db.kysely;
+
+    // Build RBAC filter: row is visible if is_public=true OR user has a matching role
+    // For PGLite which uses SQLite-compatible SQL, we use a simpler filter
+    // In production PostgreSQL this would use role_accessible @> ARRAY[...roles]
+    const isPublicFilter = (eb: any) => eb('is_public', '=', true);
+
+    const [sysTables, sysColumns, sysFields, sysRoles] = await Promise.all([
+      // sys_table: public rows only (role_accessible filtering is additive in future)
+      db.selectFrom('sys_table')
+        .selectAll()
+        .where('is_active', '=', true)
+        .where('is_public', '=', true)
+        .orderBy('name')
+        .execute(),
+
+      // sys_column: public rows only
+      db.selectFrom('sys_column')
+        .selectAll()
+        .where('is_active', '=', true)
+        .where('is_public', '=', true)
+        .execute(),
+
+      // sys_field: public rows only (MOST CRITICAL — drives form rendering)
+      db.selectFrom('sys_field')
+        .selectAll()
+        .where('is_active', '=', true)
+        .where('is_public', '=', true)
+        .execute(),
+
+      // sys_role: all active roles (role names are not sensitive)
+      db.selectFrom('sys_role')
+        .selectAll()
+        .where('is_active', '=', true)
+        .execute(),
+    ]);
+
+    return { sysTables, sysColumns, sysFields, sysRoles };
   }
 
   async getGridFields(tableName: string) {

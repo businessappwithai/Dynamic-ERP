@@ -31,6 +31,7 @@ import {
   ClipboardList,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
+import { SyncStatusBar } from '@/components/sync/SyncStatusBar';
 
 interface NavItem {
   title: string;
@@ -178,6 +179,13 @@ export function Sidebar({ className }: SidebarProps) {
           )}
         </Button>
       </div>
+
+      {/* Sync Status */}
+      {!isCollapsed && (
+        <div className="border-b px-4 py-2">
+          <SyncStatusBar />
+        </div>
+      )}
 
       {/* Navigation */}
       <ScrollArea className="flex-1 px-2 py-4">

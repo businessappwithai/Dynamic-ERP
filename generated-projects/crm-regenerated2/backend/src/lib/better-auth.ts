@@ -10,25 +10,16 @@
 import { betterAuth } from 'better-auth';
 import { kyselyAdapter } from '@better-auth/kysely-adapter';
 import { Kysely } from 'kysely';
-import { PGlite } from '@electric-sql/pglite';
-import { PGliteDialect } from 'kysely-pglite-dialect';
-import { config } from 'dotenv';
-import * as path from 'path';
-import * as fs from 'fs';
-
-// Load .env from backend root regardless of cwd
-config({ path: path.join(__dirname, '..', '..', '.env') });
-config({ path: path.join(__dirname, '..', '..', '.env.local'), override: true });
 
 let authInstance: any = null;
 
-export async function initAuth() {
+/**
+ * Initialize BetterAuth using a shared Kysely instance from DatabaseModule.
+ * This avoids the two-PGLite-connections-to-same-dir problem.
+ */
+export async function initAuth(sharedKysely: Kysely<any>) {
   if (!authInstance) {
-    const dbDir = process.env.DATABASE_DIR || path.join(__dirname, '..', '..', 'data', 'crm_regenerated_2.db');
-    fs.mkdirSync(dbDir, { recursive: true });
-    const pglite = new PGlite(dbDir);
-    await pglite.waitReady;
-    const kysely = new Kysely<any>({ dialect: new PGliteDialect(pglite) });
+    const kysely = sharedKysely;
 
     authInstance = betterAuth({
       database: kyselyAdapter(kysely),

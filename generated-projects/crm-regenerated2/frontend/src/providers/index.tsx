@@ -3,6 +3,8 @@
 import React, { type ReactNode, createContext, useContext, useState, useEffect } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
+import { initializeSync, resetSync } from '../lib/tanstack-db/sync';
+import { OfflineIndicator } from '../components/sync/OfflineIndicator';
 
 // Query Provider
 const queryClient = new QueryClient({
@@ -64,6 +66,13 @@ function AuthProvider({ children }: { children: ReactNode }) {
     checkSession();
   }, []);
 
+  // Initialize TanStack DB sync when user session is established
+  useEffect(() => {
+    if (user) {
+      initializeSync();
+    }
+  }, [user?.id]);
+
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
@@ -76,6 +85,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
       if (!response.ok) throw new Error('Login failed');
       const data = await response.json();
       setUser(data.user);
+      // Sync will auto-start via useEffect above
     } finally {
       setIsLoading(false);
     }
@@ -85,6 +95,7 @@ function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       await fetch('/api/auth/sign-out', { method: 'POST', credentials: 'include' });
+      resetSync(); // Clear all TanStack DB collections on logout (security)
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -177,6 +188,7 @@ export function Providers({ children }: ProvidersProps) {
     <QueryProvider>
       <AuthProvider>
         <TranslationProvider>
+          <OfflineIndicator />
           {children}
           <Toaster position="top-right" richColors />
         </TranslationProvider>

@@ -41,6 +41,23 @@ import { resolve } from 'path';
           console.log('✓ Database connection established');
         }
 
+        // Run RBAC migration for sys_* tables (idempotent — uses IF NOT EXISTS)
+        try {
+          const { sql } = await import('kysely');
+          await sql`ALTER TABLE sys_table ADD COLUMN IF NOT EXISTS role_accessible TEXT[] DEFAULT ARRAY[]::TEXT[], ADD COLUMN IF NOT EXISTS is_public BOOLEAN NOT NULL DEFAULT TRUE`.execute(db);
+          await sql`ALTER TABLE sys_column ADD COLUMN IF NOT EXISTS role_accessible TEXT[] DEFAULT ARRAY[]::TEXT[], ADD COLUMN IF NOT EXISTS is_public BOOLEAN NOT NULL DEFAULT TRUE`.execute(db);
+          await sql`ALTER TABLE sys_field ADD COLUMN IF NOT EXISTS role_accessible TEXT[] DEFAULT ARRAY[]::TEXT[], ADD COLUMN IF NOT EXISTS is_public BOOLEAN NOT NULL DEFAULT TRUE`.execute(db);
+          await sql`CREATE INDEX IF NOT EXISTS idx_sys_table_is_public ON sys_table (is_public)`.execute(db);
+          await sql`CREATE INDEX IF NOT EXISTS idx_sys_field_is_public ON sys_field (is_public)`.execute(db);
+          await sql`CREATE INDEX IF NOT EXISTS idx_sys_column_is_public ON sys_column (is_public)`.execute(db);
+          console.log('✓ RBAC migration applied');
+        } catch (e: any) {
+          // Only warn if it's not "already exists" — that's expected on subsequent starts
+          if (!e?.message?.includes('already exists') && !e?.message?.includes('duplicate column')) {
+            console.warn('RBAC migration warning:', e?.message);
+          }
+        }
+
         return db;
       },
     },

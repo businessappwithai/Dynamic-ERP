@@ -1,18 +1,25 @@
 /**
  * Field Metadata Hooks
  *
- * TanStack Query hooks for fetching and managing field metadata
- * from the Application Dictionary (sys_field, sys_column).
- *
- * Enables runtime UI layout customization by fetching field
- * ordering and display settings from the backend.
+ * Phase 4: Uses TanStack DB reactive collections (sysFieldCollection,
+ * sysColumnCollection, sysTableCollection) for live, offline-capable
+ * field metadata queries. Mutations still go to the API.
  *
  * Generated: 2026-05-16T05:41:34.296Z
  * Project: CRM Regenerated 2
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiClient, PaginatedResponse } from '@/lib/api-client';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api-client';
+import { useLiveCollection, useLiveQuery } from './useLiveCollection';
+import {
+  sysTableCollection,
+  sysColumnCollection,
+  sysFieldCollection,
+  type SysTable as SysTableRow,
+  type SysColumn as SysColumnRow,
+  type SysField as SysFieldRow,
+} from '@/lib/tanstack-db/collections';
 
 export interface FieldMetadata {
   sys_field_id: string;
@@ -52,50 +59,64 @@ export interface SysReference {
 }
 
 /**
- * Fetch field metadata for a specific table
+ * Returns all sys_tables from TanStack DB collection (live, reactive).
  */
-export function useFieldMetadata(tableName: string) {
-  return useQuery({
-    queryKey: ['sys', 'fields', tableName],
-    queryFn: async () => {
-      // First get the table ID
-      const tableRes = await apiClient.get<PaginatedResponse<SysTable>>(
-        `/api/sys/tables?name=${tableName}`
-      );
-      const table = tableRes.data?.[0];
-      if (!table?.sys_table_id) {
-        return [];
-      }
-
-      // Then get the columns for this table
-      const columnsRes = await apiClient.get<PaginatedResponse<ColumnMetadata>>(
-        `/api/sys/columns?table_id=${table.sys_table_id}`
-      );
-      return columnsRes.data;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+export function useAllSysTables() {
+  return useLiveCollection<SysTableRow>(sysTableCollection as any);
 }
 
 /**
- * Fetch all columns for a table by table ID
+ * Returns all sys_columns from TanStack DB collection (live, reactive).
+ */
+export function useAllSysColumns() {
+  return useLiveCollection<SysColumnRow>(sysColumnCollection as any);
+}
+
+/**
+ * Returns all sys_fields from TanStack DB collection (live, reactive).
+ */
+export function useAllSysFields() {
+  return useLiveCollection<SysFieldRow>(sysFieldCollection as any);
+}
+
+/**
+ * Returns columns for a specific table from the local TanStack DB collection.
+ * Reactive — updates immediately when the collection changes.
  */
 export function useTableColumns(tableId: string) {
-  return useQuery({
-    queryKey: ['sys', 'columns', tableId],
-    queryFn: async () => {
-      const response = await apiClient.get<PaginatedResponse<ColumnMetadata>>(
-        `/api/sys/columns?table_id=${tableId}`
-      );
-      return response.data;
-    },
-    enabled: !!tableId,
-    staleTime: 5 * 60 * 1000,
-  });
+  const columns = useLiveQuery<SysColumnRow>(
+    sysColumnCollection as any,
+    (col) => col.sys_table_id === tableId
+  );
+  return { data: columns, isLoading: false };
 }
 
 /**
- * Update field sequence order (for drag-and-drop reordering)
+ * Returns all active fields for a given table name using TanStack DB collections.
+ * Reactive — updates immediately without refetch.
+ */
+export function useFieldMetadata(tableName: string) {
+  const allTables = useLiveCollection<SysTableRow>(sysTableCollection as any);
+  const allColumns = useLiveCollection<SysColumnRow>(sysColumnCollection as any);
+  const allFields = useLiveCollection<SysFieldRow>(sysFieldCollection as any);
+
+  const table = allTables.find((t) => t.table_name === tableName);
+  if (!table) return { data: [], isLoading: allTables.length === 0 };
+
+  const columnIds = new Set(
+    allColumns.filter((c) => c.sys_table_id === table.sys_table_id).map((c) => c.sys_column_id)
+  );
+
+  const fields = allFields
+    .filter((f) => columnIds.has(f.sys_column_id) && f.is_active)
+    .sort((a, b) => a.seq_no - b.seq_no);
+
+  return { data: fields, isLoading: false };
+}
+
+/**
+ * Update field sequence order (for drag-and-drop reordering).
+ * Mutation goes to the API; SSE push will update TanStack DB collection.
  */
 export function useUpdateFieldOrder() {
   const queryClient = useQueryClient();
@@ -107,14 +128,14 @@ export function useUpdateFieldOrder() {
       });
     },
     onSuccess: () => {
-      // Invalidate field queries to refetch with new order
       queryClient.invalidateQueries({ queryKey: ['sys', 'fields'] });
     },
   });
 }
 
 /**
- * Toggle field visibility
+ * Toggle field visibility.
+ * Mutation goes to the API; SSE push will update TanStack DB collection.
  */
 export function useToggleFieldVisibility() {
   const queryClient = useQueryClient();
@@ -128,21 +149,5 @@ export function useToggleFieldVisibility() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sys', 'fields'] });
     },
-  });
-}
-
-/**
- * Fetch all reference types
- */
-export function useReferenceTypes() {
-  return useQuery({
-    queryKey: ['sys', 'references'],
-    queryFn: async () => {
-      const response = await apiClient.get<PaginatedResponse<SysReference>>(
-        '/api/sys/references'
-      );
-      return response.data;
-    },
-    staleTime: 30 * 60 * 1000, // 30 minutes - reference types rarely change
   });
 }
