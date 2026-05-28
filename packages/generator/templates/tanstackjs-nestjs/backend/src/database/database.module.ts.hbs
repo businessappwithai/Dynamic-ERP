@@ -1,18 +1,38 @@
 /**
- * Database Module with Kysely and PGLite
+ * Database Module with Kysely and MariaDB/MySQL
  *
  * Generated: {{now}}
  */
 
 import { Module, Global, OnModuleDestroy, Inject } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Kysely } from 'kysely';
-import { PGlite } from '@electric-sql/pglite';
-import { PGliteDialect } from 'kysely-pglite-dialect';
+import { Kysely, MysqlDialect } from 'kysely';
+import { createPool } from 'mysql2';
 import { KYSELY_CONNECTION } from './database.constants';
 import { DatabaseService } from './database.service';
-import { mkdirSync } from 'fs';
-import { resolve } from 'path';
+
+function buildPoolConfig(configService: ConfigService) {
+  const url = configService.get<string>('DATABASE_URL');
+  if (url && (url.startsWith('mysql://') || url.startsWith('mariadb://'))) {
+    const parsed = new URL(url.replace(/^mariadb:\/\//, 'mysql://'));
+    return {
+      host: parsed.hostname || '127.0.0.1',
+      port: parsed.port ? Number(parsed.port) : 3306,
+      user: parsed.username || '{{snakeCase project.name}}',
+      password: parsed.password || '',
+      database: parsed.pathname.replace(/^\//, '') || '{{snakeCase project.name}}',
+      waitForConnections: true,
+    };
+  }
+  return {
+    host: configService.get('DB_HOST', '127.0.0.1'),
+    port: configService.get<number>('DB_PORT', 3306),
+    user: configService.get('DB_USER', '{{snakeCase project.name}}'),
+    password: configService.get('DB_PASSWORD', ''),
+    database: configService.get('DB_NAME', '{{snakeCase project.name}}'),
+    waitForConnections: true,
+  };
+}
 
 @Global()
 @Module({
@@ -21,21 +41,11 @@ import { resolve } from 'path';
       provide: KYSELY_CONNECTION,
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
-        // PGLite - file-based embedded PostgreSQL
-        const dbDir = configService.get('DATABASE_DIR', './data/{{snakeCase project.name}}.db');
-        mkdirSync(dbDir, { recursive: true });
-        const pglite = new PGlite(dbDir);
-        await pglite.waitReady;
+        const pool = createPool(buildPoolConfig(configService));
+        const db = new Kysely<any>({ dialect: new MysqlDialect({ pool }) });
 
-        const db = new Kysely<any>({
-          dialect: new PGliteDialect(pglite),
-        });
-
-        // Test connection
         try {
-          await db.selectFrom('pg_stat_activity' as any).select('pid' as any).limit(1).execute().catch(() => {
-            // Connection test fallback
-          });
+          await db.selectFrom(db.fn.val(1) as any).execute().catch(() => {});
           console.log('✓ Database connection established');
         } catch (_error) {
           console.log('✓ Database connection established');
