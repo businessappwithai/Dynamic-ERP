@@ -141,7 +141,7 @@ function DesignPage() {
   const previewRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLTextAreaElement>(null);
   const lineNumbersRef = useRef<HTMLDivElement>(null);
-  const renderTimeoutRef = useRef<NodeJS.Timeout>();
+  const renderTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const [expandedVersions, setExpandedVersions] = useState<Set<string>>(new Set());
 
   const entities = useMemo(() => {

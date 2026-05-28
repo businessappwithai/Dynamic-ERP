@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { erdVersionDb } from "@erdwithai/core/services";
 
 export const Route = createFileRoute("/api/projects/$id/erd-versions/$versionId/restore")({ server: { handlers: {
-  POST: async ({ request, params }) => {
+  POST: async ({ params }) => {
     try {
       const versionId = params.versionId as string;
 
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/api/projects/$id/erd-versions/$versionId/
     }
   },
 
-  DELETE: async ({ request, params }) => {
+  DELETE: async ({ params }) => {
     try {
       const versionId = params.versionId as string;
 

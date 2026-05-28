@@ -1,10 +1,10 @@
 /**
- * Comprehensive E2E Tests for Next.js + NestJS Generated Application
+ * Comprehensive E2E Tests for TanStack Start + NestJS Generated Application
  *
  * Tests the complete CRUD functionality, relationships, UI components,
  * and API endpoints for the generated full-stack application.
  *
- * Stack: Next.js 14 + NestJS 10
+ * Stack: TanStack Start v1 + NestJS 10
  * Database: SQLite
  */
 
@@ -26,10 +26,10 @@ const USER_API = "/api/bus/users";
 const POST_API = "/api/bus/posts";
 
 // ============================================================================
-// Next.js Frontend - User Entity Tests
+// TanStack Start Frontend - User Entity Tests
 // ============================================================================
 
-test.describe("Next.js Frontend - User Entity", () => {
+test.describe("TanStack Start Frontend - User Entity", () => {
   test("should display users list page", async ({ page }) => {
     await page.goto(`${FRONTEND_URL}${USER_LIST_PATH}`);
 
@@ -219,10 +219,10 @@ test.describe("Next.js Frontend - User Entity", () => {
 });
 
 // ============================================================================
-// Next.js Frontend - Post Entity Tests
+// TanStack Start Frontend - Post Entity Tests
 // ============================================================================
 
-test.describe("Next.js Frontend - Post Entity", () => {
+test.describe("TanStack Start Frontend - Post Entity", () => {
   test("should display posts with user relationship", async ({ page }) => {
     await page.goto(`${FRONTEND_URL}${POST_LIST_PATH}`);
     await page.waitForLoadState("networkidle");

@@ -1196,7 +1196,7 @@ function getDefaultFlowchart(serviceName: string): string {
   const entityName = serviceName.replace("Service", "");
   return `flowchart TD
     A[Client Request] --> B[Validate Request]
-    B --> C[Process \${entityName}]
+    B --> C[Process ${entityName}]
     C --> D[Response]
     D --> E[Return to Client]
 

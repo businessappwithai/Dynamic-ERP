@@ -1,13 +1,13 @@
 /**
  * Comprehensive E2E Tests for Hospital Management System
- * Next.js + NestJS Stack
+ * TanStack Start + NestJS Stack
  *
  * Tests CRUD functionality for all core hospital entities:
  * - Patient, Staff, Department, Appointment, Admission
  * - Bill, Diagnosis, Encounter, Lab Order, Lab Result
  * - Prescription, Vital Sign, Insurance Provider
  *
- * Stack: Next.js 14 + NestJS 10
+ * Stack: TanStack Start v1 + NestJS 10
  * Database: SQLite (hospital-swiss-clean)
  *
  * Frontend: http://localhost:3000 (default)

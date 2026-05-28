@@ -17,7 +17,7 @@ export async function up(knex: Knex): Promise<void> {
     table.boolean("is_deleted").defaultTo(false);
 
     // Configuration (Step 1)
-    table.string("stack_type", 20).defaultTo("nextjs"); // nextjs, nestjs-nextjs, odata-ui5, nestjs-api, odata-api
+    table.string("stack_type", 20).defaultTo("tanstackjs-nestjs"); // tanstackjs-nestjs, odata-ui5
     table.integer("port").defaultTo(4001);
     table.text("database_url").nullable();
     table.json("environment_variables").nullable(); // Store env vars as JSON

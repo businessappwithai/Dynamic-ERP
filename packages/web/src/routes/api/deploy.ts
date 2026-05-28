@@ -24,7 +24,7 @@ export const Route = createFileRoute("/api/deploy")({ server: { handlers: {
 
         try {
           const body = await request.json();
-          const { projectId, envVars } = body;
+          const { projectId } = body;
 
           if (!projectId) {
             sendError("Missing required field: projectId");

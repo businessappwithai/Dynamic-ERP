@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { EditIcon, PlusIcon, RefreshCwIcon, TrashIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 

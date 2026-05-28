@@ -1,6 +1,6 @@
 /**
  * Comprehensive E2E Tests for CRM (Customer Relationship Management) System
- * Next.js + NestJS Stack
+ * TanStack Start + NestJS Stack
  *
  * Tests CRUD functionality for all core CRM entities:
  * - Company, Contact, Deal, DealStage, Pipeline
@@ -9,7 +9,7 @@
  * - Product, Quote, QuoteItem
  * - User, Team
  *
- * Stack: Next.js 14 + NestJS 10
+ * Stack: TanStack Start v1 + NestJS 10
  * Database: SQLite
  *
  * Frontend: http://localhost:3000 (default)
@@ -31,7 +31,6 @@ const BACKEND_URL =
 const COMPANY_PATH = "/bus_company";
 const CONTACT_PATH = "/bus_contact";
 const DEAL_PATH = "/bus_deal";
-const DEAL_STAGE_PATH = "/bus_deal_stage";
 const PIPELINE_PATH = "/bus_pipeline";
 const ACTIVITY_PATH = "/bus_activity";
 const NOTE_PATH = "/bus_note";
@@ -40,7 +39,6 @@ const EMAIL_MESSAGE_PATH = "/bus_email_message";
 const EMAIL_TEMPLATE_PATH = "/bus_email_template";
 const PRODUCT_PATH = "/bus_product";
 const QUOTE_PATH = "/bus_quote";
-const QUOTE_ITEM_PATH = "/bus_quote_item";
 const USER_PATH = "/bus_user";
 const TEAM_PATH = "/bus_team";
 

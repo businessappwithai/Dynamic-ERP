@@ -70,7 +70,7 @@ function NewRulePage() {
       if (!response.ok) throw new Error("Failed to create rule");
 
       toast.success("Rule created successfully");
-      navigate({ to: "/admin/rules/" });
+      navigate({ to: "/admin/rules" });
     } catch (error) {
       toast.error("Failed to create rule");
       console.error(error);
@@ -82,7 +82,7 @@ function NewRulePage() {
   return (
     <div className="container mx-auto py-8 max-w-4xl">
       <div className="mb-6">
-        <Button variant="ghost" onClick={() => navigate({ to: "/admin/rules/" })} className="mb-4">
+        <Button variant="ghost" onClick={() => navigate({ to: "/admin/rules" })} className="mb-4">
           <ArrowLeftIcon className="mr-2 h-4 w-4" />
           Back to Rules
         </Button>
@@ -168,7 +168,7 @@ function NewRulePage() {
         </Card>
 
         <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline" onClick={() => navigate({ to: "/admin/rules/" })}>
+          <Button type="button" variant="outline" onClick={() => navigate({ to: "/admin/rules" })}>
             Cancel
           </Button>
           <Button type="submit" disabled={loading}>

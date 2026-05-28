@@ -5,7 +5,7 @@ import { join } from "path";
 const GENERATED_HOOKS_BASE_PATH = join(process.cwd(), "generated-projects");
 
 export const Route = createFileRoute("/api/projects/$id/workflows/$serviceName/files/")({ server: { handlers: {
-  GET: async ({ request, params }) => {
+  GET: async ({ params }) => {
     try {
       const projectId = params.id as string;
       const serviceName = params.serviceName as string;

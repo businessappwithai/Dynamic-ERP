@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { projectDb } from "@erdwithai/core/services";
 
 export const Route = createFileRoute("/api/projects/$id/")({ server: { handlers: {
-  GET: async ({ request, params }) => {
+  GET: async ({ params }) => {
     try {
       const id = params.id as string;
 
@@ -53,7 +53,7 @@ export const Route = createFileRoute("/api/projects/$id/")({ server: { handlers:
     }
   },
 
-  DELETE: async ({ request, params }) => {
+  DELETE: async ({ params }) => {
     try {
       const id = params.id as string;
 

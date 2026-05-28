@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/projects/$id/workflows/$serviceName/files/$fileName")({ server: { handlers: {
-  PUT: async ({ request, params }) => {
+  PUT: async ({ request }) => {
     try {
       const body = await request.json();
       const { code } = body;

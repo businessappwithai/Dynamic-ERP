@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/rules/validate")({ server: { handlers: {
-  POST: async ({ request, params }) => {
+  POST: async ({ request }) => {
     try {
       const body = await request.json();
       const { jdm } = body;

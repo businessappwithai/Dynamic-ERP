@@ -1,15 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/workflows/$workflowId/status")({ server: { handlers: {
-  GET: async ({ request, params }) => {
+  GET: async ({ params }) => {
     try {
       const workflowId = params.workflowId as string;
-      const url = new URL(request.url);
-      const timeoutMsParam = url.searchParams.get("timeoutMs");
-      const intervalMsParam = url.searchParams.get("intervalMs");
 
-      const timeoutMs = timeoutMsParam ? parseInt(timeoutMsParam, 10) : undefined;
-      const intervalMs = intervalMsParam ? parseInt(intervalMsParam, 10) : undefined;
 
       // TODO: Implement workflow polling with actual Trigger.dev integration
       // For now, return placeholder response

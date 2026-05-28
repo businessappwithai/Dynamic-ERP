@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/api/projects/$id/workflows/$serviceName/apply")({ server: { handlers: {
-  POST: async ({ request, params }) => {
+  POST: async ({ request }) => {
     try {
-      const body = await request.json();
+      await request.json();
 
       // TODO: Implement workflow apply logic
       return new Response(

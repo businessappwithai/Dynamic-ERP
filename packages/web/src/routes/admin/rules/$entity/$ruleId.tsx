@@ -111,7 +111,7 @@ function RuleEditorPage() {
   return (
     <div className="container mx-auto py-8 max-w-6xl">
       <div className="mb-6">
-        <Button variant="ghost" onClick={() => navigate({ to: "/admin/rules/" })} className="mb-4">
+        <Button variant="ghost" onClick={() => navigate({ to: "/admin/rules" })} className="mb-4">
           <ArrowLeftIcon className="mr-2 h-4 w-4" />
           Back to Rules
         </Button>

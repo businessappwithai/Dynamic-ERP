@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { erdVersionDb } from "@erdwithai/core/services";
 
 export const Route = createFileRoute("/api/projects/$id/erd-versions/")({ server: { handlers: {
-  GET: async ({ request, params }) => {
+  GET: async ({ params }) => {
     try {
       const id = params.id as string;
 

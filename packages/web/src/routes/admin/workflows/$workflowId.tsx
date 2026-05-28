@@ -108,7 +108,7 @@ function WorkflowDetailPage() {
       <div className="mb-6">
         <Button
           variant="ghost"
-          onClick={() => navigate({ to: "/admin/workflows/" })}
+          onClick={() => navigate({ to: "/admin/workflows" })}
           className="mb-4"
         >
           <ArrowLeftIcon className="mr-2 h-4 w-4" />

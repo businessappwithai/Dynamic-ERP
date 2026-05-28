@@ -2,10 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { deploymentDb } from "@erdwithai/core/services";
 
 export const Route = createFileRoute("/api/projects/$id/deployment/")({ server: { handlers: {
-  GET: async ({ request, params }) => {
+  GET: async ({ params }) => {
     try {
       const id = params.id as string;
-      const deployments = await deploymentDb.findByProjectId(id);
+      const deployments = await deploymentDb.getAllDeployments(id);
       return new Response(JSON.stringify({ deployments }), {
         headers: { "Content-Type": "application/json" },
       });
@@ -25,17 +25,16 @@ export const Route = createFileRoute("/api/projects/$id/deployment/")({ server: 
       const { status, port } = body;
 
       if (status === "running") {
-        const result = await deploymentDb.create({
-          projectId: id,
+        const result = await deploymentDb.upsert({
+          project_id: id,
           status: "running",
           port,
-          deployedAt: new Date().toISOString(),
         });
         return new Response(JSON.stringify(result), {
           headers: { "Content-Type": "application/json" },
         });
       } else {
-        const result = await deploymentDb.update(id, body);
+        const result = await deploymentDb.upsert({ project_id: id, ...body });
         return new Response(JSON.stringify(result), {
           headers: { "Content-Type": "application/json" },
         });
@@ -54,7 +53,7 @@ export const Route = createFileRoute("/api/projects/$id/deployment/")({ server: 
     }
   },
 
-  DELETE: async ({ request, params }) => {
+  DELETE: async ({ params }) => {
     try {
       const id = params.id as string;
       await deploymentDb.delete(id);

@@ -170,7 +170,7 @@ export const Route = createFileRoute("/api/projects/$id/workflows/$serviceName/g
     }
   },
 
-  GET: async ({ request, params }) => {
+  GET: async ({ params }) => {
     try {
       const serviceName = params.serviceName as string;
       const entityName = (serviceName as string).replace("Service", "");

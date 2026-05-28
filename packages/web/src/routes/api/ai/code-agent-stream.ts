@@ -4,7 +4,7 @@ export const Route = createFileRoute("/api/ai/code-agent-stream")({ server: { ha
   POST: async ({ request }) => {
     try {
       const body = await request.json();
-      const { task, erdCode, stack } = body;
+      const { task } = body;
 
       if (!task) {
         return new Response(JSON.stringify({ error: "Task is required" }), {

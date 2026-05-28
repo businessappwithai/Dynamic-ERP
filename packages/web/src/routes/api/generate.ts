@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { generationHistoryDb, projectDb } from "@erdwithai/core/services";
+import { projectDb } from "@erdwithai/core/services";
 import { FullStackGenerator, MermaidParser } from "@erdwithai/generator";
 import fs from "fs/promises";
 import path from "path";
@@ -82,11 +82,14 @@ export const Route = createFileRoute("/api/generate")({ server: { handlers: {
           sendLog("info", `Created output directory: ${outputDir}`);
 
           sendLog("info", `Initializing FullStackGenerator for ${finalStackType}...`);
-          const generator = new FullStackGenerator({
+          // TODO: Wire up FullStackGenerator for actual generation
+          void new FullStackGenerator({
             stackOption: finalStackOption,
             projectName: project.name || `Project ${projectId}`,
             projectVersion: "1.0.0",
             projectDescription: project.description || `Generated ${finalStackType} application`,
+            outputDir,
+            port: 3000,
           });
 
           // TODO: Complete generation logic

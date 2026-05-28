@@ -1,5 +1,5 @@
 /**
- * Enhanced E2E Tests for Next.js + NestJS Generated Application
+ * Enhanced E2E Tests for TanStack Start + NestJS Generated Application
  * Compiere Application Dictionary Coverage
  *
  * Tests the complete Application Dictionary (sys_ tables) functionality:
@@ -12,7 +12,7 @@
  * - Dictionary-driven entity discovery and navigation
  * - RBAC via sys_user, sys_role, sys_access
  *
- * Stack: Next.js 14 + NestJS 10 + Fastify + Knex.js
+ * Stack: TanStack Start v1 + NestJS 10 + Fastify + Knex.js
  * Database: SQLite / PostgreSQL
  */
 
@@ -1212,7 +1212,7 @@ test.describe("NestJS API - RBAC (Users, Roles, Access)", () => {
 // Test Suite: Admin Dictionary UI - Field Layout Editor
 // ============================================================================
 
-test.describe("Next.js Frontend - Admin Dictionary Interface", () => {
+test.describe("TanStack Start Frontend - Admin Dictionary Interface", () => {
   const ADMIN_URL = `${FRONTEND_URL}/admin/dictionary`;
 
   test("should display dictionary admin page", async ({ page }) => {
@@ -1272,7 +1272,7 @@ test.describe("Next.js Frontend - Admin Dictionary Interface", () => {
 // Test Suite: Dictionary-Driven Dynamic Form Rendering
 // ============================================================================
 
-test.describe("Next.js Frontend - Dictionary-Driven Dynamic Rendering", () => {
+test.describe("TanStack Start Frontend - Dictionary-Driven Dynamic Rendering", () => {
   test("should render entity form fields based on sys_field metadata", async ({
     page,
     request,
