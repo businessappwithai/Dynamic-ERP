@@ -1,8 +1,8 @@
-import { createAPIFileRoute } from "@tanstack/start/api";
+import { createFileRoute } from "@tanstack/react-router";
 import { projectDb } from "@erdwithai/core/services";
 
-export const Route = createAPIFileRoute("/api/projects/$id")({
-  GET: async ({ request, params }) => {
+export const Route = createFileRoute("/api/projects/$id/")({ server: { handlers: {
+  GET: async ({ params }) => {
     try {
       const id = params.id as string;
 
@@ -53,7 +53,7 @@ export const Route = createAPIFileRoute("/api/projects/$id")({
     }
   },
 
-  DELETE: async ({ request, params }) => {
+  DELETE: async ({ params }) => {
     try {
       const id = params.id as string;
 
@@ -69,5 +69,7 @@ export const Route = createAPIFileRoute("/api/projects/$id")({
         headers: { "Content-Type": "application/json" },
       });
     }
+  },
+  },
   },
 });

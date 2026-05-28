@@ -1,11 +1,9 @@
-import { createAPIFileRoute } from "@tanstack/start/api";
-import { getDatabase } from "@erdwithai/core/services";
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createAPIFileRoute("/api/workflows/$workflowId/retry")({
-  POST: async ({ request, params }) => {
+export const Route = createFileRoute("/api/workflows/$workflowId/retry")({ server: { handlers: {
+  POST: async ({ params }) => {
     try {
       const workflowId = params.workflowId as string;
-      const db = await getDatabase();
 
       // TODO: Implement workflow retry logic
       // The original code referenced sys_workflow_runs table which doesn't exist in new schema
@@ -28,5 +26,7 @@ export const Route = createAPIFileRoute("/api/workflows/$workflowId/retry")({
         headers: { "Content-Type": "application/json" },
       });
     }
+  },
+  },
   },
 });

@@ -10,7 +10,7 @@ This document describes the comprehensive End-to-End (E2E) testing system for th
 
 The generator supports **two main stack options**:
 
-1. **Option 1 (Modern Web Stack)**: NestJS backend + Next.js frontend
+1. **Option 1 (Modern Web Stack)**: NestJS backend + TanStack Start frontend
 2. **Option 2 (Enterprise Stack)**: OData V4 backend + OpenUI5 frontend
 
 ### Test Files
@@ -139,12 +139,12 @@ Both failures are related to form element timeouts and can be fixed by:
 
 ### Blog Application (Option 1)
 - **ERD**: User and Post entities with one-to-many relationship
-- **Stack**: NestJS + Next.js
-- **Validates**: CRUD operations, REST API endpoints, Next.js UI
+- **Stack**: NestJS + TanStack Start
+- **Validates**: CRUD operations, REST API endpoints, TanStack Start UI
 
 ### E-commerce Application (Option 1)
 - **ERD**: Customer, Order, Product, OrderItem entities
-- **Stack**: NestJS + Next.js
+- **Stack**: NestJS + TanStack Start
 - **Validates**: Complex relationships, multiple entities, transaction handling
 
 ### Hospital Management (Option 2)

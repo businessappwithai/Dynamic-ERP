@@ -1,8 +1,8 @@
-import { createAPIFileRoute } from "@tanstack/start/api";
+import { createFileRoute } from "@tanstack/react-router";
 import { erdVersionDb } from "@erdwithai/core/services";
 
-export const Route = createAPIFileRoute("/api/projects/$id/erd-versions")({
-  GET: async ({ request, params }) => {
+export const Route = createFileRoute("/api/projects/$id/erd-versions/")({ server: { handlers: {
+  GET: async ({ params }) => {
     try {
       const id = params.id as string;
 
@@ -53,5 +53,7 @@ export const Route = createAPIFileRoute("/api/projects/$id/erd-versions")({
         headers: { "Content-Type": "application/json" },
       });
     }
+  },
+  },
   },
 });

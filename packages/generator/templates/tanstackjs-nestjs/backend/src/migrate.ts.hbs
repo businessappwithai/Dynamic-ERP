@@ -7,21 +7,35 @@
 
 import * as path from 'path';
 import * as fs from 'fs';
-import { Kysely } from 'kysely';
-import { PGlite } from '@electric-sql/pglite';
-import { PGliteDialect } from 'kysely-pglite-dialect';
+import { Kysely, MysqlDialect } from 'kysely';
+import { createPool } from 'mysql2';
 import { config } from 'dotenv';
 
 // Load .env from backend root (parent of src/) regardless of cwd
 config({ path: path.join(__dirname, '..', '.env') });
 config({ path: path.join(__dirname, '..', '.env.local'), override: true });
 
-async function createDialect() {
-  const dbDir = process.env.DATABASE_DIR ?? path.join(__dirname, '..', 'data', '{{snakeCase project.name}}.db');
-  fs.mkdirSync(dbDir, { recursive: true });
-  const pglite = new PGlite(dbDir);
-  await pglite.waitReady;
-  return new PGliteDialect(pglite);
+function buildPool() {
+  const url = process.env.DATABASE_URL;
+  if (url && (url.startsWith('mysql://') || url.startsWith('mariadb://'))) {
+    const parsed = new URL(url.replace(/^mariadb:\/\//, 'mysql://'));
+    return createPool({
+      host: parsed.hostname || '127.0.0.1',
+      port: parsed.port ? Number(parsed.port) : 3306,
+      user: parsed.username || '{{snakeCase project.name}}',
+      password: parsed.password || '',
+      database: parsed.pathname.replace(/^\//, '') || '{{snakeCase project.name}}',
+      waitForConnections: true,
+    });
+  }
+  return createPool({
+    host: process.env.DB_HOST ?? '127.0.0.1',
+    port: Number(process.env.DB_PORT ?? 3306),
+    user: process.env.DB_USER ?? '{{snakeCase project.name}}',
+    password: process.env.DB_PASSWORD ?? '',
+    database: process.env.DB_NAME ?? '{{snakeCase project.name}}',
+    waitForConnections: true,
+  });
 }
 
 async function runMigrations(db: Kysely<any>) {
@@ -46,8 +60,7 @@ async function runMigrations(db: Kysely<any>) {
 }
 
 (async () => {
-  const dialect = await createDialect();
-  const db = new Kysely<any>({ dialect });
+  const db = new Kysely<any>({ dialect: new MysqlDialect({ pool: buildPool() }) });
 
   try {
     await runMigrations(db);

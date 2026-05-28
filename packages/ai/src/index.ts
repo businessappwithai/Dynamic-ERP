@@ -1,6 +1,6 @@
 export * from "./agents";
 export * from "./converter";
-// Explicit re-exports for Next.js compatibility
+// Explicit re-exports for module compatibility
 export {
   analyzeDomainWithOpenAI,
   generateMermaidWithValidation,

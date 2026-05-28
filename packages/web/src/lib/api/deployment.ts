@@ -4,7 +4,7 @@
  */
 
 import { deploymentDb, processManagerService, projectDb } from "@erdwithai/core/services";
-import { addLogEntry, completeActionLog, startActionLog } from "@/lib/logs/logs.service";
+import { addLogEntry, completeActionLog, startActionLog } from "@/lib/action-log";
 
 export const deploymentApi = {
   /**

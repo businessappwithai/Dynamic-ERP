@@ -5,15 +5,15 @@ import { defineConfig, devices } from "@playwright/test";
  * Tests run against already-running servers on different ports
  *
  * Test suites:
- * - nextjs-nestjs: Original CRUD tests for Next.js + NestJS stack
+ * - tanstack-nestjs: Original CRUD tests for TanStack Start + NestJS stack
  * - odata-ui5: Original CRUD tests for OpenUI5 + OData V4 stack
- * - dictionary-nextjs: Compiere dictionary tests for NestJS API & Next.js admin UI
+ * - dictionary-tanstack: Compiere dictionary tests for NestJS API & TanStack Start admin UI
  * - dictionary-odata: Compiere dictionary tests for OData API & OpenUI5 metadata-driven UI
  * - dictionary-generator: Validates DictionaryGenerator output correctness
  * - generator: Tests the ERDwithAI generator UI workflow
- * - hospital-nextjs-nestjs: Hospital Management System (Next.js + NestJS) E2E tests
+ * - hospital-tanstack-nestjs: Hospital Management System (TanStack Start + NestJS) E2E tests
  * - hospital-odata-ui5: Hospital Management System (OpenUI5 + OData V4) E2E tests
- * - crm-nextjs-nestjs: CRM System (Next.js + NestJS) E2E tests
+ * - crm-tanstack-nestjs: CRM System (TanStack Start + NestJS) E2E tests
  */
 export default defineConfig({
   testDir: "./complete-tests",
@@ -40,9 +40,9 @@ export default defineConfig({
 
   projects: [
     {
-      name: "nextjs-nestjs",
+      name: "tanstack-nestjs",
       use: { ...devices["Desktop Chrome"] },
-      testMatch: ["nextjs-nestjs.e2e-test.ts"],
+      testMatch: ["tanstack-nestjs.e2e-test.ts"],
       dependencies: [],
     },
     {
@@ -52,9 +52,9 @@ export default defineConfig({
       dependencies: [],
     },
     {
-      name: "dictionary-nextjs",
+      name: "dictionary-tanstack",
       use: { ...devices["Desktop Chrome"] },
-      testMatch: ["nextjs-nestjs-dictionary.e2e-test.ts"],
+      testMatch: ["tanstack-nestjs-dictionary.e2e-test.ts"],
       dependencies: [],
     },
     {
@@ -70,12 +70,12 @@ export default defineConfig({
       dependencies: [],
     },
     {
-      name: "hospital-nextjs-nestjs",
+      name: "hospital-tanstack-nestjs",
       use: {
         ...devices["Desktop Chrome"],
         baseURL: process.env.HOSPITAL_FRONTEND_URL || "http://localhost:3000",
       },
-      testMatch: ["hospital-nextjs-nestjs.e2e-test.ts"],
+      testMatch: ["hospital-tanstack-nestjs.e2e-test.ts"],
       dependencies: [],
     },
     {
@@ -88,13 +88,13 @@ export default defineConfig({
       dependencies: [],
     },
     {
-      name: "crm-nextjs-nestjs",
+      name: "crm-tanstack-nestjs",
       use: {
         ...devices["Desktop Chrome"],
         baseURL:
           process.env.CRM_FRONTEND_URL || process.env.FRONTEND_URL || "http://localhost:3000",
       },
-      testMatch: ["crm-nextjs-nestjs.e2e-test.ts"],
+      testMatch: ["crm-tanstack-nestjs.e2e-test.ts"],
       dependencies: [],
     },
   ],

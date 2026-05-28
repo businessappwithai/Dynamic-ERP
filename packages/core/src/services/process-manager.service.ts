@@ -221,7 +221,7 @@ export class ProcessManagerService {
         command = "npm";
         args = ["run", "start:dev"];
       } else {
-        // For Next.js frontend or OpenUI5 frontend - use bun
+        // For TanStack Start frontend or OpenUI5 frontend - use bun
         command = "bun";
         args = ["run", "dev"];
       }

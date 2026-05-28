@@ -1,9 +1,9 @@
-import { createAPIFileRoute } from "@tanstack/start/api";
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createAPIFileRoute("/api/projects/$id/workflows/$serviceName/draft")({
-  POST: async ({ request, params }) => {
+export const Route = createFileRoute("/api/projects/$id/workflows/$serviceName/draft")({ server: { handlers: {
+  POST: async ({ request }) => {
     try {
-      const body = await request.json();
+      await request.json();
 
       // TODO: Implement workflow draft logic
       return new Response(
@@ -27,5 +27,7 @@ export const Route = createAPIFileRoute("/api/projects/$id/workflows/$serviceNam
         }
       );
     }
+  },
+  },
   },
 });

@@ -64,7 +64,7 @@ Tests the complete application workflow from project creation to code generation
 
 #### comprehensive-all-frameworks.e2e.spec.ts
 Tests both stack options:
-- **Option 1**: Modern Web Stack (Next.js + NestJS)
+- **Option 1**: Modern Web Stack (TanStack Start + NestJS)
 - **Option 2**: Enterprise Stack (OpenUI5 + OData)
 
 **Coverage:**
@@ -162,7 +162,7 @@ The generator supports **two main stack options**:
 
 ### Option 1: Modern Web Stack
 - **Backend**: NestJS + Fastify + Knex.js
-- **Frontend**: Next.js + Shadcn UI + TanStack Query
+- **Frontend**: TanStack Start + Shadcn UI + TanStack Query
 - **Database**: PostgreSQL or SQLite
 - **Use Case**: Modern web applications
 

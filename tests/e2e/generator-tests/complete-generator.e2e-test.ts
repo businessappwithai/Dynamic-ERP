@@ -9,10 +9,10 @@ import { expect, test } from "@playwright/test";
  * Test Data
  */
 const TEST_PROJECTS = {
-  nextjsNestjs: {
-    name: "Test Next.js NestJS App",
-    description: "Full stack application with Next.js and NestJS",
-    stackType: "nestjs-nextjs" as const,
+  tanstackNestjs: {
+    name: "Test TanStack Start NestJS App",
+    description: "Full stack application with TanStack Start and NestJS",
+    stackType: "tanstackjs-nestjs" as const,
   },
   odataUi5: {
     name: "Test OData UI5 App",
@@ -64,7 +64,7 @@ test.describe("ERDwithAI Generator", () => {
     ).toBeVisible();
   });
 
-  test("should create a new Next.js NestJS project", async ({ page }) => {
+  test("should create a new TanStack Start NestJS project", async ({ page }) => {
     // Click new project button
     await page.click(
       'button:has-text("New Project"), button:has-text("Create"), [data-testid="new-project-btn"]'
@@ -74,10 +74,10 @@ test.describe("ERDwithAI Generator", () => {
     await page.waitForURL(/\/projects\/[a-f0-9-]+\/init/);
 
     // Fill in project details
-    await page.fill('input[name="name"], input#project-name', TEST_PROJECTS.nextjsNestjs.name);
+    await page.fill('input[name="name"], input#project-name', TEST_PROJECTS.tanstackNestjs.name);
     await page.fill(
       'textarea[name="description"], textarea#project-description',
-      TEST_PROJECTS.nextjsNestjs.description
+      TEST_PROJECTS.tanstackNestjs.description
     );
 
     // Submit the form
@@ -124,10 +124,10 @@ test.describe("ERDwithAI Generator", () => {
     );
     await page.waitForURL(/\/projects\/[a-f0-9-]+\/init/);
 
-    await page.fill('input[name="name"], input#project-name', TEST_PROJECTS.nextjsNestjs.name);
+    await page.fill('input[name="name"], input#project-name', TEST_PROJECTS.tanstackNestjs.name);
     await page.fill(
       'textarea[name="description"], textarea#project-description',
-      TEST_PROJECTS.nextjsNestjs.description
+      TEST_PROJECTS.tanstackNestjs.description
     );
     await page.click(
       'button[type="submit"]:has-text("Save"), button:has-text("Continue"), button:has-text("Next")'
@@ -157,17 +157,17 @@ test.describe("ERDwithAI Generator", () => {
     await page.waitForURL(/\/projects\/[a-f0-9-]+\/generate/, { timeout: 10000 });
   });
 
-  test("should generate Next.js NestJS application", async ({ page }) => {
+  test("should generate TanStack Start NestJS application", async ({ page }) => {
     // Create project and design ERD
     await page.click(
       'button:has-text("New Project"), button:has-text("Create"), [data-testid="new-project-btn"]'
     );
     await page.waitForURL(/\/projects\/[a-f0-9-]+\/init/);
 
-    await page.fill('input[name="name"], input#project-name', TEST_PROJECTS.nextjsNestjs.name);
+    await page.fill('input[name="name"], input#project-name', TEST_PROJECTS.tanstackNestjs.name);
     await page.fill(
       'textarea[name="description"], textarea#project-description',
-      TEST_PROJECTS.nextjsNestjs.description
+      TEST_PROJECTS.tanstackNestjs.description
     );
     await page.click(
       'button[type="submit"]:has-text("Save"), button:has-text("Continue"), button:has-text("Next")'
@@ -248,9 +248,9 @@ test.describe("ERDwithAI Generator", () => {
 });
 
 /**
- * Test Suite: Generated Next.js Application
+ * Test Suite: Generated TanStack Start Application
  */
-test.describe("Generated Next.js Application", () => {
+test.describe("Generated TanStack Start Application", () => {
   let generatedAppUrl: string;
 
   test.beforeAll(async ({ browser: _browser }) => {

@@ -27,7 +27,7 @@ function InitPage() {
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
-    stackType: "tanstackjs-nestjs";
+    stackType: "tanstackjs-nestjs" | "odata-ui5";
     databaseUrl: string;
   }>({
     name: "",

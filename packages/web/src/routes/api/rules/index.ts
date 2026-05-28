@@ -1,14 +1,8 @@
-import { createAPIFileRoute } from "@tanstack/start/api";
-import { getDatabase } from "@erdwithai/core/services";
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createAPIFileRoute("/api/rules")({
-  GET: async ({ request }) => {
+export const Route = createFileRoute("/api/rules/")({ server: { handlers: {
+  GET: async () => {
     try {
-      const url = new URL(request.url);
-      const entity = url.searchParams.get("entity");
-      const operation = url.searchParams.get("operation");
-
-      const db = await getDatabase();
 
       // TODO: Update to use actual rules engine table from new schema
       // Current implementation references old sys_rule table that doesn't exist
@@ -70,5 +64,7 @@ export const Route = createAPIFileRoute("/api/rules")({
         headers: { "Content-Type": "application/json" },
       });
     }
+  },
+  },
   },
 });

@@ -1,10 +1,10 @@
-import { createAPIFileRoute } from "@tanstack/start/api";
+import { createFileRoute } from "@tanstack/react-router";
 
-export const Route = createAPIFileRoute("/api/ai/code-agent-stream")({
+export const Route = createFileRoute("/api/ai/code-agent-stream")({ server: { handlers: {
   POST: async ({ request }) => {
     try {
       const body = await request.json();
-      const { task, erdCode, stack } = body;
+      const { task } = body;
 
       if (!task) {
         return new Response(JSON.stringify({ error: "Task is required" }), {
@@ -71,5 +71,7 @@ export const Route = createAPIFileRoute("/api/ai/code-agent-stream")({
         }
       );
     }
+  },
+  },
   },
 });

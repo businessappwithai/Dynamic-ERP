@@ -1,7 +1,7 @@
-import { createAPIFileRoute } from "@tanstack/start/api";
+import { createFileRoute } from "@tanstack/react-router";
 import { projectDb } from "@erdwithai/core/services";
 
-export const Route = createAPIFileRoute("/api/deploy")({
+export const Route = createFileRoute("/api/deploy")({ server: { handlers: {
   POST: async ({ request }) => {
     const encoder = new TextEncoder();
 
@@ -24,7 +24,7 @@ export const Route = createAPIFileRoute("/api/deploy")({
 
         try {
           const body = await request.json();
-          const { projectId, envVars } = body;
+          const { projectId } = body;
 
           if (!projectId) {
             sendError("Missing required field: projectId");
@@ -67,5 +67,7 @@ export const Route = createAPIFileRoute("/api/deploy")({
         Connection: "keep-alive",
       },
     });
+  },
+  },
   },
 });

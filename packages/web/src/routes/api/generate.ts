@@ -1,10 +1,10 @@
-import { createAPIFileRoute } from "@tanstack/start/api";
-import { generationHistoryDb, projectDb } from "@erdwithai/core/services";
+import { createFileRoute } from "@tanstack/react-router";
+import { projectDb } from "@erdwithai/core/services";
 import { FullStackGenerator, MermaidParser } from "@erdwithai/generator";
 import fs from "fs/promises";
 import path from "path";
 
-export const Route = createAPIFileRoute("/api/generate")({
+export const Route = createFileRoute("/api/generate")({ server: { handlers: {
   POST: async ({ request }) => {
     const body = await request.json();
     const { projectId, stackType, stackOption, erdCode } = body;
@@ -82,11 +82,14 @@ export const Route = createAPIFileRoute("/api/generate")({
           sendLog("info", `Created output directory: ${outputDir}`);
 
           sendLog("info", `Initializing FullStackGenerator for ${finalStackType}...`);
-          const generator = new FullStackGenerator({
+          // TODO: Wire up FullStackGenerator for actual generation
+          void new FullStackGenerator({
             stackOption: finalStackOption,
             projectName: project.name || `Project ${projectId}`,
             projectVersion: "1.0.0",
             projectDescription: project.description || `Generated ${finalStackType} application`,
+            outputDir,
+            port: 3000,
           });
 
           // TODO: Complete generation logic
@@ -109,5 +112,7 @@ export const Route = createAPIFileRoute("/api/generate")({
         Connection: "keep-alive",
       },
     });
+  },
+  },
   },
 });

@@ -772,13 +772,13 @@ test.describe("Dictionary Generator - Options", () => {
     expect(options.randomizeFieldOrder).toBe(true);
   });
 
-  test("should support nextjs-nestjs stack option", () => {
-    const validStacks = ["nextjs-nestjs", "openui5-odatav4"];
-    expect(validStacks).toContain("nextjs-nestjs");
+  test("should support tanstackjs-nestjs stack option", () => {
+    const validStacks = ["tanstackjs-nestjs", "openui5-odatav4"];
+    expect(validStacks).toContain("tanstackjs-nestjs");
   });
 
   test("should support openui5-odatav4 stack option", () => {
-    const validStacks = ["nextjs-nestjs", "openui5-odatav4"];
+    const validStacks = ["tanstackjs-nestjs", "openui5-odatav4"];
     expect(validStacks).toContain("openui5-odatav4");
   });
 });
