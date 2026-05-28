@@ -1,5 +1,6 @@
 export * from "./agents";
 export * from "./converter";
+export * from "./providers";
 // Explicit re-exports for module compatibility
 export {
   analyzeDomainWithOpenAI,
