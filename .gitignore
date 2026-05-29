@@ -16,6 +16,9 @@ coverage/
 !generated-projects/**/*.test.ts
 !generated-projects/**/*.spec.ts
 
+# Generated projects runtime artifacts
+packages/web/generated-projects/
+
 # Production
 dist/
 build/
