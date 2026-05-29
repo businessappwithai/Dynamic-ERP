@@ -68,6 +68,7 @@ export interface TanStackStartFrontendOptions {
 
 export class TanStackStartFrontendGenerator extends BaseGenerator {
   private options: TanStackStartFrontendOptions;
+  private resolvedTemplateDir: string;
 
   constructor(options: TanStackStartFrontendOptions) {
     // Resolve template directory correctly regardless of bundling
@@ -75,6 +76,7 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
     const templateDir = resolveTemplateDir(`${stack}/frontend`);
     super(templateDir);
     this.options = options;
+    this.resolvedTemplateDir = templateDir;
   }
 
   async generate(
@@ -257,7 +259,7 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
   }
 
   private async generateCoreFiles(outputDir: string, context: any): Promise<void> {
-    const templateDir = path.join(__dirname, "../../../templates/tanstack-start-nestjs/frontend");
+    const templateDir = this.resolvedTemplateDir;
 
     // Entry files (client.tsx, ssr.tsx, router.tsx) - always generated to fix missing scaffolding
     const clientEntryContent = await this.renderTemplate("src/client.tsx.hbs", context);

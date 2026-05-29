@@ -6,6 +6,7 @@
  */
 
 import { defineConfig } from '@tanstack/start/config';
+import path from 'path';
 
 export default defineConfig({
   tsr: {
@@ -26,6 +27,19 @@ export default defineConfig({
     esbuild: {
       jsx: 'automatic',
       jsxImportSource: 'react',
+    },
+    resolve: {
+      alias: {
+        '@': path.resolve('./src'),
+      },
+    },
+    server: {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:{{port}}',
+          changeOrigin: true,
+        },
+      },
     },
   },
 });
