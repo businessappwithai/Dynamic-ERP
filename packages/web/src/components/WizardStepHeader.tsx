@@ -24,7 +24,7 @@ export function WizardStepHeader({
       <div className="mb-3">
         <div className="flex items-center gap-3 mb-2">
           <span className="text-sm font-semibold text-muted-foreground">
-            Step {stepNumber} of 5
+            Step {stepNumber} of 6
           </span>
           {estimatedTime && (
             <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full">

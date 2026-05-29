@@ -238,7 +238,7 @@ function InitPage() {
                     Created
                   </label>
                   <div className="bg-muted px-4 py-3 rounded-xl border border-border text-sm text-muted-foreground">
-                    {isNewProject ? "-" : formatDate(currentProject.createdAt)}
+                    {formatDate(currentProject.createdAt)}
                   </div>
                 </div>
                 <div>
@@ -246,7 +246,7 @@ function InitPage() {
                     Modified
                   </label>
                   <div className="bg-muted px-4 py-3 rounded-xl border border-border text-sm text-muted-foreground">
-                    {isNewProject ? "-" : formatDate(currentProject.updatedAt)}
+                    {formatDate(currentProject.updatedAt)}
                   </div>
                 </div>
               </div>

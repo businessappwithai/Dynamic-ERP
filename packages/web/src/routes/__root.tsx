@@ -1,4 +1,4 @@
-import { createRootRoute, HeadContent, Outlet, Scripts, ScrollRestoration } from "@tanstack/react-router";
+import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { Providers } from "@/components/providers/Providers";
 import "@/styles/globals.css";
 
@@ -20,7 +20,6 @@ function RootLayout() {
         <Providers>
           <Outlet />
         </Providers>
-        <ScrollRestoration />
         <Scripts />
       </body>
     </html>

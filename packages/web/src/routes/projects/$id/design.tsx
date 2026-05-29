@@ -865,15 +865,8 @@ function DesignPage() {
         <div className="min-h-screen bg-background flex flex-col">
           {!isFullscreen && (
             <header className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
-              <div className="max-w-[1800px] mx-auto px-6 py-4">
-                <WizardStepHeader
-                  stepNumber={2}
-                  title="Discover Your Data Model"
-                  description="Review the Entity-Relationship Diagram that our AI extracted from your business description. Each entity represents a key concept in your domain. Edit relationships as needed before generating code."
-                  estimatedTime="3-5 min"
-                />
-
-                <div className="flex items-center justify-between mb-4">
+              <div className="max-w-[1800px] mx-auto px-6 py-3">
+                <div className="flex items-center justify-between mb-3">
                   <div>
                     <div className="flex items-center gap-3">
                       <button
@@ -972,10 +965,20 @@ function DesignPage() {
                     }
                   }}
                 />
-
-                <JourneyArc currentStep="design" />
               </div>
             </header>
+          )}
+
+          {!isFullscreen && (
+            <div className="max-w-[1800px] mx-auto px-6 pt-4">
+              <WizardStepHeader
+                stepNumber={2}
+                title="Discover Your Data Model"
+                description="Review the Entity-Relationship Diagram that our AI extracted from your business description. Each entity represents a key concept in your domain. Edit relationships as needed before generating code."
+                estimatedTime="3-5 min"
+              />
+              <JourneyArc currentStep="design" />
+            </div>
           )}
 
           <div

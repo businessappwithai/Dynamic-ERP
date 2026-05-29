@@ -82,18 +82,24 @@ export const Route = createFileRoute("/api/generate")({ server: { handlers: {
           sendLog("info", `Created output directory: ${outputDir}`);
 
           sendLog("info", `Initializing FullStackGenerator for ${finalStackType}...`);
-          // TODO: Wire up FullStackGenerator for actual generation
-          void new FullStackGenerator({
+          const generator = new FullStackGenerator({
             stackOption: finalStackOption,
             projectName: project.name || `Project ${projectId}`,
             projectVersion: "1.0.0",
             projectDescription: project.description || `Generated ${finalStackType} application`,
             outputDir,
-            port: 3000,
+            port: project.port || 4000,
           });
 
-          // TODO: Complete generation logic
-          sendLog("info", "Generating project structure...");
+          sendLog("info", `Generating ${entities.length} entities (${relationships.length} relationships)...`);
+          await generator.generate(entities, relationships);
+          sendLog("success", `Generated ${entities.length} entities successfully`);
+
+          await projectDb.update(projectId, {
+            generatedPath: outputDir,
+            deploymentStatus: "completed",
+          });
+
           sendLog("success", "Code generation complete");
           sendComplete(outputDir);
           controller.close();
