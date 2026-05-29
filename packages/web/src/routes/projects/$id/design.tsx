@@ -256,8 +256,8 @@ function DesignPage() {
         if (previewRef.current) {
           const hasErrorText =
             svg.includes("Syntax error in text") ||
-            svg.includes("error-icon") ||
-            svg.includes("error-text");
+            svg.includes('class="error-icon"') ||
+            svg.includes('class="error-text"');
 
           if (hasErrorText) {
             previewRef.current.innerHTML =
