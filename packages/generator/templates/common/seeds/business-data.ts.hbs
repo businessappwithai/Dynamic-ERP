@@ -31,7 +31,7 @@ export async function seed(db: Kysely<any>): Promise<void> {
         {{#case 15}}{{name}}: new Date(Date.now() + {{@../index}} * 86400000),{{/case}}
         {{#case 16}}{{name}}: new Date(Date.now() + {{@../index}} * 3600000),{{/case}}
         {{#case 20}}{{name}}: {{#if (eq @../index 2)}}false{{else}}true{{/if}},{{/case}}
-        {{#case 13}}{{name}}: null,{{/case}}
+        {{#case 13}}{{name}}: uuidv4(),{{/case}}
         {{#case 14}}{{name}}: 'Sample {{name}} text {{@../index}}',{{/case}}
         {{#default}}{{name}}: 'Sample {{name}} {{@../index}}',{{/default}}
       {{/switch}}
