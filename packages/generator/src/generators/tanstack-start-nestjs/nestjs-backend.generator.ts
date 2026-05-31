@@ -102,6 +102,9 @@ export class NestJsBackendGenerator extends BaseGenerator {
     // Generate sys_ dictionary infrastructure
     await this.generateSysTables(outputDir, context);
 
+    // Generate Electric shape proxy module
+    await this.generateElectricModule(outputDir, context);
+
     // Generate bus_ business entities
     await this.generateBusEntities(outputDir, context);
 
@@ -563,6 +566,27 @@ export class NestJsBackendGenerator extends BaseGenerator {
       context
     );
     await fs.writeFile(path.join(outputDir, "src/modules/sys/sys.service.ts"), sysServiceContent);
+  }
+
+  private async generateElectricModule(outputDir: string, context: any): Promise<void> {
+    const electricDir = path.join(outputDir, "src/modules/electric");
+    await fs.mkdir(electricDir, { recursive: true });
+
+    try {
+      const controllerContent = await this.renderTemplate(
+        "src/modules/electric/electric.controller.ts.hbs",
+        context
+      );
+      await fs.writeFile(path.join(electricDir, "electric.controller.ts"), controllerContent);
+
+      const moduleContent = await this.renderTemplate(
+        "src/modules/electric/electric.module.ts.hbs",
+        context
+      );
+      await fs.writeFile(path.join(electricDir, "electric.module.ts"), moduleContent);
+    } catch (e) {
+      console.warn("Electric module templates not found, skipping:", (e as Error).message);
+    }
   }
 
   private async generateBusEntities(outputDir: string, context: any): Promise<void> {

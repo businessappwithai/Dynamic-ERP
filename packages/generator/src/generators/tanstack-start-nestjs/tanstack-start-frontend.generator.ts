@@ -294,6 +294,16 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
     const providersContent = await this.renderTemplate("src/providers/index.tsx.hbs", context);
     await fs.writeFile(path.join(outputDir, "src/providers/index.tsx"), providersContent);
 
+    // ElectricProvider (static file — JSX double-braces conflict with Handlebars)
+    try {
+      await fs.copyFile(
+        path.join(this.resolvedTemplateDir, "src/providers/electric-provider.tsx"),
+        path.join(outputDir, "src/providers/electric-provider.tsx")
+      );
+    } catch (e) {
+      console.warn("electric-provider static file not found, skipping:", (e as Error).message);
+    }
+
     // Copy provider files
     const providerFiles = [
       "src/providers/query-provider.tsx",
@@ -360,6 +370,22 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
     const apiClientContent = await this.renderTemplate("src/lib/api-client.ts.hbs", context);
     await fs.writeFile(path.join(outputDir, "src/lib/api-client.ts"), apiClientContent);
 
+    // ElectricSQL + PGlite setup (local-first sys_ entity sync)
+    try {
+      const electricContent = await this.renderTemplate("src/lib/electric.ts.hbs", context);
+      await fs.writeFile(path.join(outputDir, "src/lib/electric.ts"), electricContent);
+    } catch (e) {
+      console.warn("Electric template not found, skipping:", (e as Error).message);
+    }
+
+    // TanStack DB collections backed by PGlite
+    try {
+      const collectionsContent = await this.renderTemplate("src/lib/sys-collections.ts.hbs", context);
+      await fs.writeFile(path.join(outputDir, "src/lib/sys-collections.ts"), collectionsContent);
+    } catch (e) {
+      console.warn("sys-collections template not found, skipping:", (e as Error).message);
+    }
+
     // i18n translation utilities (static files, copy directly)
     const i18nFiles = [
       "src/lib/translations.tsx",
@@ -381,12 +407,23 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
     const hooksContent = await this.renderTemplate("src/hooks/use-entities.ts.hbs", context);
     await fs.writeFile(path.join(outputDir, "src/hooks/use-entities.ts"), hooksContent);
 
-    // Field metadata hooks
+    // Field metadata hooks (HTTP-based, kept for backwards compat)
     const fieldHooksContent = await this.renderTemplate(
       "src/hooks/use-field-metadata.ts.hbs",
       context
     );
     await fs.writeFile(path.join(outputDir, "src/hooks/use-field-metadata.ts"), fieldHooksContent);
+
+    // Local-first sys_ hooks via TanStack DB + ElectricSQL
+    try {
+      const sysElectricContent = await this.renderTemplate(
+        "src/hooks/use-sys-electric.ts.hbs",
+        context
+      );
+      await fs.writeFile(path.join(outputDir, "src/hooks/use-sys-electric.ts"), sysElectricContent);
+    } catch (e) {
+      console.warn("use-sys-electric template not found, skipping:", (e as Error).message);
+    }
   }
 
   private async generateComponents(outputDir: string, _context: any): Promise<void> {
@@ -645,6 +682,7 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
     // Generate environment configuration for TanStack Start
     const envLocalContent = `VITE_API_URL=${context.config.baseUrl}
 VITE_MASTRA_URL=http://localhost:4111
+VITE_ELECTRIC_URL=${context.config.baseUrl}/v1/shape
 PORT=3001
 `;
     await fs.writeFile(path.join(outputDir, ".env.local"), envLocalContent);
