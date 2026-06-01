@@ -160,8 +160,11 @@ function EntityDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['{{kebabCase entity.name}}'] });
       navigate({ to: '/{{addBusPrefix entity.tableName}}' });
     },
-    onError: () => {
+    onError: (err: unknown) => {
       setShowDeleteConfirm(false);
+      const message =
+        err instanceof Error ? err.message : 'Failed to delete record';
+      toast.error('Delete failed', { description: message });
     },
   });
 
