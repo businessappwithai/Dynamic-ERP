@@ -100,7 +100,7 @@ function TableDetailPage() {
           });
         } catch (e) {}
       }
-      const response = await fetch(`http://localhost:3001/api/sys/columns/direct?tableName=${tableName}`);
+      const response = await fetch(`/api/sys/columns/direct?tableName=${tableName}`);
       if (!response.ok) throw new Error('Failed to fetch columns');
       return await response.json();
     },

@@ -369,9 +369,12 @@ class ApiClient {
   async delete<T = void>(path: string, options?: RequestOptions): Promise<T> {
     const startTime = Date.now();
     const url = this.buildUrl(path);
+    // DELETE requests have no body — omit Content-Type to avoid Fastify's
+    // "body cannot be empty when content-type is application/json" error.
+    const { "Content-Type": _ct, ...headersWithoutContentType } = this.getHeaders(options?.headers) as Record<string, string>;
     const requestOptions = {
       method: "DELETE" as const,
-      headers: this.getHeaders(options?.headers),
+      headers: headersWithoutContentType,
       signal: options?.signal,
     };
 

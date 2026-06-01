@@ -38,8 +38,13 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('User not authenticated. Please sign in.');
     }
 
-    // Get user's roles from session or database
-    const userRoles = user.roles || [];
+    // Collect roles from both sources:
+    // - user.roles: application roles from sys_user_roles (populated by SessionAuthGuard if configured)
+    // - user.role: BetterAuth role field ('admin', 'user', etc.)
+    const userRoles: string[] = [...(user.roles || [])];
+    if (user.role && !userRoles.includes(user.role)) {
+      userRoles.push(user.role);
+    }
 
     // Check if user has any of the required roles
     const hasRole = requiredRoles.some((role) => userRoles.includes(role));

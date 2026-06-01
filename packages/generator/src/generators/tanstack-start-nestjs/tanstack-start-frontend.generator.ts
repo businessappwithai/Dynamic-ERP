@@ -71,9 +71,11 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
   private resolvedTemplateDir: string;
 
   constructor(options: TanStackStartFrontendOptions) {
-    // Resolve template directory correctly regardless of bundling
-    const stack = options.stackOption || "tanstack-start-nestjs";
-    const templateDir = resolveTemplateDir(`${stack}/frontend`);
+    // All frontend templates live in tanstack-start-nestjs/frontend/ as the
+    // single canonical source. tanstackjs-nestjs/frontend/ is kept only for
+    // legacy scaffold scaffolding differences; Electric/TanStack DB templates
+    // are not duplicated there.
+    const templateDir = resolveTemplateDir("tanstack-start-nestjs/frontend");
     super(templateDir);
     this.options = options;
     this.resolvedTemplateDir = templateDir;
@@ -294,11 +296,19 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
     const providersContent = await this.renderTemplate("src/providers/index.tsx.hbs", context);
     await fs.writeFile(path.join(outputDir, "src/providers/index.tsx"), providersContent);
 
-    // Copy provider files
+    // ElectricProvider (static file — JSX double-braces conflict with Handlebars)
+    try {
+      await fs.copyFile(
+        path.join(this.resolvedTemplateDir, "src/providers/electric-provider.tsx"),
+        path.join(outputDir, "src/providers/electric-provider.tsx")
+      );
+    } catch (e) {
+      console.warn("electric-provider static file not found, skipping:", (e as Error).message);
+    }
+
+    // Copy provider files (only query-provider; index.tsx comes from the .hbs template)
     const providerFiles = [
       "src/providers/query-provider.tsx",
-      "src/providers/browser-router-provider.tsx",
-      "src/providers/index.ts",
     ];
 
     for (const file of providerFiles) {
@@ -360,6 +370,22 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
     const apiClientContent = await this.renderTemplate("src/lib/api-client.ts.hbs", context);
     await fs.writeFile(path.join(outputDir, "src/lib/api-client.ts"), apiClientContent);
 
+    // ElectricSQL + PGlite setup (local-first sys_ entity sync)
+    try {
+      const electricContent = await this.renderTemplate("src/lib/electric.ts.hbs", context);
+      await fs.writeFile(path.join(outputDir, "src/lib/electric.ts"), electricContent);
+    } catch (e) {
+      console.warn("Electric template not found, skipping:", (e as Error).message);
+    }
+
+    // TanStack DB collections backed by PGlite
+    try {
+      const collectionsContent = await this.renderTemplate("src/lib/sys-collections.ts.hbs", context);
+      await fs.writeFile(path.join(outputDir, "src/lib/sys-collections.ts"), collectionsContent);
+    } catch (e) {
+      console.warn("sys-collections template not found, skipping:", (e as Error).message);
+    }
+
     // i18n translation utilities (static files, copy directly)
     const i18nFiles = [
       "src/lib/translations.tsx",
@@ -381,12 +407,23 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
     const hooksContent = await this.renderTemplate("src/hooks/use-entities.ts.hbs", context);
     await fs.writeFile(path.join(outputDir, "src/hooks/use-entities.ts"), hooksContent);
 
-    // Field metadata hooks
+    // Field metadata hooks (HTTP-based, kept for backwards compat)
     const fieldHooksContent = await this.renderTemplate(
       "src/hooks/use-field-metadata.ts.hbs",
       context
     );
     await fs.writeFile(path.join(outputDir, "src/hooks/use-field-metadata.ts"), fieldHooksContent);
+
+    // Local-first sys_ hooks via TanStack DB + ElectricSQL
+    try {
+      const sysElectricContent = await this.renderTemplate(
+        "src/hooks/use-sys-electric.ts.hbs",
+        context
+      );
+      await fs.writeFile(path.join(outputDir, "src/hooks/use-sys-electric.ts"), sysElectricContent);
+    } catch (e) {
+      console.warn("use-sys-electric template not found, skipping:", (e as Error).message);
+    }
   }
 
   private async generateComponents(outputDir: string, _context: any): Promise<void> {
@@ -626,6 +663,16 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
       console.warn("Custom tailwind config template not found, keeping TanStack Start default");
     }
 
+    // Copy postcss.config.js (required for Tailwind CSS processing)
+    try {
+      await fs.copyFile(
+        path.join(templateDir, "postcss.config.js"),
+        path.join(outputDir, "postcss.config.js")
+      );
+    } catch (e) {
+      console.warn("postcss.config.js template not found");
+    }
+
     // Update tsconfig.json
     try {
       const tsconfigContent = await this.renderTemplate("tsconfig.json.hbs", context);
@@ -643,8 +690,12 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
     }
 
     // Generate environment configuration for TanStack Start
-    const envLocalContent = `VITE_API_URL=${context.config.baseUrl}
+    // VITE_API_URL points to the frontend (port 3001) so the Vite proxy
+    // forwards /api/* requests to the NestJS backend, keeping cookies same-origin
+    const envLocalContent = `VITE_API_URL=http://localhost:3001
+VITE_BACKEND_URL=${context.config.baseUrl}
 VITE_MASTRA_URL=http://localhost:4111
+VITE_ELECTRIC_URL=${context.config.baseUrl}/v1/shape
 PORT=3001
 `;
     await fs.writeFile(path.join(outputDir, ".env.local"), envLocalContent);

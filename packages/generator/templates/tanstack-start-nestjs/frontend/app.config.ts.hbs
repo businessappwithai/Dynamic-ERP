@@ -9,9 +9,6 @@ export default defineConfig({
     quoteStyle: 'single',
     semicolons: false,
   },
-  server: {
-    preset: 'node-server',
-  },
   react: {
     jsxRuntime: 'automatic',
     jsxImportSource: 'react',
@@ -26,16 +23,14 @@ export default defineConfig({
         '@': path.resolve('./src'),
       },
     },
+    // @ts-expect-error - server proxy is valid Vite config but not typed in StartUserViteConfig
     server: {
-      middlewareMode: false,
-      port: 3000,
       proxy: {
         '/api': {
-          target: 'http://localhost:3001',
+          target: process.env.VITE_API_URL || 'http://localhost:3000',
           changeOrigin: true,
         },
       },
     },
-    ssr: false,
   },
 })

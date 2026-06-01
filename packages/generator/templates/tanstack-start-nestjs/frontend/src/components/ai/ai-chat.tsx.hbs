@@ -65,7 +65,7 @@ export function AIChatProvider({ children }: AIChatProviderProps) {
   return (
     <CopilotKit
       runtimeUrl="/api/copilotkit"
-      publicApiKey={process.env.NEXT_PUBLIC_COPILOT_API_KEY}
+      publicApiKey={import.meta.env.VITE_COPILOT_API_KEY}
     >
       {children}
     </CopilotKit>
