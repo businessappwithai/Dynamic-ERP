@@ -347,6 +347,9 @@ export class BusService {
       }
 
       if ((mode === 'update' || mode === 'patch') && !column.is_updateable) {
+        // In patch mode: skip non-updateable fields silently (they are stripped before writing)
+        // In update mode: only error on non-key non-updateable fields
+        if (mode === 'patch') continue;
         if (value !== undefined && column.column_name !== 'id') {
           errors.push(`Field '${column.name}' is not updateable`);
         }
@@ -369,9 +372,13 @@ export class BusService {
         if (typeof value !== 'string') return `Field '${fieldName}' must be a string`;
         break;
       case 11:
+        // Accept numeric strings — PostgreSQL integer columns may serialize as strings in JSON
+        if (typeof value === 'string' && /^-?\d+$/.test(value.trim())) break;
         if (typeof value !== 'number' || !Number.isInteger(value)) return `Field '${fieldName}' must be an integer`;
         break;
       case 12:
+        // Accept numeric strings — PostgreSQL NUMERIC/DECIMAL columns serialize as strings in JSON
+        if (typeof value === 'string' && !isNaN(parseFloat(value.trim())) && isFinite(Number(value.trim()))) break;
         if (typeof value !== 'number') return `Field '${fieldName}' must be a number`;
         break;
       case 20:

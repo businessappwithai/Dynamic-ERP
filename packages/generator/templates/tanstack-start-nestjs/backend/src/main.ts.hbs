@@ -8,8 +8,49 @@
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import { Kysely, PostgresDialect } from 'kysely';
+import { Pool } from 'pg';
 import { AppModule } from './app.module';
 import { initAuth, getAuth } from './lib/better-auth';
+
+async function ensureAdminUser(logger: Logger) {
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@{{project.domain}}';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'password123';
+
+  const pool = process.env.DATABASE_URL
+    ? new Pool({ connectionString: process.env.DATABASE_URL })
+    : new Pool({
+        host: process.env.DB_HOST ?? '127.0.0.1',
+        port: Number(process.env.DB_PORT ?? 5432),
+        user: process.env.DB_USER ?? '{{projectSnake}}',
+        password: process.env.DB_PASSWORD ?? '',
+        database: process.env.DB_NAME ?? '{{projectSnake}}',
+      });
+
+  const db = new Kysely<any>({ dialect: new PostgresDialect({ pool }) });
+
+  try {
+    const auth = getAuth();
+
+    // Check if admin user already exists
+    const existing = await db.selectFrom('user').select(['id', 'role']).where('email', '=', adminEmail).executeTakeFirst();
+
+    if (!existing) {
+      // Create admin user via Better Auth server-side API
+      await auth.api.signUpEmail({ body: { email: adminEmail, password: adminPassword, name: 'Admin User' } });
+      // Update role to 'admin' — Better Auth defaults new users to 'user'
+      await db.updateTable('user').set({ role: 'admin' }).where('email', '=', adminEmail).execute();
+      logger.log(`Admin user created: ${adminEmail} (password: ${adminPassword})`);
+    } else if (existing.role !== 'admin') {
+      await db.updateTable('user').set({ role: 'admin' }).where('email', '=', adminEmail).execute();
+      logger.log(`Admin user role updated to 'admin': ${adminEmail}`);
+    }
+  } catch (err: any) {
+    logger.warn(`Could not ensure admin user: ${err?.message ?? err}`);
+  } finally {
+    await db.destroy();
+  }
+}
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -113,6 +154,9 @@ async function bootstrap() {
 
   logger.log(`Application running on: ${await app.getUrl()}`);
   logger.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+
+  // Ensure the default admin user exists with the correct role
+  await ensureAdminUser(logger);
 }
 
 bootstrap().catch((err) => {
