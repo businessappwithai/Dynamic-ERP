@@ -26,13 +26,18 @@ export function QueryProvider({ children }: ProvidersProps) {
             gcTime: 5 * 60 * 1000, // 5 minutes (formerly cacheTime)
             refetchOnWindowFocus: false,
             retry: (failureCount, error) => {
-              // Don't retry on 4xx errors
               const apiError = error as { statusCode?: number };
+              // Don't retry on 4xx client errors
               if (apiError.statusCode && apiError.statusCode >= 400 && apiError.statusCode < 500) {
                 return false;
               }
-              // Retry up to 3 times on 5xx errors and network failures
-              return failureCount < 3;
+              // Don't retry on network failures (ERR_CONNECTION_REFUSED, offline)
+              // — backend won't recover in milliseconds, so retrying just floods the console
+              if (!apiError.statusCode) {
+                return false;
+              }
+              // Retry once on transient 5xx server errors
+              return failureCount < 1;
             },
           },
           mutations: {

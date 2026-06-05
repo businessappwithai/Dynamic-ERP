@@ -6,7 +6,19 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
       gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
-      retry: 1,
+      retry: (failureCount, error) => {
+        const apiError = error as { statusCode?: number };
+        // Don't retry on 4xx client errors
+        if (apiError.statusCode && apiError.statusCode >= 400 && apiError.statusCode < 500) {
+          return false;
+        }
+        // Don't retry on network failures (ERR_CONNECTION_REFUSED, offline)
+        if (!apiError.statusCode) {
+          return false;
+        }
+        // Retry once on transient 5xx server errors
+        return failureCount < 1;
+      },
       refetchOnWindowFocus: false,
     },
   },
