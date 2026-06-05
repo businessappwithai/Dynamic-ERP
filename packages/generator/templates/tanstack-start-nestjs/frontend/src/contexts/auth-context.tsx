@@ -35,7 +35,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         });
         if (response.ok) {
           const data = await response.json();
-          setUser(data.user);
+          setUser(data?.user ?? null);
         }
       } catch (error) {
         console.error('Failed to check session:', error);

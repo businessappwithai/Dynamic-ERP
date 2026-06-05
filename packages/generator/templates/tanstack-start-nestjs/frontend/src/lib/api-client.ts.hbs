@@ -294,6 +294,7 @@ class ApiClient {
     const requestOptions = {
       method: "GET" as const,
       headers: this.getHeaders(options?.headers),
+      credentials: "include" as const,
       signal: options?.signal,
     };
 
@@ -314,6 +315,7 @@ class ApiClient {
     const requestOptions = {
       method: "POST" as const,
       headers: this.getHeaders(options?.headers),
+      credentials: "include" as const,
       body: data ? JSON.stringify(data) : undefined,
       signal: options?.signal,
     };
@@ -335,6 +337,7 @@ class ApiClient {
     const requestOptions = {
       method: "PUT" as const,
       headers: this.getHeaders(options?.headers),
+      credentials: "include" as const,
       body: data ? JSON.stringify(data) : undefined,
       signal: options?.signal,
     };
@@ -356,6 +359,7 @@ class ApiClient {
     const requestOptions = {
       method: "PATCH" as const,
       headers: this.getHeaders(options?.headers),
+      credentials: "include" as const,
       body: data ? JSON.stringify(data) : undefined,
       signal: options?.signal,
     };
@@ -380,6 +384,7 @@ class ApiClient {
     const requestOptions = {
       method: "DELETE" as const,
       headers: headersWithoutContentType,
+      credentials: "include" as const,
       signal: options?.signal,
     };
 
