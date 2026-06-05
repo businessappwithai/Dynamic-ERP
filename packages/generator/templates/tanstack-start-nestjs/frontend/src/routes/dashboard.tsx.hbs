@@ -165,7 +165,7 @@ function QuickAccessCard({ table }: { table: TableMetadata }) {
           {table.entity_type && table.entity_type !== 'U' && (
             <AttributeBadge
               icon={Database}
-              label={{ D: 'System', A: 'Application', C: 'Custom' }[table.entity_type] ?? table.entity_type}
+              label={table.entity_type === 'D' ? 'System' : table.entity_type === 'A' ? 'Application' : table.entity_type === 'C' ? 'Custom' : table.entity_type}
               variant="outline"
             />
           )}

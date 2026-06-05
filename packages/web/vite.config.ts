@@ -15,6 +15,13 @@ const config = defineConfig({
     // Native .node binaries and Node-only drivers can't be bundled by Rolldown — exclude them
     exclude: ["@mastra/fastembed", "@anush008/tokenizers", "@anush008/tokenizers-darwin-universal", "mysql2"],
   },
+  ssr: {
+    // Treat workspace packages as Node.js externals so their dist/index.js
+    // files are used directly instead of being re-processed by Vite SSR.
+    // Without this, Vite SSR fails to resolve named exports (e.g. entityToBusEntity)
+    // from subpath exports like @erdwithai/core/types.
+    external: ["@erdwithai/core", "@erdwithai/generator", "@erdwithai/ai"],
+  },
   resolve: {
     tsconfigPaths: true,
     alias: [
