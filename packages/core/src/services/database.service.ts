@@ -246,6 +246,20 @@ async function _runMigrationsImpl(db: Kysely<Database>): Promise<void> {
       .execute();
   } catch { /* already exists */ }
 
+  try {
+    await db.schema
+      .createTable("rules")
+      .ifNotExists()
+      .addColumn("id", "varchar(128)", (col) => col.primaryKey())
+      .addColumn("entity_name", "varchar(255)", (col) => col.notNull())
+      .addColumn("rule_name", "varchar(255)", (col) => col.notNull())
+      .addColumn("operation", "varchar(64)", (col) => col.notNull())
+      .addColumn("jdm_content", "text", (col) => col.notNull())
+      .addColumn("created_at", "varchar(64)", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`))
+      .addColumn("updated_at", "varchar(64)", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`))
+      .execute();
+  } catch { /* already exists */ }
+
   // Auth tables
   try {
     await db.schema
@@ -1005,6 +1019,72 @@ export const settingsDb = {
   },
 };
 
+// ─── rulesDb ──────────────────────────────────────────────────────────────────
+
+export const rulesDb = {
+  async findAll(options?: { entityName?: string; operation?: string }) {
+    const db = getDb();
+    let query = db.selectFrom("rules").selectAll();
+    if (options?.entityName) query = query.where("entity_name", "=", options.entityName);
+    if (options?.operation) query = query.where("operation", "=", options.operation);
+    const rows = await query.orderBy("created_at", "desc").execute();
+    return (rows as any[]).map((r) => ({
+      id: r.id,
+      entityName: r.entity_name,
+      ruleName: r.rule_name,
+      operation: r.operation,
+      jdmContent: JSON.parse(r.jdm_content),
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+    }));
+  },
+
+  async findById(id: string) {
+    const db = getDb();
+    const row = await db.selectFrom("rules").selectAll().where("id", "=", id).executeTakeFirst();
+    if (!row) return null;
+    return {
+      id: (row as any).id,
+      entityName: (row as any).entity_name,
+      ruleName: (row as any).rule_name,
+      operation: (row as any).operation,
+      jdmContent: JSON.parse((row as any).jdm_content),
+      createdAt: (row as any).created_at,
+      updatedAt: (row as any).updated_at,
+    };
+  },
+
+  async create(data: { id: string; entityName: string; ruleName: string; operation: string; jdmContent: object }) {
+    const db = getDb();
+    const now = new Date().toISOString();
+    await db.insertInto("rules").values({
+      id: data.id,
+      entity_name: data.entityName,
+      rule_name: data.ruleName,
+      operation: data.operation,
+      jdm_content: JSON.stringify(data.jdmContent),
+      created_at: now,
+      updated_at: now,
+    } as any).execute();
+    return this.findById(data.id);
+  },
+
+  async update(id: string, data: { entityName?: string; ruleName?: string; operation?: string; jdmContent?: object }) {
+    const db = getDb();
+    const updates: Record<string, any> = { updated_at: new Date().toISOString() };
+    if (data.entityName !== undefined) updates.entity_name = data.entityName;
+    if (data.ruleName !== undefined) updates.rule_name = data.ruleName;
+    if (data.operation !== undefined) updates.operation = data.operation;
+    if (data.jdmContent !== undefined) updates.jdm_content = JSON.stringify(data.jdmContent);
+    await db.updateTable("rules").set(updates).where("id", "=", id).execute();
+    return this.findById(id);
+  },
+
+  async delete(id: string) {
+    await getDb().deleteFrom("rules").where("id", "=", id).execute();
+  },
+};
+
 // ─── Aggregate export ─────────────────────────────────────────────────────────
 
 export const dbOperations = {
@@ -1015,4 +1095,5 @@ export const dbOperations = {
   deployments: deploymentDb,
   entities: entityDb,
   settings: settingsDb,
+  rules: rulesDb,
 };

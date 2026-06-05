@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { convertToMermaid } from "@erdwithai/ai";
 
 export const Route = createFileRoute("/api/ai/convert-stream")({ server: { handlers: {
   POST: async ({ request }) => {
@@ -6,38 +7,39 @@ export const Route = createFileRoute("/api/ai/convert-stream")({ server: { handl
       const body = await request.json();
       const { description } = body;
 
-      if (!description) {
+      if (!description || typeof description !== "string") {
         return new Response(JSON.stringify({ error: "Description is required" }), {
           status: 400,
           headers: { "Content-Type": "application/json" },
         });
       }
 
-      // Create SSE stream for streaming conversion process
       const encoder = new TextEncoder();
+
       const stream = new ReadableStream({
         async start(controller) {
+          const send = (data: Record<string, unknown>) => {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+          };
+
           try {
-            // TODO: Implement full streaming conversion logic
-            // This should stream the AI analysis process step by step
+            send({ step: "analyzing", message: "Analyzing business domain and entity relationships..." });
 
-            controller.enqueue(
-              encoder.encode(
-                `data: ${JSON.stringify({ status: "analyzing", message: "Analyzing description..." })}\n\n`
-              )
-            );
+            const mermaidSyntax = await convertToMermaid(description);
 
-            controller.enqueue(
-              encoder.encode(
-                `data: ${JSON.stringify({ status: "complete", mermaidSyntax: "erDiagram\n  ENTITY {}" })}\n\n`
-              )
-            );
+            if (!mermaidSyntax) {
+              send({ step: "error", message: "AI returned an empty diagram — please try again with more detail." });
+              controller.close();
+              return;
+            }
 
-            controller.close();
+            send({ step: "generating", message: "Building entity model and relationships..." });
+            send({ step: "validating", message: "Validating ERD diagram syntax..." });
+            send({ mermaidSyntax });
           } catch (error) {
-            controller.enqueue(
-              encoder.encode(`data: ${JSON.stringify({ error: "Conversion failed" })}\n\n`)
-            );
+            const message = error instanceof Error ? error.message : "Conversion failed";
+            send({ step: "error", message });
+          } finally {
             controller.close();
           }
         },

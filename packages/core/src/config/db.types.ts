@@ -195,6 +195,16 @@ export interface AuthVerificationTokensTable {
   createdAt: string;
 }
 
+export interface RulesTable {
+  id: string;
+  entity_name: string;
+  rule_name: string;
+  operation: string;
+  jdm_content: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Database {
   projects: ProjectsTable;
   erd_versions: ErdVersionsTable;
@@ -203,6 +213,7 @@ export interface Database {
   deployments: DeploymentsTable;
   entities: EntitiesTable;
   settings: SettingsTable;
+  rules: RulesTable;
   auth_users: AuthUsersTable;
   auth_sessions: AuthSessionsTable;
   auth_accounts: AuthAccountsTable;

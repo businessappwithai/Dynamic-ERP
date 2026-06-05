@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Database, FileCode2, Loader2, Plus, Search, Trash2 } from "lucide-react";
+import { Database, FileCode2, Loader2, Menu, Plus, Search, Trash2, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { LogsViewer } from "@/components/logs/LogsViewer";
 import { NewProjectModal } from "@/components/project";
@@ -35,6 +35,7 @@ function ProjectsPage() {
   const [typeFilter, setTypeFilter] = useState("All Types");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [showMenu, setShowMenu] = useState<string | null>(null);
+  const [showMobileNav, setShowMobileNav] = useState(false);
   const [showLogsViewer, setShowLogsViewer] = useState(false);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
@@ -139,8 +140,65 @@ function ProjectsPage() {
               <h1 className="font-bold text-2xl tracking-tight text-foreground">ERDwithAI</h1>
             </div>
             <div className="flex items-center gap-3">
+              {/* Desktop nav links — hidden on mobile */}
+              <div className="hidden sm:flex items-center gap-3">
+                <Link
+                  to="/admin/mermaid"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-secondary hover:bg-secondary/80 text-muted-foreground hover:text-foreground rounded-xl text-sm font-medium transition-colors"
+                >
+                  <FileCode2 className="w-4 h-4" />
+                  Mermaid Library
+                </Link>
+                <Link
+                  to="/admin/rules"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-secondary hover:bg-secondary/80 text-muted-foreground hover:text-foreground rounded-xl text-sm font-medium transition-colors"
+                >
+                  Rules Admin
+                </Link>
+              </div>
+              {/* Desktop create button */}
+              <button
+                onClick={() => setShowNewProjectModal(true)}
+                disabled={isLoading || isCreatingProject}
+                className="hidden sm:flex bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-xl text-sm font-semibold items-center gap-2 shadow-lg shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: "#FF8400" }}
+              >
+                {isLoading || isCreatingProject ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4" />
+                )}
+                {isCreatingProject ? "Creating..." : "Create New Project"}
+              </button>
+              {/* Mobile: icon-only create button + hamburger */}
+              <button
+                onClick={() => setShowNewProjectModal(true)}
+                disabled={isLoading || isCreatingProject}
+                className="sm:hidden w-10 h-10 flex items-center justify-center rounded-xl shadow-lg shadow-primary/25 transition-all disabled:opacity-50"
+                style={{ backgroundColor: "#FF8400" }}
+                aria-label="Create new project"
+              >
+                {isLoading || isCreatingProject ? (
+                  <Loader2 className="w-4 h-4 text-white animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4 text-white" />
+                )}
+              </button>
+              <button
+                onClick={() => setShowMobileNav((v) => !v)}
+                className="sm:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
+                aria-label="Menu"
+              >
+                {showMobileNav ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+          {/* Mobile nav drawer */}
+          {showMobileNav && (
+            <div className="sm:hidden flex flex-col gap-2 pb-3">
               <Link
                 to="/admin/mermaid"
+                onClick={() => setShowMobileNav(false)}
                 className="flex items-center gap-2 px-4 py-2.5 bg-secondary hover:bg-secondary/80 text-muted-foreground hover:text-foreground rounded-xl text-sm font-medium transition-colors"
               >
                 <FileCode2 className="w-4 h-4" />
@@ -148,25 +206,13 @@ function ProjectsPage() {
               </Link>
               <Link
                 to="/admin/rules"
+                onClick={() => setShowMobileNav(false)}
                 className="flex items-center gap-2 px-4 py-2.5 bg-secondary hover:bg-secondary/80 text-muted-foreground hover:text-foreground rounded-xl text-sm font-medium transition-colors"
               >
                 Rules Admin
               </Link>
-            <button
-              onClick={() => setShowNewProjectModal(true)}
-              disabled={isLoading || isCreatingProject}
-              className="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-lg shadow-primary/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: "#FF8400" }}
-            >
-              {isLoading || isCreatingProject ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Plus className="w-4 h-4" />
-              )}
-              {isCreatingProject ? "Creating..." : "Create New Project"}
-            </button>
             </div>
-          </div>
+          )}
 
           {/* Search & Filter Bar */}
           <div className="flex gap-3 flex-wrap">

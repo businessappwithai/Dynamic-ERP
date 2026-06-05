@@ -1,24 +1,81 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { rulesDb, runMigrations } from "@erdwithai/core/services";
+
+let _dbReady = false;
+async function ensureDb() {
+  if (!_dbReady) {
+    _dbReady = true;
+    await runMigrations().catch((err) => console.error("[DB] Migration error:", err));
+  }
+}
 
 export const Route = createFileRoute("/api/rules/$ruleId/")({ server: { handlers: {
-  GET: async ({ params: _params }) => {
+  GET: async ({ params }) => {
+    await ensureDb();
     try {
-
-      // TODO: Update to use actual rules engine table from new schema
-      // Current implementation references old sys_rule table that doesn't exist
-
-      return new Response(
-        JSON.stringify({
-          error: "Rule not found",
-        }),
-        {
+      const rule = await rulesDb.findById(params.ruleId);
+      if (!rule) {
+        return new Response(JSON.stringify({ error: "Rule not found" }), {
           status: 404,
           headers: { "Content-Type": "application/json" },
-        }
-      );
+        });
+      }
+      return new Response(JSON.stringify({ rule }), {
+        headers: { "Content-Type": "application/json" },
+      });
     } catch (error) {
       console.error("Error fetching rule:", error);
       return new Response(JSON.stringify({ error: "Failed to fetch rule" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  },
+
+  PUT: async ({ request, params }) => {
+    await ensureDb();
+    try {
+      const body = await request.json();
+      const { entityName, ruleName, operation, jdmContent } = body;
+
+      const existing = await rulesDb.findById(params.ruleId);
+      if (!existing) {
+        return new Response(JSON.stringify({ error: "Rule not found" }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      const rule = await rulesDb.update(params.ruleId, { entityName, ruleName, operation, jdmContent });
+      return new Response(JSON.stringify({ success: true, rule }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      console.error("Error updating rule:", error);
+      return new Response(JSON.stringify({ error: "Failed to update rule" }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+  },
+
+  DELETE: async ({ params }) => {
+    await ensureDb();
+    try {
+      const existing = await rulesDb.findById(params.ruleId);
+      if (!existing) {
+        return new Response(JSON.stringify({ error: "Rule not found" }), {
+          status: 404,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      await rulesDb.delete(params.ruleId);
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      console.error("Error deleting rule:", error);
+      return new Response(JSON.stringify({ error: "Failed to delete rule" }), {
         status: 500,
         headers: { "Content-Type": "application/json" },
       });
