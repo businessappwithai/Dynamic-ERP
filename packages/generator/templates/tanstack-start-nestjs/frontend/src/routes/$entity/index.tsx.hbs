@@ -464,6 +464,7 @@ function EntityListPage() {
 
       {/* Data Table (columns dynamically rendered from sys_field via DynamicTable) */}
       <DynamicTable
+        hideSearch={true}
         tableName="{{addBusPrefix entity.tableName}}"
         data={filteredData}
         isLoading={isLoading}

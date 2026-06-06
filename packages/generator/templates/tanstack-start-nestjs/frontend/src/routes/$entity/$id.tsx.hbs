@@ -117,23 +117,31 @@ function EntityDetailPage() {
         toast.error('Record was modified by another user. Please refresh and try again.');
         return;
       }
-      // Handle 400 Validation errors with field-level details
-      if (error.errors && typeof error.errors === 'object') {
-        const fieldErrors: Record<string, string> = {};
-        for (const [field, messages] of Object.entries(error.errors)) {
-          if (Array.isArray(messages)) {
-            fieldErrors[field] = messages.join(', ');
-          } else if (typeof messages === 'string') {
-            fieldErrors[field] = messages;
+      // Handle validation errors - errors can be array of strings or object with field keys
+      if (error.errors) {
+        if (Array.isArray(error.errors)) {
+          // Backend returns array of error strings
+          toast.error('Validation failed', {
+            description: error.errors.join('\n') || 'Please check the form for errors',
+          });
+        } else if (typeof error.errors === 'object') {
+          // Field-level errors as object { fieldName: ['error1'] }
+          const fieldErrors: Record<string, string> = {};
+          for (const [field, messages] of Object.entries(error.errors)) {
+            if (Array.isArray(messages)) {
+              fieldErrors[field] = (messages as string[]).join(', ');
+            } else if (typeof messages === 'string') {
+              fieldErrors[field] = messages;
+            }
           }
+          setServerErrors(fieldErrors);
+          const errorMessages = Object.entries(fieldErrors)
+            .map(([field, msg]) => `${field}: ${msg}`)
+            .join('; ');
+          toast.error('Validation failed', {
+            description: errorMessages || 'Please check the form for errors',
+          });
         }
-        setServerErrors(fieldErrors);
-        const errorMessages = Object.entries(fieldErrors)
-          .map(([field, msg]) => `${field}: ${msg}`)
-          .join('; ');
-        toast.error('Validation failed', {
-          description: errorMessages || 'Please check the form for errors',
-        });
         return;
       }
       // Generic error handler
@@ -141,7 +149,7 @@ function EntityDetailPage() {
       if (typeof error.message === 'string') {
         message = error.message;
       } else if (Array.isArray(error.message) && error.message.length > 0) {
-        message = error.message.join(', ');
+        message = (error.message as string[]).join(', ');
       } else if (error.error) {
         message = error.error;
       }

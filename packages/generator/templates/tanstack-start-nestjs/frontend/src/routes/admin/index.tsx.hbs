@@ -20,6 +20,7 @@ import {
   ArrowRight,
   Database,
   RefreshCw,
+  Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -60,6 +61,11 @@ interface SysReference {
   name: string;
 }
 
+interface SysTab {
+  sys_tab_id: string;
+  name: string;
+}
+
 function AdminDashboardPage() {
   const { data: tablesResponse, isLoading: tablesLoading, refetch: refetchTables } = useQuery({
     queryKey: ['admin', 'tables'],
@@ -84,6 +90,11 @@ function AdminDashboardPage() {
   const { data: referencesResponse } = useQuery({
     queryKey: ['admin', 'references-count'],
     queryFn: () => apiClient.get<PaginatedResponse<SysReference>>('/api/sys/references', { limit: 1 }),
+  });
+
+  const { data: tabsResponse } = useQuery({
+    queryKey: ['admin', 'tabs-count'],
+    queryFn: () => apiClient.get<PaginatedResponse<SysTab>>('/api/sys/tabs', { limit: 1 }),
   });
 
   // Fetch all fields to compute per-entity field counts
@@ -136,56 +147,66 @@ function AdminDashboardPage() {
       <main className="max-w-7xl mx-auto px-8 py-12">
         {/* Swiss Clean Overview Cards - Grid Layout */}
         <section className="mb-16">
-          <div className="grid grid-cols-5 gap-0 border-l border-r border-border">
+          <div className="grid grid-cols-6 gap-0 border-l border-r border-border">
             {/* Tables Card */}
-            <div className="border-t border-b border-border border-r p-8 flex flex-col justify-between bg-card">
+            <Link to="/admin/tables" className="border-t border-b border-border border-r p-6 flex flex-col justify-between bg-card hover:bg-muted/30 transition-colors">
               <div>
-                <Table2 className="h-8 w-8 mb-6 text-primary" />
-                <h2 className="font-mono-display text-muted-foreground mb-2">Tables</h2>
-                <p className="text-5xl font-bold text-foreground font-display mb-2">{tablesResponse?.meta?.total || 0}</p>
+                <Table2 className="h-7 w-7 mb-5 text-primary" />
+                <h2 className="font-mono-display text-muted-foreground mb-2 text-sm">Tables</h2>
+                <p className="text-4xl font-bold text-foreground font-display mb-2">{tablesResponse?.meta?.total || 0}</p>
               </div>
-              <p className="text-xs text-muted-foreground mt-4">Registered in sys_table</p>
-            </div>
+              <p className="text-xs text-muted-foreground mt-3">sys_table</p>
+            </Link>
 
             {/* Columns Card */}
-            <div className="border-t border-b border-border border-r p-8 flex flex-col justify-between bg-card">
+            <div className="border-t border-b border-border border-r p-6 flex flex-col justify-between bg-card">
               <div>
-                <Columns className="h-8 w-8 mb-6 text-primary" />
-                <h2 className="font-mono-display text-muted-foreground mb-2">Columns</h2>
-                <p className="text-5xl font-bold text-foreground font-display mb-2">{columnsResponse?.meta?.total || 0}</p>
+                <Columns className="h-7 w-7 mb-5 text-primary" />
+                <h2 className="font-mono-display text-muted-foreground mb-2 text-sm">Columns</h2>
+                <p className="text-4xl font-bold text-foreground font-display mb-2">{columnsResponse?.meta?.total || 0}</p>
               </div>
-              <p className="text-xs text-muted-foreground mt-4">Defined in sys_column</p>
+              <p className="text-xs text-muted-foreground mt-3">sys_column</p>
             </div>
 
             {/* Fields Card */}
-            <div className="border-t border-b border-border border-r p-8 flex flex-col justify-between bg-card">
+            <Link to="/admin/fields" className="border-t border-b border-border border-r p-6 flex flex-col justify-between bg-card hover:bg-muted/30 transition-colors">
               <div>
-                <LayoutList className="h-8 w-8 mb-6 text-primary" />
-                <h2 className="font-mono-display text-muted-foreground mb-2">Fields</h2>
-                <p className="text-5xl font-bold text-foreground font-display mb-2">{fieldsResponse?.meta?.total || 0}</p>
+                <LayoutList className="h-7 w-7 mb-5 text-primary" />
+                <h2 className="font-mono-display text-muted-foreground mb-2 text-sm">Fields</h2>
+                <p className="text-4xl font-bold text-foreground font-display mb-2">{fieldsResponse?.meta?.total || 0}</p>
               </div>
-              <p className="text-xs text-muted-foreground mt-4">Layout entries in sys_field</p>
-            </div>
+              <p className="text-xs text-muted-foreground mt-3">sys_field</p>
+            </Link>
 
             {/* Windows Card */}
-            <div className="border-t border-b border-border border-r p-8 flex flex-col justify-between bg-card">
+            <Link to="/admin/windows" className="border-t border-b border-border border-r p-6 flex flex-col justify-between bg-card hover:bg-muted/30 transition-colors">
               <div>
-                <AppWindow className="h-8 w-8 mb-6 text-primary" />
-                <h2 className="font-mono-display text-muted-foreground mb-2">Windows</h2>
-                <p className="text-5xl font-bold text-foreground font-display mb-2">{windowsResponse?.meta?.total || 0}</p>
+                <AppWindow className="h-7 w-7 mb-5 text-primary" />
+                <h2 className="font-mono-display text-muted-foreground mb-2 text-sm">Windows</h2>
+                <p className="text-4xl font-bold text-foreground font-display mb-2">{windowsResponse?.meta?.total || 0}</p>
               </div>
-              <p className="text-xs text-muted-foreground mt-4">Defined in sys_window</p>
-            </div>
+              <p className="text-xs text-muted-foreground mt-3">sys_window</p>
+            </Link>
 
-            {/* Entities Card */}
-            <div className="border-t border-b border-border p-8 flex flex-col justify-between bg-card">
+            {/* Tabs Card */}
+            <Link to="/admin/tabs" className="border-t border-b border-border border-r p-6 flex flex-col justify-between bg-card hover:bg-muted/30 transition-colors">
               <div>
-                <Settings className="h-8 w-8 mb-6 text-primary" />
-                <h2 className="font-mono-display text-muted-foreground mb-2">Entities</h2>
-                <p className="text-5xl font-bold text-foreground font-display mb-2">{{entities.length}}</p>
+                <Layers className="h-7 w-7 mb-5 text-primary" />
+                <h2 className="font-mono-display text-muted-foreground mb-2 text-sm">Tabs</h2>
+                <p className="text-4xl font-bold text-foreground font-display mb-2">{tabsResponse?.meta?.total || 0}</p>
               </div>
-              <p className="text-xs text-muted-foreground mt-4">Generated business entities</p>
-            </div>
+              <p className="text-xs text-muted-foreground mt-3">sys_tab</p>
+            </Link>
+
+            {/* References Card */}
+            <Link to="/admin/references" className="border-t border-b border-border p-6 flex flex-col justify-between bg-card hover:bg-muted/30 transition-colors">
+              <div>
+                <Hash className="h-7 w-7 mb-5 text-primary" />
+                <h2 className="font-mono-display text-muted-foreground mb-2 text-sm">References</h2>
+                <p className="text-4xl font-bold text-foreground font-display mb-2">{referencesResponse?.meta?.total || 0}</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">sys_reference</p>
+            </Link>
           </div>
         </section>
 
@@ -202,7 +223,35 @@ function AdminDashboardPage() {
                 </div>
                 <h3 className="text-2xl font-bold mb-3 font-display text-foreground">Field Layout Manager</h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  Customize the order and visibility of fields in forms and grid views. Drag-and-drop reordering with seq_no and seq_no_grid editing.
+                  Customize field order and visibility in forms and grid views. Drag-and-drop reordering.
+                </p>
+              </div>
+            </Link>
+
+            {/* Windows Manager */}
+            <Link to="/admin/windows" className="group">
+              <div className="swiss-card p-8 hover:border-primary/50 transition-all">
+                <div className="flex items-start justify-between mb-6">
+                  <AppWindow className="h-6 w-6 text-primary" />
+                  <ArrowRight className="h-5 w-5 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <h3 className="text-2xl font-bold mb-3 font-display text-foreground">Windows Manager</h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  Create and manage application windows — the top-level containers for entity screens
+                </p>
+              </div>
+            </Link>
+
+            {/* Tabs Manager */}
+            <Link to="/admin/tabs" className="group">
+              <div className="swiss-card p-8 hover:border-primary/50 transition-all">
+                <div className="flex items-start justify-between mb-6">
+                  <Layers className="h-6 w-6 text-primary" />
+                  <ArrowRight className="h-5 w-5 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <h3 className="text-2xl font-bold mb-3 font-display text-foreground">Tabs Manager</h3>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  Manage tabs within windows — each tab corresponds to an entity data view
                 </p>
               </div>
             </Link>

@@ -129,7 +129,7 @@ export class SysService {
   async createTable(data: Record<string, unknown>) {
     const now = new Date().toISOString();
     const [table] = await this.db.kysely.insertInto('sys_table')
-      .values({ ...data, created: now, updated: now } as any)
+      .values({ ...data, created_at: now, updated_at: now, created_by: 'system', updated_by: 'system' } as any)
       .returningAll()
       .execute();
     return table;
@@ -138,7 +138,7 @@ export class SysService {
   async updateTable(id: string, data: Record<string, unknown>) {
     await this.findTableById(id);
     await this.db.kysely.updateTable('sys_table')
-      .set({ ...data, updated: new Date().toISOString() } as any)
+      .set({ ...data, updated_at: new Date().toISOString(), updated_by: 'system' } as any)
       .where('sys_table_id', '=', id)
       .execute();
     return this.findTableById(id);
@@ -173,7 +173,7 @@ export class SysService {
   async updateColumn(id: string, data: Record<string, unknown>) {
     await this.findColumnById(id);
     await this.db.kysely.updateTable('sys_column')
-      .set({ ...data, updated: new Date().toISOString() } as any)
+      .set({ ...data, updated_at: new Date().toISOString(), updated_by: 'system' } as any)
       .where('sys_column_id', '=', id)
       .execute();
     return this.findColumnById(id);
@@ -263,7 +263,7 @@ export class SysService {
     }
 
     await this.db.kysely.updateTable('sys_field')
-      .set({ ...data, version: ((field as any).version || 0) + 1, updated: new Date().toISOString() } as any)
+      .set({ ...data, version: ((field as any).version || 0) + 1, updated_at: new Date().toISOString(), updated_by: 'system' } as any)
       .where('sys_field_id', '=', id)
       .execute();
 
@@ -275,7 +275,7 @@ export class SysService {
     await this.db.kysely.transaction().execute(async (trx) => {
       for (const { id, seq_no } of fields) {
         await trx.updateTable('sys_field')
-          .set({ seq_no, updated: new Date().toISOString() } as any)
+          .set({ seq_no, updated_at: new Date().toISOString(), updated_by: 'system' } as any)
           .where('sys_field_id', '=', id)
           .execute();
       }
@@ -316,7 +316,7 @@ export class SysService {
   async createFieldGroup(data: Record<string, unknown>) {
     const now = new Date().toISOString();
     const [group] = await this.db.kysely.insertInto('sys_field_group')
-      .values({ ...data, created: now, updated: now } as any)
+      .values({ ...data, created_at: now, updated_at: now, created_by: 'system', updated_by: 'system' } as any)
       .returningAll()
       .execute();
     return group;
@@ -325,7 +325,7 @@ export class SysService {
   async updateFieldGroup(id: string, data: Record<string, unknown>) {
     await this.findFieldGroupById(id);
     await this.db.kysely.updateTable('sys_field_group')
-      .set({ ...data, updated: new Date().toISOString() } as any)
+      .set({ ...data, updated_at: new Date().toISOString(), updated_by: 'system' } as any)
       .where('sys_field_group_id', '=', id)
       .execute();
     return this.findFieldGroupById(id);
@@ -334,7 +334,7 @@ export class SysService {
   async deleteFieldGroup(id: string) {
     await this.findFieldGroupById(id);
     await this.db.kysely.updateTable('sys_field_group')
-      .set({ is_active: false, updated: new Date().toISOString() } as any)
+      .set({ is_active: false, updated_at: new Date().toISOString(), updated_by: 'system' } as any)
       .where('sys_field_group_id', '=', id)
       .execute();
     return { success: true };
@@ -391,6 +391,86 @@ export class SysService {
     ]);
 
     return { data, meta: { total: Number(countRow?.count ?? 0), page, pageSize: limit } };
+  }
+
+  async findWindowById(id: string) {
+    const window = await this.db.kysely.selectFrom('sys_window' as any).selectAll()
+      .where('sys_window_id' as any, '=', id).executeTakeFirst();
+    if (!window) throw new NotFoundException(`Window with ID ${id} not found`);
+    return window;
+  }
+
+  async createWindow(data: Record<string, unknown>) {
+    const now = new Date().toISOString();
+    const [win] = await this.db.kysely.insertInto('sys_window' as any)
+      .values({ ...data, created_at: now, updated_at: now, created_by: 'system', updated_by: 'system' } as any)
+      .returningAll()
+      .execute();
+    return win;
+  }
+
+  async updateWindow(id: string, data: Record<string, unknown>) {
+    await this.findWindowById(id);
+    await this.db.kysely.updateTable('sys_window' as any)
+      .set({ ...data, updated_at: new Date().toISOString(), updated_by: 'system' } as any)
+      .where('sys_window_id' as any, '=', id)
+      .execute();
+    return this.findWindowById(id);
+  }
+
+  // ============================================================
+  // SYS_TAB
+  // ============================================================
+
+  async findAllTabs(options: PaginationOptions & { windowId?: string; tableId?: string } = {}) {
+    const { page = 1, limit = 100, windowId, tableId } = options;
+    const offset = (page - 1) * limit;
+
+    let query = this.db.kysely.selectFrom('sys_tab' as any).selectAll();
+    if (windowId) query = (query as any).where('sys_window_id', '=', windowId);
+    if (tableId) query = (query as any).where('sys_table_id', '=', tableId);
+
+    const [data, countRow] = await Promise.all([
+      (query as any).orderBy('seq_no').limit(limit).offset(offset).execute(),
+      (query as any).clearSelect().select((eb: any) => eb.fn.countAll().as('count')).executeTakeFirst(),
+    ]);
+
+    return { data, meta: { total: Number(countRow?.count ?? 0), page, pageSize: limit } };
+  }
+
+  async findTabById(id: string) {
+    const tab = await this.db.kysely.selectFrom('sys_tab' as any).selectAll()
+      .where('sys_tab_id' as any, '=', id).executeTakeFirst();
+    if (!tab) throw new NotFoundException(`Tab with ID ${id} not found`);
+    return tab;
+  }
+
+  async findTabByTableName(tableName: string) {
+    const tab = await (this.db.kysely
+      .selectFrom('sys_tab' as any)
+      .innerJoin('sys_table', 'sys_table.sys_table_id', 'sys_tab.sys_table_id' as any)
+      .selectAll('sys_tab' as any)
+      .where('sys_table.table_name', '=', tableName) as any)
+      .executeTakeFirst();
+    return tab;
+  }
+
+  async createTab(data: Record<string, unknown>) {
+    const now = new Date().toISOString();
+    const [tab] = await this.db.kysely.insertInto('sys_tab' as any)
+      .values({ ...data, created_at: now, updated_at: now, created_by: 'system', updated_by: 'system' } as any)
+      .returningAll()
+      .execute();
+    return tab;
+  }
+
+  async updateTab(id: string, data: Record<string, unknown>) {
+    await this.findTabById(id);
+    await this.db.kysely.updateTable('sys_tab' as any)
+      .set({ ...data, updated_at: new Date().toISOString(), updated_by: 'system' } as any)
+      .where('sys_tab_id' as any, '=', id)
+      .execute();
+    return this.findTabById(id);
   }
 
   // ============================================================

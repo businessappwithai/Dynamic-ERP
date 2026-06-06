@@ -260,7 +260,7 @@ export async function seed(db: Kysely<any>): Promise<void> {
   }).execute();
 
   // Create sys_column entries
-  const {{camelCase name}}Columns: Array<{ id: string; name: string; displayName: string }> = [];
+  const {{camelCase name}}Columns: Array<{ id: string; name: string; displayName: string; isKey: boolean }> = [];
 
   let {{camelCase name}}ColumnSeqNo = 10;
   {{#each attributes}}
@@ -269,6 +269,7 @@ export async function seed(db: Kysely<any>): Promise<void> {
     id: {{camelCase ../name}}_{{camelCase name}}_columnId,
     name: '{{columnName}}',
     displayName: '{{displayName}}',
+    isKey: {{#if (eq name ../primaryKey)}}true{{else}}false{{/if}},
   });
 
   await db.insertInto('sys_column').values({
@@ -314,8 +315,8 @@ export async function seed(db: Kysely<any>): Promise<void> {
       name: col.displayName,
       seq_no: {{camelCase name}}SeqNumbers[i],
       seq_no_grid: (i + 1) * 10,
-      is_displayed: true,
-      is_displayed_grid: i < 8, // Show first 8 columns in grid
+      is_displayed: !col.isKey,
+      is_displayed_grid: !col.isKey && i < 8, // Hide pk fields, show first 8 non-pk columns in grid
       is_read_only: false,
       is_encrypted: false,
       is_same_line: false,

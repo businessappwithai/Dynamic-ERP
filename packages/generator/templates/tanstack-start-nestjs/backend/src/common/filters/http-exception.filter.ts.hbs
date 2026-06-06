@@ -16,12 +16,13 @@ import { FastifyReply, FastifyRequest } from 'fastify';
 
 export interface ErrorResponse {
   statusCode: number;
-  message: string;
+  message: string | string[];
   error: string;
   timestamp: string;
   path: string;
   requestId?: string;
   details?: any;
+  errors?: string[] | Record<string, string[]>;
 }
 
 @Catch()
@@ -60,9 +61,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
     }
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = 'Internal server error';
+    let message: string | string[] = 'Internal server error';
     let error = 'Internal Server Error';
     let details: any = undefined;
+    let errors: string[] | Record<string, string[]> | undefined = undefined;
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
@@ -79,6 +81,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         message = responseObj.message || message;
         error = responseObj.error || this.getErrorName(status);
         details = responseObj.details;
+        errors = responseObj.errors;
 
         // Log all keys from response object for debugging
         this.logger.error(`[${methodName}] Response Object Keys: ${Object.keys(responseObj).join(', ')}`);
@@ -87,6 +90,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
         if (Array.isArray(message)) {
           this.logger.error(`[${methodName}] Validation Errors (${message.length}):`);
           message.forEach((err, idx) => {
+            this.logger.error(`[${methodName}]   [${idx + 1}] ${err}`);
+          });
+        }
+
+        // Log errors array if present
+        if (Array.isArray(errors)) {
+          this.logger.error(`[${methodName}] Field Errors (${errors.length}):`);
+          errors.forEach((err, idx) => {
             this.logger.error(`[${methodName}]   [${idx + 1}] ${err}`);
           });
         }
@@ -110,6 +121,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       path: request.url,
       requestId: request.id,
       ...(details && { details }),
+      ...(errors && { errors }),
     };
 
     this.logger.error(`[${methodName}] Response Status: ${status}`);

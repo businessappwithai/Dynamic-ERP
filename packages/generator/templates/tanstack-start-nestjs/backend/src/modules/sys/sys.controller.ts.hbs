@@ -231,4 +231,60 @@ export class SysController {
   async findAllWindows(@Query('page') page?: string, @Query('limit') limit?: string) {
     return this.sysService.findAllWindows({ page: page ? (parseInt(page, 10) || 1) : 1, limit: limit ? (parseInt(limit, 10) || 100) : 100 });
   }
+
+  @Get('windows/:id')
+  @ApiOperation({ summary: 'Get window by ID' })
+  async findWindowById(@Param('id') id: string) {
+    return this.sysService.findWindowById(id);
+  }
+
+  @Post('windows')
+  @ApiOperation({ summary: 'Create window' })
+  async createWindow(@Body() data: Record<string, unknown>) {
+    return this.sysService.createWindow(data);
+  }
+
+  @Patch('windows/:id')
+  @ApiOperation({ summary: 'Update window' })
+  async updateWindow(@Param('id') id: string, @Body() data: Record<string, unknown>) {
+    return this.sysService.updateWindow(id, data);
+  }
+
+  // ============================================================================
+  // SYS_TAB Endpoints
+  // ============================================================================
+
+  @Get('tabs')
+  @ApiOperation({ summary: 'List all tabs' })
+  async findAllTabs(
+    @Query('windowId') windowId?: string,
+    @Query('tableId') tableId?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.sysService.findAllTabs({
+      windowId,
+      tableId,
+      page: page ? (parseInt(page, 10) || 1) : 1,
+      limit: limit ? (parseInt(limit, 10) || 100) : 100,
+    });
+  }
+
+  @Get('tabs/:id')
+  @ApiOperation({ summary: 'Get tab by ID' })
+  async findTabById(@Param('id') id: string) {
+    return this.sysService.findTabById(id);
+  }
+
+  @Post('tabs')
+  @ApiOperation({ summary: 'Create tab' })
+  async createTab(@Body() data: Record<string, unknown>) {
+    return this.sysService.createTab(data);
+  }
+
+  @Patch('tabs/:id')
+  @ApiOperation({ summary: 'Update tab' })
+  async updateTab(@Param('id') id: string, @Body() data: Record<string, unknown>) {
+    return this.sysService.updateTab(id, data);
+  }
 }

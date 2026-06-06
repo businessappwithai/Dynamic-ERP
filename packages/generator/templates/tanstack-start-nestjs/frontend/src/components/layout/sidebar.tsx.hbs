@@ -31,6 +31,9 @@ import {
   Activity,
   Pill,
   ClipboardList,
+  AppWindow,
+  Layers,
+  LayoutList,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
@@ -62,17 +65,38 @@ const navItems: NavItem[] = [
 
 const adminItems: NavItem[] = [
   {
+    title: 'Dashboard',
+    href: '/admin',
+    icon: Database,
+    description: 'Admin Overview',
+    requireAdmin: true,
+  },
+  {
     title: 'Dictionary',
     href: '/admin/dictionary',
-    icon: Database,
-    description: 'Application Dictionary',
+    icon: AppWindow,
+    description: 'Application Dictionary (Windows & Tabs)',
     requireAdmin: true,
   },
   {
     title: 'Field Layout',
     href: '/admin/fields',
-    icon: Settings,
+    icon: LayoutList,
     description: 'Field layout editor',
+    requireAdmin: true,
+  },
+  {
+    title: 'Tables',
+    href: '/admin/tables',
+    icon: Database,
+    description: 'Table browser',
+    requireAdmin: true,
+  },
+  {
+    title: 'References',
+    href: '/admin/references',
+    icon: Settings,
+    description: 'Reference types',
     requireAdmin: true,
   },
   {

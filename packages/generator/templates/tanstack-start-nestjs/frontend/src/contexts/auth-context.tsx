@@ -59,7 +59,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (!response.ok) throw new Error('Login failed');
       const data = await response.json();
-      setUser(data.user);
+      setUser(data?.user ?? null);
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +87,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (!response.ok) throw new Error('Signup failed');
       const data = await response.json();
-      setUser(data.user);
+      setUser(data?.user ?? null);
     } finally {
       setIsLoading(false);
     }

@@ -66,6 +66,7 @@ interface DynamicTableProps {
   onView?: (id: string) => void;
   onEdit?: (id: string) => void;
   selectedId?: string;
+  hideSearch?: boolean;
 }
 
 // ============================================================================
@@ -238,6 +239,7 @@ export function DynamicTable({
   onView,
   onEdit,
   selectedId,
+  hideSearch = false,
 }: DynamicTableProps) {
   const { t } = useTranslations();
   const { data: fields, isLoading: fieldsLoading, error } = useGridFields(tableName);
@@ -374,17 +376,19 @@ export function DynamicTable({
       />
 
       <div className="flex items-center justify-between gap-2">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search..."
-            value={globalFilter}
-            onChange={(e) => setGlobalFilter(e.target.value)}
-            className="pl-8"
-          />
-        </div>
+        {!hideSearch && (
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search..."
+              value={globalFilter}
+              onChange={(e) => setGlobalFilter(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+        )}
         {totalCount > 0 && (
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm text-muted-foreground ml-auto">
             Showing {(page - 1) * pageSize + 1} to {Math.min(page * pageSize, totalCount)} of{" "}
             {totalCount} entries
           </div>
