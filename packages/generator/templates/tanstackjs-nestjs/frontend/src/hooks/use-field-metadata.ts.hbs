@@ -60,7 +60,7 @@ export function useFieldMetadata(tableName: string) {
     queryFn: async () => {
       // First get the table ID
       const tableRes = await apiClient.get<PaginatedResponse<SysTable>>(
-        `/api/sys/tables?name=${tableName}`
+        `/sys/tables?name=${tableName}`
       );
       const table = tableRes.data?.[0];
       if (!table?.sys_table_id) {
@@ -69,7 +69,7 @@ export function useFieldMetadata(tableName: string) {
 
       // Then get the columns for this table
       const columnsRes = await apiClient.get<PaginatedResponse<ColumnMetadata>>(
-        `/api/sys/columns?table_id=${table.sys_table_id}`
+        `/sys/columns?table_id=${table.sys_table_id}`
       );
       return columnsRes.data;
     },
@@ -85,7 +85,7 @@ export function useTableColumns(tableId: string) {
     queryKey: ['sys', 'columns', tableId],
     queryFn: async () => {
       const response = await apiClient.get<PaginatedResponse<ColumnMetadata>>(
-        `/api/sys/columns?table_id=${tableId}`
+        `/sys/columns?table_id=${tableId}`
       );
       return response.data;
     },
@@ -102,7 +102,7 @@ export function useUpdateFieldOrder() {
 
   return useMutation({
     mutationFn: async ({ fieldId, newSeqNo }: { fieldId: string; newSeqNo: number }) => {
-      return apiClient.patch<FieldMetadata>(`/api/sys/fields/${fieldId}`, {
+      return apiClient.patch<FieldMetadata>(`/sys/fields/${fieldId}`, {
         seq_no: newSeqNo,
       });
     },
@@ -121,7 +121,7 @@ export function useToggleFieldVisibility() {
 
   return useMutation({
     mutationFn: async ({ fieldId, isDisplayed }: { fieldId: string; isDisplayed: boolean }) => {
-      return apiClient.patch<FieldMetadata>(`/api/sys/fields/${fieldId}`, {
+      return apiClient.patch<FieldMetadata>(`/sys/fields/${fieldId}`, {
         is_displayed: isDisplayed,
       });
     },
@@ -139,7 +139,7 @@ export function useReferenceTypes() {
     queryKey: ['sys', 'references'],
     queryFn: async () => {
       const response = await apiClient.get<PaginatedResponse<SysReference>>(
-        '/api/sys/references'
+        '/sys/references'
       );
       return response.data;
     },

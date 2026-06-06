@@ -38,7 +38,7 @@ async function waitForPageReady(page: any) {
 
 test.describe('{{project.name}} — API Health', () => {
 {{#each entities}}
-  test('GET /api/bus/{{plural (snakeCase name)}} should respond 200', async ({ request }) => {
+  test('GET /bus/{{plural (snakeCase name)}} should respond 200', async ({ request }) => {
     const res = await request.get(`${API_BASE}/{{plural (snakeCase name)}}`);
     expect(res.status()).toBe(200);
     const data = await res.json();

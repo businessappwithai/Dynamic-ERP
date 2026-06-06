@@ -41,7 +41,7 @@ export class BusController {
 
   /**
    * List all records for a business entity
-   * GET /api/bus/:entity
+   * GET /bus/:entity
    */
   @Get(':entity')
   @ApiOperation({ summary: 'List all records for a business entity' })
@@ -139,7 +139,7 @@ export class BusController {
   /**
    * Get dictionary metadata for an entity
    * Useful for clients to understand field configuration
-   * GET /api/bus/:entity/meta
+   * GET /bus/:entity/meta
    */
   @Get(':entity/meta')
   @ApiOperation({ summary: 'Get dictionary metadata for an entity' })
@@ -157,7 +157,7 @@ export class BusController {
 
   /**
    * Get fields configuration for forms (ordered by seq_no)
-   * GET /api/bus/:entity/fields/form
+   * GET /bus/:entity/fields/form
    */
   @Get(':entity/fields/form')
   @ApiOperation({ summary: 'Get fields for form display (ordered by seq_no)' })
@@ -174,7 +174,7 @@ export class BusController {
 
   /**
    * Get fields configuration for grid/table (ordered by seq_no_grid)
-   * GET /api/bus/:entity/fields/grid
+   * GET /bus/:entity/fields/grid
    */
   @Get(':entity/fields/grid')
   @ApiOperation({ summary: 'Get fields for grid display (ordered by seq_no_grid)' })
@@ -191,7 +191,7 @@ export class BusController {
 
   /**
    * Get a single record by ID
-   * GET /api/bus/:entity/:id
+   * GET /bus/:entity/:id
    */
   @Get(':entity/:id')
   @ApiOperation({ summary: 'Get a single record by ID' })
@@ -214,7 +214,7 @@ export class BusController {
 
   /**
    * Create a new record
-   * POST /api/bus/:entity
+   * POST /bus/:entity
    */
   @Post(':entity')
   @ApiOperation({ summary: 'Create a new record' })
@@ -239,7 +239,7 @@ export class BusController {
 
   /**
    * Update an existing record (full replace)
-   * PUT /api/bus/:entity/:id
+   * PUT /bus/:entity/:id
    */
   @Put(':entity/:id')
   @ApiOperation({ summary: 'Update a record (full replace)' })
@@ -273,7 +273,7 @@ export class BusController {
 
   /**
    * Partially update a record
-   * PATCH /api/bus/:entity/:id
+   * PATCH /bus/:entity/:id
    */
   @Patch(':entity/:id')
   @ApiOperation({ summary: 'Partially update a record' })
@@ -306,7 +306,7 @@ export class BusController {
 
   /**
    * Delete a record (soft delete)
-   * DELETE /api/bus/:entity/:id
+   * DELETE /bus/:entity/:id
    */
   @Delete(':entity/:id')
   @HttpCode(HttpStatus.NO_CONTENT)

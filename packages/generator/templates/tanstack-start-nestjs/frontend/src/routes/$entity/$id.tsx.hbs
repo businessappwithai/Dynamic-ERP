@@ -78,7 +78,7 @@ function EntityDetailPage() {
   // Fetch the record data
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['{{kebabCase entity.name}}', id],
-    queryFn: () => apiClient.get<{{entity.name}}>(`/api/bus/{{addBusPrefix entity.tableName}}/${id}`),
+    queryFn: () => apiClient.get<{{entity.name}}>(`/bus/{{addBusPrefix entity.tableName}}/${id}`),
     enabled: !isNew && !!id,
   });
 
@@ -86,10 +86,10 @@ function EntityDetailPage() {
   const saveMutation = useMutation({
     mutationFn: async (formData: Partial<{{entity.name}}>) => {
       if (isNew) {
-        return apiClient.post<{{entity.name}}>('/api/bus/{{addBusPrefix entity.tableName}}', formData);
+        return apiClient.post<{{entity.name}}>('/bus/{{addBusPrefix entity.tableName}}', formData);
       } else {
         return apiClient.patch<{{entity.name}}>(
-          `/api/bus/{{addBusPrefix entity.tableName}}/${id}`,
+          `/bus/{{addBusPrefix entity.tableName}}/${id}`,
           formData,
           {
             headers: data?.version ? { 'If-Match': `"${data.version}"` } : {},
@@ -163,7 +163,7 @@ function EntityDetailPage() {
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      return apiClient.delete(`/api/bus/{{addBusPrefix entity.tableName}}/${id}`);
+      return apiClient.delete(`/bus/{{addBusPrefix entity.tableName}}/${id}`);
     },
     onSuccess: () => {
       toast.success('{{entity.name}} deleted successfully');

@@ -72,7 +72,7 @@ describe('DynamicTable', () => {
     const { DynamicTable } = await import('../src/components/tables/dynamic-table');
 
     globalThis.fetch = createMockFetch({
-      '/api/sys/fields': { data: [] },
+      '/sys/fields': { data: [] },
     });
 
     const { container } = render(
@@ -98,7 +98,7 @@ describe('DynamicTable', () => {
       { sys_field_id: 'f1', name: 'Name', column_name: 'name', seq_no_grid: 1, is_displayed_grid: true, sys_reference_id: 10, is_mandatory: true, is_read_only: false, is_displayed: true, seq_no: 1 },
     ];
     globalThis.fetch = createMockFetch({
-      '/api/sys/fields': { data: fieldMeta },
+      '/sys/fields': { data: fieldMeta },
     });
 
     const sampleData = [{ id: 'row-1', name: '{{entities.[0].name}} One' }];
@@ -122,7 +122,7 @@ describe('DynamicTable', () => {
     const { DynamicTable } = await import('../src/components/tables/dynamic-table');
 
     globalThis.fetch = createMockFetch({
-      '/api/sys/fields': { data: [] },
+      '/sys/fields': { data: [] },
     });
 
     render(
@@ -182,10 +182,10 @@ describe('Mock API Responses', () => {
 describe('API path helpers', () => {
   it('createMockFetch returns 200 for known paths', async () => {
     const mockFetch = createMockFetch({
-      '/api/bus/bus_{{snakeCase entities.[0].name}}': { data: [], meta: { total: 0 } },
+      '/bus/bus_{{snakeCase entities.[0].name}}': { data: [], meta: { total: 0 } },
     });
 
-    const response = await mockFetch('/api/bus/bus_{{snakeCase entities.[0].name}}');
+    const response = await mockFetch('/bus/bus_{{snakeCase entities.[0].name}}');
     expect(response.ok).toBe(true);
     expect(response.status).toBe(200);
   });

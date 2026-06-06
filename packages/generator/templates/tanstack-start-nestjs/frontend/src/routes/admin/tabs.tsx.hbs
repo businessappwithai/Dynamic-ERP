@@ -216,7 +216,7 @@ function TabsManagementPage() {
 
   const { data: tabsResponse, isLoading: tabsLoading, refetch } = useQuery({
     queryKey: ['admin', 'tabs-mgmt', filterWindowId],
-    queryFn: () => apiClient.get<PaginatedResponse<SysTab>>('/api/sys/tabs', {
+    queryFn: () => apiClient.get<PaginatedResponse<SysTab>>('/sys/tabs', {
       limit: 200,
       ...(filterWindowId ? { windowId: filterWindowId } : {}),
     }),
@@ -224,16 +224,16 @@ function TabsManagementPage() {
 
   const { data: windowsResponse } = useQuery({
     queryKey: ['admin', 'windows-list'],
-    queryFn: () => apiClient.get<PaginatedResponse<SysWindow>>('/api/sys/windows', { limit: 200 }),
+    queryFn: () => apiClient.get<PaginatedResponse<SysWindow>>('/sys/windows', { limit: 200 }),
   });
 
   const { data: tablesResponse } = useQuery({
     queryKey: ['admin', 'tables-list'],
-    queryFn: () => apiClient.get<PaginatedResponse<SysTable>>('/api/sys/tables', { limit: 200 }),
+    queryFn: () => apiClient.get<PaginatedResponse<SysTable>>('/sys/tables', { limit: 200 }),
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: TabFormState) => apiClient.post<SysTab>('/api/sys/tabs', data),
+    mutationFn: (data: TabFormState) => apiClient.post<SysTab>('/sys/tabs', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'tabs-mgmt'] });
       queryClient.invalidateQueries({ queryKey: ['admin', 'tabs-all'] });
@@ -245,7 +245,7 @@ function TabsManagementPage() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: TabFormState }) =>
-      apiClient.patch<SysTab>(`/api/sys/tabs/${id}`, data),
+      apiClient.patch<SysTab>(`/sys/tabs/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'tabs-mgmt'] });
       queryClient.invalidateQueries({ queryKey: ['admin', 'tabs-all'] });

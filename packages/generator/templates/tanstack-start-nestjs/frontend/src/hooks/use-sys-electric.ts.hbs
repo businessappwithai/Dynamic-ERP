@@ -53,7 +53,7 @@ export function useSysTable(tableName: string) {
 
       // HTTP fallback
       const res = await apiClient.get<PaginatedResponse<SysTable>>(
-        `/api/sys/tables?name=${encodeURIComponent(tableName)}`
+        `/sys/tables?name=${encodeURIComponent(tableName)}`
       );
       return res.data?.[0];
     },
@@ -89,13 +89,13 @@ export function useSysColumns(tableName: string) {
 
       // HTTP fallback: first resolve table_id
       const tableRes = await apiClient.get<PaginatedResponse<SysTable>>(
-        `/api/sys/tables?name=${encodeURIComponent(tableName)}`
+        `/sys/tables?name=${encodeURIComponent(tableName)}`
       );
       const tableId = tableRes.data?.[0]?.sys_table_id;
       if (!tableId) return [];
 
       const colRes = await apiClient.get<PaginatedResponse<ColumnMetadata>>(
-        `/api/sys/columns?table_id=${tableId}`
+        `/sys/columns?table_id=${tableId}`
       );
       return colRes.data ?? [];
     },
@@ -132,13 +132,13 @@ export function useSysFields(tableName: string) {
 
       // HTTP fallback
       const tableRes = await apiClient.get<PaginatedResponse<SysTable>>(
-        `/api/sys/tables?name=${encodeURIComponent(tableName)}`
+        `/sys/tables?name=${encodeURIComponent(tableName)}`
       );
       const tableId = tableRes.data?.[0]?.sys_table_id;
       if (!tableId) return [];
 
       const fieldRes = await apiClient.get<PaginatedResponse<FieldMetadata>>(
-        `/api/sys/fields?table_id=${tableId}`
+        `/sys/fields?table_id=${tableId}`
       );
       return fieldRes.data ?? [];
     },
@@ -164,7 +164,7 @@ export function useSysReferences() {
         return localQuery<SysReference>('SELECT * FROM sys_reference ORDER BY name');
       }
 
-      const res = await apiClient.get<PaginatedResponse<SysReference>>('/api/sys/references');
+      const res = await apiClient.get<PaginatedResponse<SysReference>>('/sys/references');
       return res.data ?? [];
     },
     staleTime: isSynced ? Infinity : 30 * 60 * 1000,
@@ -180,7 +180,7 @@ export function useUpdateFieldOrder() {
 
   return useMutation({
     mutationFn: async ({ fieldId, newSeqNo }: { fieldId: string; newSeqNo: number }) => {
-      return apiClient.patch<FieldMetadata>(`/api/sys/fields/${fieldId}`, { seq_no: newSeqNo });
+      return apiClient.patch<FieldMetadata>(`/sys/fields/${fieldId}`, { seq_no: newSeqNo });
     },
     onSuccess: () => {
       // Electric will sync the change back automatically; invalidate to trigger local re-query
@@ -194,7 +194,7 @@ export function useToggleFieldVisibility() {
 
   return useMutation({
     mutationFn: async ({ fieldId, isDisplayed }: { fieldId: string; isDisplayed: boolean }) => {
-      return apiClient.patch<FieldMetadata>(`/api/sys/fields/${fieldId}`, {
+      return apiClient.patch<FieldMetadata>(`/sys/fields/${fieldId}`, {
         is_displayed: isDisplayed,
       });
     },

@@ -40,7 +40,7 @@ function TableBrowserPage() {
 
   const { data: tablesResponse, isLoading: tablesLoading, refetch: refetchTables } = useQuery({
     queryKey: ['admin', 'tables-browser'],
-    queryFn: () => apiClient.get<PaginatedResponse<SysTable>>('/api/sys/tables/all', { limit: 200 }),
+    queryFn: () => apiClient.get<PaginatedResponse<SysTable>>('/sys/tables/all', { limit: 200 }),
   });
 
   const tables = tablesResponse?.data || [];

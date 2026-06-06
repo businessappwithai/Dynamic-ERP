@@ -253,13 +253,13 @@ function FieldsGrid({ tabId, onFieldSelect, selectedFieldId }: FieldsGridProps) 
 
   const { data: fieldsResp, isLoading } = useQuery({
     queryKey: ['sys_fields', tabId],
-    queryFn: () => apiClient.get<{ data: SysField[]; total: number }>(`/api/sys/fields?tabId=${tabId}&limit=200`),
+    queryFn: () => apiClient.get<{ data: SysField[]; total: number }>(`/sys/fields?tabId=${tabId}&limit=200`),
     enabled: !!tabId,
   });
 
   const updateFieldMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
-      apiClient.patch(`/api/sys/fields/${id}`, data),
+      apiClient.patch(`/sys/fields/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sys_fields', tabId] });
       toast.success('Field updated');
@@ -360,7 +360,7 @@ function TabEditor({ tab, onClose, onSave, isSaving }: TabEditorProps) {
 
   const updateFieldMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
-      apiClient.patch(`/api/sys/fields/${id}`, data),
+      apiClient.patch(`/sys/fields/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sys_fields', tab.sys_tab_id] });
       toast.success('Field updated');
@@ -467,14 +467,14 @@ function TabsPanel({ windowId }: TabsPanelProps) {
     queryKey: ['sys_tabs', windowId],
     queryFn: () =>
       apiClient.get<{ data: SysTab[]; total: number }>(
-        `/api/sys/tabs?windowId=${windowId}&limit=200`
+        `/sys/tabs?windowId=${windowId}&limit=200`
       ),
     enabled: !!windowId,
   });
 
   const createTabMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) =>
-      apiClient.post('/api/sys/tabs', { ...data, sys_window_id: windowId }),
+      apiClient.post('/sys/tabs', { ...data, sys_window_id: windowId }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sys_tabs', windowId] });
       toast.success('Tab created');
@@ -485,7 +485,7 @@ function TabsPanel({ windowId }: TabsPanelProps) {
 
   const updateTabMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
-      apiClient.patch(`/api/sys/tabs/${id}`, data),
+      apiClient.patch(`/sys/tabs/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sys_tabs', windowId] });
       toast.success('Tab saved');
@@ -667,14 +667,14 @@ function ApplicationDictionaryPage() {
   const { data: windowsResp, isLoading: windowsLoading, refetch } = useQuery({
     queryKey: ['sys_windows'],
     queryFn: () =>
-      apiClient.get<{ data: SysWindow[]; total: number }>('/api/sys/windows?limit=200'),
+      apiClient.get<{ data: SysWindow[]; total: number }>('/sys/windows?limit=200'),
   });
 
   const { data: tabCountsResp } = useQuery({
     queryKey: ['sys_tab_counts', selectedWindowId],
     queryFn: () =>
       apiClient.get<{ data: { total: number }[] }>(
-        `/api/sys/tabs?windowId=${selectedWindowId}&limit=1`
+        `/sys/tabs?windowId=${selectedWindowId}&limit=1`
       ),
     enabled: !!selectedWindowId,
     select: (data: any) => data?.total ?? 0,
@@ -682,7 +682,7 @@ function ApplicationDictionaryPage() {
 
   const createWindowMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) =>
-      apiClient.post<SysWindow>('/api/sys/windows', data),
+      apiClient.post<SysWindow>('/sys/windows', data),
     onSuccess: (newWindow: any) => {
       queryClient.invalidateQueries({ queryKey: ['sys_windows'] });
       toast.success('Window created');
@@ -694,7 +694,7 @@ function ApplicationDictionaryPage() {
 
   const updateWindowMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
-      apiClient.patch(`/api/sys/windows/${id}`, data),
+      apiClient.patch(`/sys/windows/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sys_windows'] });
       toast.success('Window saved');

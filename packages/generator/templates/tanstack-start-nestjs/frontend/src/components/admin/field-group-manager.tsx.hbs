@@ -103,7 +103,7 @@ export function FieldGroupManager({ entityName }: FieldGroupManagerProps) {
     mutationFn: async (updates: Array<{ id: string; field_group: string | null }>) => {
       await Promise.all(
         updates.map((update) =>
-          apiClient.patch(`/api/sys/fields/${update.id}`, {
+          apiClient.patch(`/sys/fields/${update.id}`, {
             field_group: update.field_group,
           })
         )

@@ -145,16 +145,16 @@ function WindowsManagementPage() {
 
   const { data: windowsResponse, isLoading, refetch } = useQuery({
     queryKey: ['admin', 'windows-mgmt'],
-    queryFn: () => apiClient.get<PaginatedResponse<SysWindow>>('/api/sys/windows', { limit: 200 }),
+    queryFn: () => apiClient.get<PaginatedResponse<SysWindow>>('/sys/windows', { limit: 200 }),
   });
 
   const { data: tabsResponse } = useQuery({
     queryKey: ['admin', 'tabs-all'],
-    queryFn: () => apiClient.get<PaginatedResponse<SysTab>>('/api/sys/tabs', { limit: 500 }),
+    queryFn: () => apiClient.get<PaginatedResponse<SysTab>>('/sys/tabs', { limit: 500 }),
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: WindowFormState) => apiClient.post<SysWindow>('/api/sys/windows', data),
+    mutationFn: (data: WindowFormState) => apiClient.post<SysWindow>('/sys/windows', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'windows-mgmt'] });
       setCreatingNew(false);
@@ -165,7 +165,7 @@ function WindowsManagementPage() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: WindowFormState }) =>
-      apiClient.patch<SysWindow>(`/api/sys/windows/${id}`, data),
+      apiClient.patch<SysWindow>(`/sys/windows/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin', 'windows-mgmt'] });
       setEditingId(null);

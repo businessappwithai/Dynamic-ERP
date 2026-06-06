@@ -173,7 +173,7 @@ function EntityListPage() {
         ...filterParams,
       });
       return apiClient.get<PaginatedResponse<{{entity.name}}>>(
-        `/api/bus/{{addBusPrefix entity.tableName}}?${params.toString()}`
+        `/bus/{{addBusPrefix entity.tableName}}?${params.toString()}`
       );
     },
   });
@@ -189,7 +189,7 @@ function EntityListPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      await apiClient.delete(`/api/bus/{{addBusPrefix entity.tableName}}/${id}`);
+      await apiClient.delete(`/bus/{{addBusPrefix entity.tableName}}/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['{{kebabCase entity.name}}'] });

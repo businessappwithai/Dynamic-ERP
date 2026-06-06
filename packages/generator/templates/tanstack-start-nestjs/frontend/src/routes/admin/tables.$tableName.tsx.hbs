@@ -71,12 +71,12 @@ function TableDetailPage() {
   const { data: tablesResponse, isLoading: tableLoading, refetch: refetchTable } = useQuery({
     queryKey: ['admin', 'table-detail', tableName],
     queryFn: async () => {
-      const dictResponse = await apiClient.get<PaginatedResponse<SysTable>>('/api/sys/tables', {
+      const dictResponse = await apiClient.get<PaginatedResponse<SysTable>>('/sys/tables', {
         limit: 1,
         search: tableName,
       });
       if (dictResponse.data && dictResponse.data.length > 0) return dictResponse;
-      const schemaResponse = await apiClient.get<any>('/api/sys/tables/all', { limit: 1, search: tableName });
+      const schemaResponse = await apiClient.get<any>('/sys/tables/all', { limit: 1, search: tableName });
       return schemaResponse;
     },
   });
@@ -85,7 +85,7 @@ function TableDetailPage() {
 
   const { data: referencesResponse } = useQuery({
     queryKey: ['admin', 'references'],
-    queryFn: () => apiClient.get<PaginatedResponse<Reference>>('/api/sys/references', { limit: 100 }),
+    queryFn: () => apiClient.get<PaginatedResponse<Reference>>('/sys/references', { limit: 100 }),
   });
 
   const { data: columnsResponse, isLoading: columnsLoading, refetch: refetchColumns } = useQuery({
@@ -94,13 +94,13 @@ function TableDetailPage() {
       if (!table) return { data: [] };
       if (table.sys_table_id) {
         try {
-          return await apiClient.get<PaginatedResponse<SysColumn>>('/api/sys/columns', {
+          return await apiClient.get<PaginatedResponse<SysColumn>>('/sys/columns', {
             tableId: table.sys_table_id,
             limit: 200,
           });
         } catch (e) {}
       }
-      const response = await fetch(`/api/sys/columns/direct?tableName=${tableName}`);
+      const response = await fetch(`/sys/columns/direct?tableName=${tableName}`);
       if (!response.ok) throw new Error('Failed to fetch columns');
       return await response.json();
     },
@@ -122,9 +122,9 @@ function TableDetailPage() {
   const updateTableMutation = useMutation({
     mutationFn: async (data: { name: string; description: string; is_active: boolean }) => {
       if (table?.sys_table_id) {
-        return apiClient.patch(`/api/sys/tables/${table.sys_table_id}`, data);
+        return apiClient.patch(`/sys/tables/${table.sys_table_id}`, data);
       } else {
-        return apiClient.post('/api/sys/tables', data);
+        return apiClient.post('/sys/tables', data);
       }
     },
     onSuccess: () => {

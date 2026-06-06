@@ -205,7 +205,7 @@ export function FieldLayoutEditor({ entityName }: FieldLayoutEditorProps) {
       // Batch update all fields
       await Promise.all(
         updates.map((update) =>
-          apiClient.patch(`/api/sys/fields/${update.id}`, {
+          apiClient.patch(`/sys/fields/${update.id}`, {
             seq_no: mode === 'form' ? update.seq_no : undefined,
             seq_no_grid: mode === 'grid' ? update.seq_no : undefined,
             is_displayed: mode === 'form' ? update.is_displayed : undefined,

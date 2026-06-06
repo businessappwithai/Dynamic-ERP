@@ -211,7 +211,7 @@ function FieldLayoutPageContent() {
   // Fetch sys_table entries for the entity selector
   const { data: tablesResponse, isLoading: tablesLoading } = useQuery({
     queryKey: ['admin', 'sys-tables'],
-    queryFn: () => apiClient.get<PaginatedResponse<SysTable>>('/api/sys/tables', { limit: 200 }),
+    queryFn: () => apiClient.get<PaginatedResponse<SysTable>>('/sys/tables', { limit: 200 }),
   });
 
   // Fetch sys_field entries for the selected table
@@ -222,7 +222,7 @@ function FieldLayoutPageContent() {
   } = useQuery({
     queryKey: ['admin', 'fields', selectedTable],
     queryFn: () =>
-      apiClient.get<PaginatedResponse<SysField>>('/api/sys/fields', {
+      apiClient.get<PaginatedResponse<SysField>>('/sys/fields', {
         table_name: selectedTable,
         limit: 200,
         sort: layoutMode === 'form' ? 'seq_no' : 'seq_no_grid',
@@ -392,7 +392,7 @@ function FieldLayoutPageContent() {
 
       await Promise.all(
         updates.map((update) =>
-          apiClient.put(`/api/sys/fields/${update.sys_field_id}`, {
+          apiClient.put(`/sys/fields/${update.sys_field_id}`, {
             seq_no: update.seq_no,
             seq_no_grid: update.seq_no_grid,
             is_displayed: update.is_displayed,
@@ -591,7 +591,7 @@ function FieldLayoutPageContent() {
                     <li>- Use arrow buttons to move fields up or down one position</li>
                     <li>- Toggle the eye icon to show/hide fields in the layout</li>
                     <li>- Switch between Form (seq_no) and Grid (seq_no_grid) modes</li>
-                    <li>- Click "Save Changes" to persist updates via PUT to /api/sys/fields</li>
+                    <li>- Click "Save Changes" to persist updates via PUT to /sys/fields</li>
                   </ul>
                 </div>
               </CardContent>

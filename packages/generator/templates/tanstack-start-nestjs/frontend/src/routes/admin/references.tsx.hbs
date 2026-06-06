@@ -78,7 +78,7 @@ function ReferenceTypesPage() {
 
   const { data: referencesResponse, isLoading: referencesLoading, refetch: refetchReferences } = useQuery({
     queryKey: ['admin', 'references-list'],
-    queryFn: () => apiClient.get<PaginatedResponse<Reference>>('/api/sys/references', { limit: 200 }),
+    queryFn: () => apiClient.get<PaginatedResponse<Reference>>('/sys/references', { limit: 200 }),
   });
 
   const references = referencesResponse?.data || [];

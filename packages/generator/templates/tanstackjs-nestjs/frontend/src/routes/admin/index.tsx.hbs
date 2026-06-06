@@ -63,33 +63,33 @@ interface SysReference {
 function AdminDashboardPage() {
   const { data: tablesResponse, isLoading: tablesLoading, refetch: refetchTables } = useQuery({
     queryKey: ['admin', 'tables'],
-    queryFn: () => apiClient.get<PaginatedResponse<SysTable>>('/api/sys/tables', { limit: 200 }),
+    queryFn: () => apiClient.get<PaginatedResponse<SysTable>>('/sys/tables', { limit: 200 }),
   });
 
   const { data: columnsResponse, isLoading: columnsLoading } = useQuery({
     queryKey: ['admin', 'columns-count'],
-    queryFn: () => apiClient.get<PaginatedResponse<SysColumn>>('/api/sys/columns', { limit: 1 }),
+    queryFn: () => apiClient.get<PaginatedResponse<SysColumn>>('/sys/columns', { limit: 1 }),
   });
 
   const { data: fieldsResponse, isLoading: fieldsLoading } = useQuery({
     queryKey: ['admin', 'fields-count'],
-    queryFn: () => apiClient.get<PaginatedResponse<SysField>>('/api/sys/fields', { limit: 1 }),
+    queryFn: () => apiClient.get<PaginatedResponse<SysField>>('/sys/fields', { limit: 1 }),
   });
 
   const { data: windowsResponse, isLoading: windowsLoading } = useQuery({
     queryKey: ['admin', 'windows-count'],
-    queryFn: () => apiClient.get<PaginatedResponse<SysWindow>>('/api/sys/windows', { limit: 1 }),
+    queryFn: () => apiClient.get<PaginatedResponse<SysWindow>>('/sys/windows', { limit: 1 }),
   });
 
   const { data: referencesResponse } = useQuery({
     queryKey: ['admin', 'references-count'],
-    queryFn: () => apiClient.get<PaginatedResponse<SysReference>>('/api/sys/references', { limit: 1 }),
+    queryFn: () => apiClient.get<PaginatedResponse<SysReference>>('/sys/references', { limit: 1 }),
   });
 
   // Fetch all fields to compute per-entity field counts
   const { data: allFieldsResponse } = useQuery({
     queryKey: ['admin', 'all-fields'],
-    queryFn: () => apiClient.get<PaginatedResponse<SysField>>('/api/sys/fields', { limit: 500 }),
+    queryFn: () => apiClient.get<PaginatedResponse<SysField>>('/sys/fields', { limit: 500 }),
   });
 
   const tables = tablesResponse?.data || [];

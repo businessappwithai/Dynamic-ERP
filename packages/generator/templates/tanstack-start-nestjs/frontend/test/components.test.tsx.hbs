@@ -27,7 +27,7 @@ describe('DynamicTable Component', () => {
     const { DynamicTable } = await import('../src/components/tables/dynamic-table');
 
     globalThis.fetch = createMockFetch({
-      '/api/sys/fields': { data: [] },
+      '/sys/fields': { data: [] },
     });
 
     const { container } = render(
@@ -50,7 +50,7 @@ describe('DynamicTable Component', () => {
     const { DynamicTable } = await import('../src/components/tables/dynamic-table');
 
     globalThis.fetch = createMockFetch({
-      '/api/sys/fields': { data: [] },
+      '/sys/fields': { data: [] },
     });
 
     const sampleData = [
@@ -78,7 +78,7 @@ describe('DynamicTable Component', () => {
     const { DynamicTable } = await import('../src/components/tables/dynamic-table');
 
     globalThis.fetch = createMockFetch({
-      '/api/sys/fields': { data: [] },
+      '/sys/fields': { data: [] },
     });
 
     const { container } = render(
@@ -115,10 +115,10 @@ describe('DynamicTable Component', () => {
 describe('API Mock Utilities', () => {
   it('createMockFetch returns 200 for known paths', async () => {
     const mockFetch = createMockFetch({
-      '/api/bus/test_table': { data: [], meta: { total: 0 } },
+      '/bus/test_table': { data: [], meta: { total: 0 } },
     });
 
-    const response = await mockFetch('/api/bus/test_table');
+    const response = await mockFetch('/bus/test_table');
     expect(response.ok).toBe(true);
     expect(response.status).toBe(200);
   });
