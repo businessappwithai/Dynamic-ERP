@@ -289,7 +289,9 @@ function DeployPage() {
     navigate({ to: "/projects" });
   };
 
-  if (isLoading) {
+  const shouldLoad = !getProject(projectId) && !currentProject;
+
+  if (isLoading || shouldLoad) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex items-center gap-3">

@@ -318,7 +318,9 @@ function RulesDesignPage() {
     navigate({ to: "/projects/$id/generate", params: { id: projectId } });
   };
 
-  if (isLoading) {
+  const shouldLoad = !getProject(projectId) && !currentProject;
+
+  if (isLoading || shouldLoad) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Zap className="w-6 h-6 text-blue-600 animate-pulse" />
