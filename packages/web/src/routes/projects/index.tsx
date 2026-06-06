@@ -48,9 +48,10 @@ function ProjectsPage() {
     const matchesSearch =
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (p.description && p.description.toLowerCase().includes(searchQuery.toLowerCase()));
+    const computedStatus = p.deploymentStatus === "running" ? "active" : p.generatedPath ? "complete" : "draft";
     const matchesStatus =
       statusFilter === "All Status" ||
-      p.status?.toLowerCase() === statusFilter.toLowerCase();
+      computedStatus === statusFilter.toLowerCase();
     const matchesType =
       typeFilter === "All Types" ||
       (typeFilter === "TanStack Start/NestJS" && p.stackType === "tanstackjs-nestjs") ||
