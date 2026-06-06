@@ -1,4 +1,5 @@
 import React, { type ReactNode, createContext, useContext, useState, useEffect } from 'react';
+import { setUnauthorizedCallback } from '@/lib/api-client';
 
 interface User {
   id: string;
@@ -45,6 +46,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
 
     checkSession();
+
+    // Register 401 unauthorized callback for API client
+    setUnauthorizedCallback(async () => {
+      setUser(null);
+      await fetch('/api/auth/sign-out', { method: 'POST', credentials: 'include' });
+      window.location.href = '/auth/login';
+    });
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -57,7 +65,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
         credentials: 'include',
       });
 
-      if (!response.ok) throw new Error('Login failed');
+      if (!response.ok) {
+        let message = 'Login failed';
+        try {
+          const errorData = await response.json();
+          message = errorData?.message || errorData?.error || `Login failed (${response.status})`;
+        } catch {
+          // response was not JSON
+        }
+        throw new Error(message);
+      }
       const data = await response.json();
       setUser(data?.user ?? null);
     } finally {
@@ -85,7 +102,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
         credentials: 'include',
       });
 
-      if (!response.ok) throw new Error('Signup failed');
+      if (!response.ok) {
+        let message = 'Signup failed';
+        try {
+          const errorData = await response.json();
+          message = errorData?.message || errorData?.error || `Signup failed (${response.status})`;
+        } catch {
+          // response was not JSON
+        }
+        throw new Error(message);
+      }
       const data = await response.json();
       setUser(data?.user ?? null);
     } finally {

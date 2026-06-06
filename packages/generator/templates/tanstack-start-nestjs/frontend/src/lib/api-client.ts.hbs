@@ -13,6 +13,17 @@ const API_BASE_URL = (() => {
 })();
 
 // ============================================================================
+// 401 Unauthorized Interceptor
+// ============================================================================
+
+type OnUnauthorized = () => void;
+let onUnauthorizedCallback: OnUnauthorized | null = null;
+
+export function setUnauthorizedCallback(cb: OnUnauthorized) {
+  onUnauthorizedCallback = cb;
+}
+
+// ============================================================================
 // Logger Utility
 // ============================================================================
 
@@ -253,6 +264,20 @@ class ApiClient {
 
     // Log response
     this.logger.logResponse(method, url, response, duration);
+
+    // Intercept 401 Unauthorized — trigger auto-logout
+    if (response.status === 401) {
+      onUnauthorizedCallback?.();
+      const error = {
+        statusCode: 401,
+        message: 'Session expired. Please sign in again.',
+        error: 'Unauthorized',
+        timestamp: new Date().toISOString(),
+        path: response.url,
+      } as ApiError;
+      this.logger.logError(method, url, error, duration);
+      throw error;
+    }
 
     if (response.status === 204) {
       return undefined as T;

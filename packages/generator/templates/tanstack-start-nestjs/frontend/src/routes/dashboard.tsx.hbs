@@ -30,6 +30,7 @@ import {
   X,
 } from 'lucide-react';
 import { Icon } from '@/components/ui/icon';
+import { DashboardSkeleton } from '@/components/skeletons/dashboard-skeleton';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/dashboard')({
@@ -255,12 +256,7 @@ function DashboardPage() {
       {/* Main Content */}
       <main className="container-swiss py-8 space-y-8">
         {/* Tables Loading State */}
-        {tablesLoading && (
-          <div className="swiss-card p-12 text-center">
-            <Loader2 className="w-12 h-12 mx-auto mb-4 text-primary animate-spin" />
-            <p className="text-muted-foreground">Loading application entities...</p>
-          </div>
-        )}
+        {tablesLoading && <DashboardSkeleton />}
 
         {/* Tables Error State */}
         {tablesError && (
