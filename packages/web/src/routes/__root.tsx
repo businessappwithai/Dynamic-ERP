@@ -1,9 +1,23 @@
-import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
+import { createRootRoute, HeadContent, Link, Outlet, Scripts } from "@tanstack/react-router";
 import { Providers } from "@/components/providers/Providers";
 import "@/styles/globals.css";
 
+function NotFoundPage() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background text-foreground">
+      <div className="text-6xl font-bold text-muted-foreground">404</div>
+      <h1 className="text-2xl font-semibold">Page Not Found</h1>
+      <p className="text-muted-foreground">The page you're looking for doesn't exist.</p>
+      <Link to="/projects" className="mt-2 px-4 py-2 rounded-lg text-white text-sm font-semibold" style={{ backgroundColor: "#FF8400" }}>
+        Back to Projects
+      </Link>
+    </div>
+  );
+}
+
 export const Route = createRootRoute({
   component: RootLayout,
+  notFoundComponent: NotFoundPage,
 });
 
 function RootLayout() {
