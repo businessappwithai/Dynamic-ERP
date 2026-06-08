@@ -466,26 +466,26 @@ function EntityListPage() {
             )}
           </div>
         )}
-      </div>
 
-      {/* Data Table (columns dynamically rendered from sys_field via DynamicTable) */}
-      <DynamicTable
-        hideSearch={true}
-        tableName="{{addBusPrefix entity.tableName}}"
-        data={filteredData}
-        isLoading={isLoading}
-        totalCount={
-          quickSearch
-            ? filteredData.length
-            : response?.meta?.total || 0
-        }
-        onView={(id) => navigate({ to: '/{{addBusPrefix entity.tableName}}/$id', params: { id } })}
-        onEdit={(id) => navigate({ to: '/{{addBusPrefix entity.tableName}}/$id', params: { id } })}
-        onDelete={(id) => deleteMutation.mutate(id)}
-        page={page}
-        pageSize={pageSize}
-        onPageChange={setPage}
-      />
+        {/* Data Table (columns dynamically rendered from sys_field via DynamicTable) */}
+        <DynamicTable
+          hideSearch={true}
+          tableName="{{addBusPrefix entity.tableName}}"
+          data={filteredData}
+          isLoading={isLoading}
+          totalCount={
+            quickSearch
+              ? filteredData.length
+              : response?.meta?.total || 0
+          }
+          onView={(id) => navigate({ to: '/{{addBusPrefix entity.tableName}}/$id', params: { id } })}
+          onEdit={(id) => navigate({ to: '/{{addBusPrefix entity.tableName}}/$id', params: { id } })}
+          onDelete={(id) => deleteMutation.mutate(id)}
+          page={page}
+          pageSize={pageSize}
+          onPageChange={setPage}
+        />
+      </div>
     </>}
     </div>
     </div>
