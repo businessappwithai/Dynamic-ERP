@@ -240,7 +240,13 @@ class ApiClient {
 
   private buildUrl(path: string, params?: Record<string, unknown>): string {
     const origin = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
-    const basePath = this.baseUrl || "/api";
+    let basePath = this.baseUrl || "/api";
+
+    // If baseUrl is an absolute URL without /api, append /api
+    if (basePath.startsWith("http") && !basePath.includes("/api")) {
+      basePath = basePath + "/api";
+    }
+
     const fullUrl = basePath.startsWith("http") ? basePath : origin + basePath;
     const url = new URL(`${fullUrl}${path}`);
 

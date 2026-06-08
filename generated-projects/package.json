@@ -1,7 +1,7 @@
 {
-  "name": "crm-app",
+  "name": "simple-crm",
   "version": "1.0.0",
-  "description": "Generated application",
+  "description": "A simple CRM application",
   "private": true,
   "workspaces": [
     "backend",

@@ -1,6 +1,6 @@
-# crm-app
+# simple-crm
 
-Generated application
+A simple CRM application
 
 ## Tech Stack
 
@@ -60,7 +60,7 @@ bun run build
 ## Project Structure
 
 ```
-crm-app/
+simple-crm/
 ├── backend/           # NestJS API
 │   ├── src/
 │   │   ├── modules/

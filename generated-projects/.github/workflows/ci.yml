@@ -1,4 +1,4 @@
-name: CI - crm-app
+name: CI - simple-crm
 
 on:
   push:
