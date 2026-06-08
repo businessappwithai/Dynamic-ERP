@@ -61,6 +61,26 @@ function resolveTemplateDir(subpath: string): string {
   return fallbackPath;
 }
 
+/**
+ * Clean up JSON content by fixing trailing commas and formatting issues
+ * from Handlebars template rendering
+ */
+function cleanJsonContent(jsonStr: string): string {
+  try {
+    // Remove trailing commas before } and ]
+    let cleaned = jsonStr.replace(/,(\s*[}\]])/g, "$1");
+    // Remove leading commas after [ and {
+    cleaned = cleaned.replace(/(\[\s*),/g, "$1");
+    cleaned = cleaned.replace(/(\{\s*),/g, "$1");
+    // Parse and reformat to ensure valid JSON
+    const parsed = JSON.parse(cleaned);
+    return JSON.stringify(parsed, null, 2);
+  } catch (e) {
+    // If parsing fails, return original but still try to fix obvious issues
+    return jsonStr.replace(/,(\s*[}\]])/g, "$1").replace(/(\[\s*),/g, "$1");
+  }
+}
+
 export interface NestJsBackendOptions {
   projectName: string;
   projectVersion: string;
@@ -528,10 +548,12 @@ export class NestJsBackendGenerator extends BaseGenerator {
     for (const entity of context.entities) {
       try {
         const entityContext = { ...entity };
-        const jdmContent = await this.renderTemplate(
+        let jdmContent = await this.renderTemplate(
           "src/modules/rules/jdm/entity.jdm.json.hbs",
           entityContext
         );
+        // Clean up JSON formatting (fix trailing commas, etc.)
+        jdmContent = cleanJsonContent(jdmContent);
         await fs.writeFile(
           path.join(outputDir, `src/modules/rules/jdm/${entity.tableName}.jdm.json`),
           jdmContent
