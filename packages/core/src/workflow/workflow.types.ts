@@ -37,6 +37,7 @@ export interface TriggerWorkflowPayload {
 export interface WorkflowRunResult {
   id: string;
   status: WorkflowStatus;
+  createdAt?: Date;
   completedAt?: Date;
   error?: string;
   durationMs?: number;

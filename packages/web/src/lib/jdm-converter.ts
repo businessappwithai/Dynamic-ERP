@@ -1,7 +1,7 @@
 // Converts a parsed Mermaid flowchart AST → GoRules JDM JSON
 // Minimal, no AI required.
 
-import { type FlowAST, type NodeShape } from "./mermaid-flowchart-parser";
+import type { FlowAST, NodeShape } from "./mermaid-flowchart-parser";
 
 type JdmNodeType =
   | "inputNode"

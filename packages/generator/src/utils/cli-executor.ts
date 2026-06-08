@@ -7,7 +7,6 @@
 
 import { execSync, spawn } from "child_process";
 import * as fs from "fs/promises";
-import * as path from "path";
 
 export interface CliExecutorOptions {
   cwd?: string;

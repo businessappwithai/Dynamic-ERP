@@ -21,6 +21,7 @@ import { createKyselyAdapter } from "./better-auth-adapter.js";
  */
 export class AuthService implements IAuthService {
   private auth: ReturnType<typeof createBetterAuth>;
+  private db: Kysely<any>;
 
   constructor(config: {
     db: Kysely<any>;
@@ -28,6 +29,8 @@ export class AuthService implements IAuthService {
     baseURL: string;
     sessionMaxAge?: number;
   }) {
+    this.db = config.db;
+
     validateAuthOptions({
       secret: config.secret,
       baseURL: config.baseURL,
@@ -160,30 +163,37 @@ export class AuthService implements IAuthService {
    */
   async assignRole(userId: string, role: UserRole): Promise<void> {
     // Get role ID
-    const roleRecord = await this.db("ad_role").where("name", role).first();
+    const roleRecord = await this.db
+      .selectFrom("ad_role" as any)
+      .selectAll()
+      .where("name" as any, "=", role)
+      .executeTakeFirst();
 
     if (!roleRecord) {
       throw new Error(`ROLE_NOT_FOUND: ${role}`);
     }
 
     // Check if already assigned
-    const existing = await this.db("ad_user_roles")
-      .where({
-        ad_user_id: userId,
-        ad_role_id: roleRecord.ad_role_id,
-      })
-      .first();
+    const existing = await this.db
+      .selectFrom("ad_user_roles" as any)
+      .selectAll()
+      .where("ad_user_id" as any, "=", userId)
+      .where("ad_role_id" as any, "=", (roleRecord as any).ad_role_id)
+      .executeTakeFirst();
 
     if (existing) {
       return; // Already assigned
     }
 
     // Assign role
-    await this.db("ad_user_roles").insert({
-      ad_user_id: userId,
-      ad_role_id: roleRecord.ad_role_id,
-      created_at: new Date(),
-    });
+    await this.db
+      .insertInto("ad_user_roles" as any)
+      .values({
+        ad_user_id: userId,
+        ad_role_id: (roleRecord as any).ad_role_id,
+        created_at: new Date(),
+      } as any)
+      .execute();
   }
 
   /**
@@ -191,31 +201,38 @@ export class AuthService implements IAuthService {
    */
   async removeRole(userId: string, role: UserRole): Promise<void> {
     // Get role ID
-    const roleRecord = await this.db("ad_role").where("name", role).first();
+    const roleRecord = await this.db
+      .selectFrom("ad_role" as any)
+      .selectAll()
+      .where("name" as any, "=", role)
+      .executeTakeFirst();
 
     if (!roleRecord) {
       throw new Error(`ROLE_NOT_FOUND: ${role}`);
     }
 
     // Remove role
-    await this.db("ad_user_roles")
-      .where({
-        ad_user_id: userId,
-        ad_role_id: roleRecord.ad_role_id,
-      })
-      .delete();
+    await this.db
+      .deleteFrom("ad_user_roles" as any)
+      .where("ad_user_id" as any, "=", userId)
+      .where("ad_role_id" as any, "=", (roleRecord as any).ad_role_id)
+      .execute();
   }
 
   /**
    * Get user roles
    */
   async getUserRoles(userId: string): Promise<UserRole[]> {
-    const roles = await this.db("ad_user_roles as ur")
-      .join("ad_role as r", "ur.ad_role_id", "r.ad_role_id")
-      .where("ur.ad_user_id", userId)
-      .pluck("r.name");
+    const roles = await this.db
+      .selectFrom("ad_user_roles as ur" as any)
+      .innerJoin("ad_role as r", (eb) =>
+        eb.on("ur.ad_role_id" as any, "=", "r.ad_role_id" as any)
+      )
+      .where("ur.ad_user_id" as any, "=", userId)
+      .select("r.name" as any)
+      .execute();
 
-    return roles as UserRole[];
+    return roles.map((r: any) => r.name as UserRole);
   }
 }
 

@@ -4,8 +4,6 @@ import {
   PlusIcon,
   RefreshCwIcon,
   TrashIcon,
-  SaveIcon,
-  MoreVerticalIcon,
   CheckCircle2Icon,
   CircleIcon,
 } from "lucide-react";
@@ -46,7 +44,6 @@ function RulesListPage() {
   const [selectedRule, setSelectedRule] = useState<RuleDefinition | null>(null);
   const [conditions, setConditions] = useState<RuleCondition[]>([]);
   const [activeTab, setActiveTab] = useState<"properties" | "conditions">("properties");
-  const [showMoreMenu, setShowMoreMenu] = useState<string | null>(null);
 
   const fetchRules = async () => {
     setLoading(true);
@@ -394,7 +391,7 @@ function RulesListPage() {
                               </tr>
                             </thead>
                             <tbody>
-                              {conditions.map((cond, idx) => (
+                              {conditions.map((cond) => (
                                 <tr key={cond.id} className="border-t border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
                                   <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{cond.sequence}</td>
                                   <td className="px-4 py-3 text-slate-900 dark:text-slate-50 font-mono text-xs">{cond.entityAttribute}</td>

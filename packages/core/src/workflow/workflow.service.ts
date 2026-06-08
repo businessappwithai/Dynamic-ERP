@@ -46,6 +46,7 @@ export class WorkflowService implements IWorkflowService {
     this.runs.set(runId, {
       id: runId,
       status: "draft",
+      createdAt: new Date(),
       inputPayload: payload,
     });
 

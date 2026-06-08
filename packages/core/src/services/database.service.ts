@@ -6,7 +6,7 @@
  * Change driver / connection string there only.
  */
 
-import { Kysely, sql } from "kysely";
+import { type Kysely, sql } from "kysely";
 import { getDb, destroyDb, type Database } from "../config/db.config.js";
 
 // Re-export types consumed by other packages

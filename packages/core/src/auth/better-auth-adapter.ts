@@ -2,7 +2,6 @@
  * Better Auth database adapter using Kysely
  */
 
-import type { Adapter } from "better-auth";
 import type { Kysely } from "kysely";
 
 interface AuthUser {
@@ -27,10 +26,10 @@ interface AuthSession {
 /**
  * Create a Kysely adapter for Better Auth
  */
-export function createKyselyAdapter(db: Kysely<any>): Adapter {
+export function createKyselyAdapter(db: Kysely<any>): any {
   return {
     // User operations
-    createUser: async (user) => {
+    createUser: async (user: any) => {
       const newUser = await db
         .insertInto("auth_users" as any)
         .values({
@@ -47,7 +46,7 @@ export function createKyselyAdapter(db: Kysely<any>): Adapter {
       return newUser as AuthUser;
     },
 
-    getUser: async (id) => {
+    getUser: async (id: any) => {
       const user = await db
         .selectFrom("auth_users" as any)
         .selectAll()
@@ -56,7 +55,7 @@ export function createKyselyAdapter(db: Kysely<any>): Adapter {
       return user as AuthUser | undefined;
     },
 
-    getUserByEmail: async (email) => {
+    getUserByEmail: async (email: any) => {
       const user = await db
         .selectFrom("auth_users" as any)
         .selectAll()
@@ -65,7 +64,7 @@ export function createKyselyAdapter(db: Kysely<any>): Adapter {
       return user as AuthUser | undefined;
     },
 
-    updateUser: async (id, data) => {
+    updateUser: async (id: any, data: any) => {
       const updated = await db
         .updateTable("auth_users" as any)
         .set({
@@ -78,7 +77,7 @@ export function createKyselyAdapter(db: Kysely<any>): Adapter {
       return updated as AuthUser;
     },
 
-    deleteUser: async (id) => {
+    deleteUser: async (id: any) => {
       await db
         .deleteFrom("auth_users" as any)
         .where("id", "=", id)
@@ -86,7 +85,7 @@ export function createKyselyAdapter(db: Kysely<any>): Adapter {
     },
 
     // Session operations
-    createSession: async (session) => {
+    createSession: async (session: any) => {
       const newSession = await db
         .insertInto("auth_sessions" as any)
         .values({
@@ -102,7 +101,7 @@ export function createKyselyAdapter(db: Kysely<any>): Adapter {
       return newSession as AuthSession;
     },
 
-    getSession: async (token) => {
+    getSession: async (token: any) => {
       const session = await db
         .selectFrom("auth_sessions" as any)
         .selectAll()
@@ -111,7 +110,7 @@ export function createKyselyAdapter(db: Kysely<any>): Adapter {
       return session as AuthSession | undefined;
     },
 
-    updateSession: async (token, data) => {
+    updateSession: async (token: any, data: any) => {
       const updated = await db
         .updateTable("auth_sessions" as any)
         .set({
@@ -124,7 +123,7 @@ export function createKyselyAdapter(db: Kysely<any>): Adapter {
       return updated as AuthSession;
     },
 
-    deleteSession: async (token) => {
+    deleteSession: async (token: any) => {
       await db
         .deleteFrom("auth_sessions" as any)
         .where("token", "=", token)
@@ -132,7 +131,7 @@ export function createKyselyAdapter(db: Kysely<any>): Adapter {
     },
 
     // Account operations (for OAuth)
-    createAccount: async (account) => {
+    createAccount: async (account: any) => {
       return await db
         .insertInto("auth_accounts" as any)
         .values(account as any)
@@ -140,7 +139,7 @@ export function createKyselyAdapter(db: Kysely<any>): Adapter {
         .executeTakeFirst();
     },
 
-    getAccount: async (userId, provider) => {
+    getAccount: async (userId: any, provider: any) => {
       return await db
         .selectFrom("auth_accounts" as any)
         .selectAll()
@@ -149,7 +148,7 @@ export function createKyselyAdapter(db: Kysely<any>): Adapter {
         .executeTakeFirst();
     },
 
-    deleteAccount: async (userId, provider) => {
+    deleteAccount: async (userId: any, provider: any) => {
       await db
         .deleteFrom("auth_accounts" as any)
         .where("userId", "=", userId)
@@ -158,7 +157,7 @@ export function createKyselyAdapter(db: Kysely<any>): Adapter {
     },
 
     // Verification token operations
-    createVerificationToken: async (token) => {
+    createVerificationToken: async (token: any) => {
       return await db
         .insertInto("auth_verification_tokens" as any)
         .values(token as any)
@@ -166,7 +165,7 @@ export function createKyselyAdapter(db: Kysely<any>): Adapter {
         .executeTakeFirst();
     },
 
-    getVerificationToken: async (token) => {
+    getVerificationToken: async (token: any) => {
       return await db
         .selectFrom("auth_verification_tokens" as any)
         .selectAll()
@@ -174,7 +173,7 @@ export function createKyselyAdapter(db: Kysely<any>): Adapter {
         .executeTakeFirst();
     },
 
-    deleteVerificationToken: async (token) => {
+    deleteVerificationToken: async (token: any) => {
       await db
         .deleteFrom("auth_verification_tokens" as any)
         .where("token", "=", token)

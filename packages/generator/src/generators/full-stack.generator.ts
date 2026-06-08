@@ -29,7 +29,7 @@ import {
   type TanStackStartFrontendOptions,
 } from "./tanstack-start-nestjs/tanstack-start-frontend.generator";
 
-export type StackOption = "tanstackjs-nestjs" | "openui5-odatav4";
+export type StackOption = "tanstackjs-nestjs" | "tanstack-start-nestjs" | "openui5-odatav4";
 export type AIAddonOption = "none" | "basic" | "advanced";
 
 export interface FullStackGeneratorOptions {
@@ -130,25 +130,29 @@ export class FullStackGenerator {
       ...this.options.tanstackStartNestjs?.backend,
     };
 
-    // Frontend options
-    const frontendOptions: TanStackStartFrontendOptions = {
-      projectName: this.options.projectName,
-      projectVersion: this.options.projectVersion,
-      projectDescription: this.options.projectDescription,
-      apiBaseUrl: `http://localhost:${this.options.port}`,
-      enableDarkMode: false,
-      stackOption: this.options.stackOption,
-      ...aiConfig,
-      ...this.options.tanstackStartNestjs?.frontend,
-    };
-
     console.log("📦 Generating NestJS backend...");
     const backendGenerator = new NestJsBackendGenerator(backendOptions);
     await backendGenerator.generate(entities, relationships, backendDir);
 
-    console.log("📦 Generating TanStack Start frontend...");
-    const frontendGenerator = new TanStackStartFrontendGenerator(frontendOptions);
-    await frontendGenerator.generate(entities, relationships, frontendDir);
+    if (this.options.stackOption === "tanstackjs-nestjs" || this.options.stackOption === "tanstack-start-nestjs") {
+      // Frontend options for TanStack Start
+      const frontendOptions: TanStackStartFrontendOptions = {
+        projectName: this.options.projectName,
+        projectVersion: this.options.projectVersion,
+        projectDescription: this.options.projectDescription,
+        apiBaseUrl: `http://localhost:${this.options.port}`,
+        enableDarkMode: false,
+        stackOption: this.options.stackOption as "tanstackjs-nestjs" | "tanstack-start-nestjs",
+        ...aiConfig,
+        ...this.options.tanstackStartNestjs?.frontend,
+      };
+
+      console.log("📦 Generating TanStack Start frontend...");
+      const frontendGenerator = new TanStackStartFrontendGenerator(frontendOptions);
+      await frontendGenerator.generate(entities, relationships, frontendDir);
+    } else {
+      console.log("📦 Skipping frontend generation (non-TanStack stack selected)");
+    }
   }
 
   /**

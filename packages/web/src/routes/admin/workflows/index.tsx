@@ -1,11 +1,10 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   RefreshCwIcon,
   RotateCwIcon,
   CheckCircle2Icon,
   AlertCircle,
   Clock,
-  ArrowRightIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -35,7 +34,6 @@ export const Route = createFileRoute("/admin/workflows/")({
 });
 
 function WorkflowMonitorPage() {
-  const navigate = useNavigate();
   const [workflows, setWorkflows] = useState<WorkflowRun[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<{
@@ -405,7 +403,7 @@ function WorkflowMonitorPage() {
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          {steps.map((step, idx) => (
+                          {steps.map((step) => (
                             <div key={step.id} className="border border-slate-200 dark:border-slate-800 rounded-lg p-3">
                               <div className="flex items-center justify-between mb-1">
                                 <div className="flex items-center gap-3">

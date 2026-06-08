@@ -168,14 +168,14 @@ export class RulesEngineService implements IRulesEngineService {
     }
 
     // Query database for active rule
-    const row = await this.db<RuleDefinitionRow>("sys_rule_definitions")
-      .where({
-        entity_name: entityName,
-        trigger: operation,
-        active: true,
-      })
-      .orderBy("priority", "asc")
-      .first();
+    const row = await this.db
+      .selectFrom("sys_rule_definitions" as any)
+      .selectAll()
+      .where("entity_name" as any, "=", entityName)
+      .where("trigger" as any, "=", operation)
+      .where("active" as any, "=", true)
+      .orderBy("priority" as any, "asc")
+      .executeTakeFirst();
 
     if (!row) {
       return null;
@@ -206,8 +206,9 @@ export class RulesEngineService implements IRulesEngineService {
   ): Promise<RuleDefinition> {
     const now = new Date();
 
-    const [row] = await this.db<RuleDefinitionRow>("sys_rule_definitions")
-      .insert({
+    const row = await this.db
+      .insertInto("sys_rule_definitions" as any)
+      .values({
         id: this.generateId(),
         entity_name: entityName,
         name: ruleName,
@@ -221,8 +222,9 @@ export class RulesEngineService implements IRulesEngineService {
         created_at: now.toISOString(),
         updated_at: now.toISOString(),
         version: 1,
-      })
-      .returning("*");
+      } as any)
+      .returningAll()
+      .executeTakeFirst();
 
     if (!row) {
       throw new Error("Failed to create rule: no row returned");
@@ -242,23 +244,36 @@ export class RulesEngineService implements IRulesEngineService {
    * @returns Updated rule definition
    */
   async updateRule(ruleId: string, jdmContent: JDMContent): Promise<RuleDefinition> {
-    const [row] = await this.db<RuleDefinitionRow>("sys_rule_definitions")
-      .where({ id: ruleId })
-      .update({
+    // Get current rule to find version
+    const current = await this.db
+      .selectFrom("sys_rule_definitions" as any)
+      .selectAll()
+      .where("id" as any, "=", ruleId)
+      .executeTakeFirst();
+
+    if (!current) {
+      throw new Error("Rule not found: " + ruleId);
+    }
+
+    const row = await this.db
+      .updateTable("sys_rule_definitions" as any)
+      .set({
         decision_model: jdmContent,
         updated_at: new Date().toISOString(),
-        version: this.db.raw("version + 1"),
-      })
-      .returning("*");
+        version: ((current as any).version || 0) + 1,
+      } as any)
+      .where("id" as any, "=", ruleId)
+      .returningAll()
+      .executeTakeFirst();
 
     if (!row) {
       throw new Error("Rule not found: " + ruleId);
     }
 
     // Invalidate cache for this entity/operation
-    ruleCache.invalidate(row.entity_name, row.trigger);
+    ruleCache.invalidate((row as any).entity_name, (row as any).trigger);
 
-    return this.mapRowToDefinition(row);
+    return this.mapRowToDefinition(row as any);
   }
 
   /**
@@ -300,25 +315,28 @@ export class RulesEngineService implements IRulesEngineService {
   }> {
     const offset = (page - 1) * limit;
 
-    // Build query
-    let query = this.db<RuleDefinitionRow>("sys_rule_definitions").orderBy("created_at", "desc");
+    // Build base query
+    let countQuery = this.db.selectFrom("sys_rule_definitions" as any).selectAll();
+    let selectQuery = this.db.selectFrom("sys_rule_definitions" as any).selectAll();
 
     if (entityName) {
-      query = query.where("entity_name", entityName);
+      countQuery = countQuery.where("entity_name" as any, "=", entityName);
+      selectQuery = selectQuery.where("entity_name" as any, "=", entityName);
     }
 
     // Get total count
-    const countResult = (await query.clone().count("* as count").first()) as
-      | { count: string | number }
-      | undefined;
-
-    const total = Number(countResult?.count ?? 0);
+    const countResult = await countQuery.execute();
+    const total = countResult.length;
 
     // Get paginated results
-    const rows = await query.limit(limit).offset(offset);
+    const rows = await selectQuery
+      .orderBy("created_at" as any, "desc")
+      .limit(limit)
+      .offset(offset)
+      .execute();
 
     return {
-      rules: rows.map((row) => this.mapRowToDefinition(row)),
+      rules: rows.map((row: any) => this.mapRowToDefinition(row)),
       total,
       page,
       limit,
