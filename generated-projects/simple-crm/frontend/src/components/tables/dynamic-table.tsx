@@ -411,9 +411,9 @@ export function DynamicTable({
         <Table data-testid="entity-table">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="bg-slate-700 hover:bg-slate-700">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className="text-white font-semibold">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -433,7 +433,7 @@ export function DynamicTable({
                   <TableRow
                     key={row.id}
                     data-state={isSelected && "selected"}
-                    className={onRowClick ? "cursor-pointer" : ""}
+                    className={`${onRowClick ? "cursor-pointer hover:bg-primary/10" : ""} ${row.index % 2 === 1 ? "bg-primary/[0.04]" : ""} transition-colors`}
                     onClick={() => onRowClick?.(row.original)}
                   >
                     {row.getVisibleCells().map((cell) => (

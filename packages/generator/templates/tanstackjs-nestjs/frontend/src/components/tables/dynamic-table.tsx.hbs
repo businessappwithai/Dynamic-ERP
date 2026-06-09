@@ -372,9 +372,9 @@ export function DynamicTable({
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="hover:bg-muted/50 border-b border-border/40">
+              <TableRow key={headerGroup.id} className="bg-primary/5 hover:bg-primary/5 border-b border-border/40">
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="bg-muted/20">
+                  <TableHead key={header.id} className="text-primary/80 font-semibold">
                     {header.isPlaceholder ? null : (
                       <div
                         className={`flex items-center space-x-2 ${
@@ -412,7 +412,7 @@ export function DynamicTable({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
-                  className={`cursor-pointer hover:bg-muted/50 border-b border-border/30 transition-colors ${
+                  className={`${onRowClick ? 'cursor-pointer hover:bg-primary/10' : ''} ${row.index % 2 === 1 ? 'bg-primary/[0.04]' : ''} border-b border-border/30 transition-colors ${
                     selectedId && String(row.original.id) === selectedId
                       ? 'bg-primary/10'
                       : ''

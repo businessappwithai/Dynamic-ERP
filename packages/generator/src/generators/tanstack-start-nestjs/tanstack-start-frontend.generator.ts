@@ -379,6 +379,14 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
     const apiClientContent = await this.renderTemplate("src/lib/api-client.ts.hbs", context);
     await fs.writeFile(path.join(outputDir, "src/lib/api-client.ts"), apiClientContent);
 
+    // Field schema with Zod validation and field type helpers
+    try {
+      const fieldSchemaContent = await this.renderTemplate("src/lib/field-schema.ts.hbs", context);
+      await fs.writeFile(path.join(outputDir, "src/lib/field-schema.ts"), fieldSchemaContent);
+    } catch (e) {
+      console.warn("field-schema template not found, skipping:", (e as Error).message);
+    }
+
     // ElectricSQL + PGlite setup (local-first sys_ entity sync)
     try {
       const electricContent = await this.renderTemplate("src/lib/electric.ts.hbs", context);
