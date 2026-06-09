@@ -15,7 +15,7 @@
  * Project: {{project.name}}
  */
 
-import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, UsePipes, Logger } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query, UseGuards, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { SessionAuthGuard } from '../auth/guards/session-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -66,13 +66,12 @@ export class RulesController {
 
   @Post()
   @Roles('admin')
-  @UsePipes(new ZodValidationPipe(CreateRuleSchema))
   @ApiOperation({ summary: 'Create a new business rule (admin only)' })
   @ApiResponse({ status: 201, description: 'Rule created successfully' })
   @ApiResponse({ status: 400, description: 'Invalid input' })
   @ApiResponse({ status: 409, description: 'Rule already exists' })
   async create(
-    @Body() dto: {
+    @Body(new ZodValidationPipe(CreateRuleSchema)) dto: {
       entityName: string;
       ruleName: string;
       operation: string;
@@ -93,13 +92,12 @@ export class RulesController {
 
   @Put(':id')
   @Roles('admin')
-  @UsePipes(new ZodValidationPipe(UpdateRuleSchema))
   @ApiOperation({ summary: 'Update an existing rule (admin only)' })
   @ApiResponse({ status: 200, description: 'Rule updated successfully' })
   @ApiResponse({ status: 404, description: 'Rule not found' })
   async update(
     @Param('id') id: string,
-    @Body() dto: {
+    @Body(new ZodValidationPipe(UpdateRuleSchema)) dto: {
       jdmContent?: string;
       isActive?: boolean;
     },
@@ -125,18 +123,16 @@ export class RulesController {
   }
 
   @Post('validate')
-  @UsePipes(new ZodValidationPipe(ValidateJdmSchema))
   @ApiOperation({ summary: 'Validate JDM content' })
   @ApiResponse({ status: 200, description: 'Validation result' })
-  async validate(@Body() dto: { jdmContent: string }) {
+  async validate(@Body(new ZodValidationPipe(ValidateJdmSchema)) dto: { jdmContent: string }) {
     return await this.rulesService.validateJDM(dto.jdmContent);
   }
 
   @Post('dry-run')
-  @UsePipes(new ZodValidationPipe(DryRunSchema))
   @ApiOperation({ summary: 'Dry run rule with test context' })
   @ApiResponse({ status: 200, description: 'Dry run completed' })
-  async dryRun(@Body() dto: { ruleId: string; testData: Record<string, unknown> }) {
+  async dryRun(@Body(new ZodValidationPipe(DryRunSchema)) dto: { ruleId: string; testData: Record<string, unknown> }) {
     return await this.rulesService.dryRun(dto.ruleId, dto.testData);
   }
 
@@ -154,11 +150,10 @@ export class RulesController {
   }
 
   @Post('evaluate')
-  @UsePipes(new ZodValidationPipe(EvaluateRulesSchema))
   @ApiOperation({ summary: 'Evaluate business rules for an entity' })
   @ApiResponse({ status: 200, description: 'Rules evaluated successfully' })
   async evaluateRules(
-    @Body()
+    @Body(new ZodValidationPipe(EvaluateRulesSchema))
     body: {
       entityName: string;
       operation: 'CREATE' | 'READ' | 'UPDATE' | 'DELETE';
