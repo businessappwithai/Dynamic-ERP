@@ -26,7 +26,11 @@ export async function up(db: Kysely<any>): Promise<void> {
       {{/if}}
         {{/case}}
         {{#case 11}}
+      {{#if (endsWith name '_id')}}
+      , {{name}} UUID{{#if required}} NOT NULL{{/if}}
+      {{else}}
       , {{name}} INTEGER{{#if required}} NOT NULL{{/if}}{{#if default}} DEFAULT {{default}}{{/if}}
+      {{/if}}
         {{/case}}
         {{#case 12}}
       , {{name}} DECIMAL(18,6){{#if required}} NOT NULL{{/if}}{{#if default}} DEFAULT {{default}}{{/if}}

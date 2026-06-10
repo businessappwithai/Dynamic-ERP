@@ -1,5 +1,5 @@
 /**
- * {{entity.name}} Detail/Edit Page with Tabs
+ * {{entity.displayName}} Detail/Edit Page with Tabs
  *
  * Displays and allows editing of a single {{entity.name}} record
  * using dynamic fields driven by sys_field metadata from the
@@ -120,7 +120,7 @@ function EntityDetailPage() {
     onSuccess: (savedData) => {
       queryClient.invalidateQueries({ queryKey: ['{{kebabCase entity.name}}'] });
       setServerErrors({}); // Clear errors on success
-      toast.success('{{entity.name}} ' + (isNew ? 'created' : 'updated') + ' successfully');
+      toast.success('{{entity.displayName}} ' + (isNew ? 'created' : 'updated') + ' successfully');
       if (isNew) {
         navigate({ to: '/{{addBusPrefix entity.tableName}}/$id', params: { id: String(savedData['{{entity.primaryKey}}']) } });
       } else {
@@ -166,7 +166,7 @@ function EntityDetailPage() {
         return;
       }
       // Generic error handler
-      let message = 'Failed to save {{entity.name}}';
+      let message = 'Failed to save {{entity.displayName}}';
       if (typeof error.message === 'string') {
         message = error.message;
       } else if (Array.isArray(error.message) && error.message.length > 0) {
@@ -186,7 +186,7 @@ function EntityDetailPage() {
       return apiClient.delete(`/bus/{{addBusPrefix entity.tableName}}/${id}`);
     },
     onSuccess: () => {
-      toast.success('{{entity.name}} deleted successfully');
+      toast.success('{{entity.displayName}} deleted successfully');
       queryClient.invalidateQueries({ queryKey: ['{{kebabCase entity.name}}'] });
       navigate({ to: '/{{addBusPrefix entity.tableName}}' });
     },
@@ -207,7 +207,7 @@ function EntityDetailPage() {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/20 mb-4">
               <AlertCircle className="h-8 w-8 text-destructive" />
             </div>
-            <p className="text-destructive text-lg font-semibold">Error loading {{entity.name}}</p>
+            <p className="text-destructive text-lg font-semibold">Error loading {{entity.displayName}}</p>
             <p className="text-sm text-muted-foreground mt-2">
               The record may not exist or the server may be unavailable.
             </p>
@@ -248,7 +248,7 @@ function EntityDetailPage() {
               <Link to="/{{addBusPrefix entity.tableName}}">
                 <Button variant="ghost" size="sm" className="hover:bg-primary/10">
                   <ChevronLeft className="mr-1 h-4 w-4" />
-                  {{entity.name}} List
+                  {{entity.displayName}} List
                 </Button>
               </Link>
               <div className="flex items-center gap-3">
@@ -258,10 +258,10 @@ function EntityDetailPage() {
                 <div>
                   <h1 className="text-3xl font-bold text-foreground" data-testid="entity-heading">
                     {isNew
-                      ? 'Create {{entity.name}}'
+                      ? 'Create {{entity.displayName}}'
                       : mode === 'edit'
-                        ? 'Edit {{entity.name}}'
-                        : '{{entity.name}} Detail'}
+                        ? 'Edit {{entity.displayName}}'
+                        : '{{entity.displayName}} Detail'}
                   </h1>
                   {!isNew && data && (
                     <p className="text-muted-foreground text-sm">
@@ -327,7 +327,7 @@ function EntityDetailPage() {
                   <p className="font-semibold text-destructive text-lg">Confirm Deletion</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     This action cannot be undone. This will permanently delete the
-                    {{entity.name}} record.
+                    {{entity.displayName}} record.
                   </p>
                 </div>
               </div>

@@ -120,16 +120,20 @@ function formatCellValue(value: unknown, referenceId: number): string {
         return String(value);
       }
 
-    case REFERENCE_TYPE.AMOUNT:
-      return typeof value === "number"
-        ? value.toLocaleString(undefined, {
+    case REFERENCE_TYPE.AMOUNT: {
+      const numAmt = typeof value === "number" ? value : parseFloat(String(value));
+      return isNaN(numAmt)
+        ? String(value)
+        : numAmt.toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
-          })
-        : String(value);
+          });
+    }
 
-    case REFERENCE_TYPE.INTEGER:
-      return typeof value === "number" ? value.toLocaleString() : String(value);
+    case REFERENCE_TYPE.INTEGER: {
+      const numInt = typeof value === "number" ? value : parseInt(String(value), 10);
+      return isNaN(numInt) ? String(value) : numInt.toLocaleString();
+    }
 
     case REFERENCE_TYPE.TEXT: {
       const text = String(value);

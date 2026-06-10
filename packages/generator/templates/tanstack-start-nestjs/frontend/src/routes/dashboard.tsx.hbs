@@ -10,7 +10,7 @@
  * Project: {{project.name}}
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
@@ -191,6 +191,12 @@ function DashboardPage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate({ to: '/auth/login' });
+    }
+  }, [authLoading, isAuthenticated, navigate]);
+
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -200,7 +206,6 @@ function DashboardPage() {
   }
 
   if (!isAuthenticated) {
-    navigate({ to: '/auth/login' });
     return null;
   }
 

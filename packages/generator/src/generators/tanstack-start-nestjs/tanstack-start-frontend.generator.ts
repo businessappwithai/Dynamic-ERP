@@ -622,7 +622,9 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
 
   private async generateEntityPages(outputDir: string, context: any): Promise<void> {
     for (const entity of context.entities) {
-      const entityContext = { ...context, entity };
+      const displayName = entity.displayName ||
+        entity.name.charAt(0).toUpperCase() + entity.name.slice(1).toLowerCase().replace(/_([a-z])/g, (_: string, c: string) => ' ' + c.toUpperCase());
+      const entityContext = { ...context, entity: { ...entity, displayName } };
       const entityDir = path.join(outputDir, `src/routes/$entity`);
       // Create the directory for this entity's routes
       await fs.mkdir(entityDir, { recursive: true });
