@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth-context';
-import { Home, Info, Tag, Hash, Calendar, Shield, FileText, Database, Layers } from 'lucide-react';
+import { Home, Info, Tag, Hash, Calendar, Shield, FileText, Database, Layers, Search, X } from 'lucide-react';
 import { apiClient, type PaginatedResponse } from '@/lib/api-client';
 import { useFormFields, useGridFields, useTableMetadata, type FieldMetadata } from '@/hooks/use-entities';
 import { getFieldTypeLabel, getFieldTypeColor } from '@/lib/field-schema';
@@ -11,6 +11,8 @@ import { DynamicForm } from '@/components/forms/dynamic-form';
 import { DynamicTable } from '@/components/tables/dynamic-table';
 import { DeleteConfirmDialog } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { ADToolbar } from './ad-toolbar';
 import { ADRecordNav } from './ad-record-nav';
 
@@ -180,7 +182,9 @@ export function EntityWindowShell({ tableName, entityLabel }: EntityWindowShellP
   const [viewMode, setViewMode] = useState<'list' | 'detail'>('list');
   const [currentIndex, setCurrentIndex] = useState(0);
   const [page, setPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [advancedSearchOpen, setAdvancedSearchOpen] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState<Record<string, string>>({});
+  const [pendingFilters, setPendingFilters] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState<AnyRecord>({});
   const [hasChanges, setHasChanges] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -190,10 +194,16 @@ export function EntityWindowShell({ tableName, entityLabel }: EntityWindowShellP
   const { data: formFields, isLoading: isLoadingFields } = useFormFields(tableName);
   const { data: gridFields, isLoading: isLoadingGrid } = useGridFields(tableName);
 
+  const activeFilterCount = Object.values(advancedFilters).filter(Boolean).length;
+
   const fetchParams: Record<string, unknown> = {
     page,
     limit: 100,
-    ...(searchQuery ? { search: searchQuery } : {}),
+    ...Object.fromEntries(
+      Object.entries(advancedFilters)
+        .filter(([, v]) => v)
+        .map(([k, v]) => [`filter.${k}`, `contains:${v}`])
+    ),
   };
 
   const { data: recordsData, isLoading, refetch } = useQuery({
@@ -317,6 +327,19 @@ export function EntityWindowShell({ tableName, entityLabel }: EntityWindowShellP
     setIsEditing(false);
   };
 
+  const handleAdvancedSearchApply = useCallback(() => {
+    setAdvancedFilters({ ...pendingFilters });
+    setPage(1);
+    setCurrentIndex(0);
+  }, [pendingFilters]);
+
+  const handleAdvancedSearchClear = useCallback(() => {
+    setPendingFilters({});
+    setAdvancedFilters({});
+    setPage(1);
+    setCurrentIndex(0);
+  }, []);
+
   const handleFormChange = useCallback(() => {
     if (!hasChanges) setHasChanges(true);
   }, [hasChanges]);
@@ -344,8 +367,9 @@ export function EntityWindowShell({ tableName, entityLabel }: EntityWindowShellP
         onEdit={handleEdit}
         onCancelEdit={handleCancelEdit}
         onRefresh={() => refetch()}
-        searchValue={searchQuery}
-        onSearchChange={(val) => { setSearchQuery(val); setPage(1); setCurrentIndex(0); }}
+        onAdvancedSearchToggle={() => setAdvancedSearchOpen(o => !o)}
+        advancedFilterCount={activeFilterCount}
+        isAdvancedSearchOpen={advancedSearchOpen}
         isSaving={saveMutation.isPending}
         isDeleting={deleteMutation.isPending}
         hasChanges={hasChanges || isCreating}
@@ -353,6 +377,39 @@ export function EntityWindowShell({ tableName, entityLabel }: EntityWindowShellP
         isEditing={isEditing || isCreating}
         isDetailView={viewMode === 'detail' && !isCreating}
       />
+
+      {advancedSearchOpen && (
+        <div className="border-b border-border bg-muted/10 px-4 py-3">
+          <div className="flex items-end flex-wrap gap-3">
+            {(gridFields ?? []).filter(f => f.is_displayed_grid && !['id', 'created_at', 'updated_at', 'deleted_at'].includes(f.column_name)).map((field) => (
+              <div key={field.column_name} className="flex flex-col gap-1 min-w-[140px]">
+                <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
+                  {field.name}
+                </label>
+                <Input
+                  className="h-8 text-sm"
+                  placeholder={`Filter ${field.name}…`}
+                  value={pendingFilters[field.column_name] ?? ''}
+                  onChange={e => setPendingFilters(prev => ({ ...prev, [field.column_name]: e.target.value }))}
+                  onKeyDown={e => e.key === 'Enter' && handleAdvancedSearchApply()}
+                />
+              </div>
+            ))}
+            <div className="flex gap-2 pb-0.5">
+              <Button size="sm" className="h-8" onClick={handleAdvancedSearchApply}>
+                <Search className="h-3.5 w-3.5 mr-1.5" />
+                Search
+              </Button>
+              {activeFilterCount > 0 && (
+                <Button size="sm" variant="outline" className="h-8" onClick={handleAdvancedSearchClear}>
+                  <X className="h-3.5 w-3.5 mr-1.5" />
+                  Clear
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-gradient-to-r from-indigo-100 to-sky-50">
         <div className="flex items-center gap-3">

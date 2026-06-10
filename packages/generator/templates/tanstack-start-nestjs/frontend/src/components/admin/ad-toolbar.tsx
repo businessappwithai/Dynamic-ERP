@@ -5,13 +5,13 @@ import {
   RotateCcw,
   RefreshCw,
   Copy,
-  Search,
+  SlidersHorizontal,
   Pencil,
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import {
   Tooltip,
   TooltipContent,
@@ -28,8 +28,8 @@ interface ADToolbarProps {
   onRefresh?: () => void;
   onEdit?: () => void;
   onCancelEdit?: () => void;
-  searchValue?: string;
-  onSearchChange?: (value: string) => void;
+  onAdvancedSearchToggle?: () => void;
+  advancedFilterCount?: number;
   isSaving?: boolean;
   isDeleting?: boolean;
   hasChanges?: boolean;
@@ -37,6 +37,7 @@ interface ADToolbarProps {
   canCreate?: boolean;
   isEditing?: boolean;
   isDetailView?: boolean;
+  isAdvancedSearchOpen?: boolean;
 }
 
 function ToolbarButton({
@@ -81,8 +82,8 @@ export function ADToolbar({
   onRefresh,
   onEdit,
   onCancelEdit,
-  searchValue,
-  onSearchChange,
+  onAdvancedSearchToggle,
+  advancedFilterCount = 0,
   isSaving,
   isDeleting,
   hasChanges,
@@ -90,20 +91,33 @@ export function ADToolbar({
   canCreate = true,
   isEditing = false,
   isDetailView = false,
+  isAdvancedSearchOpen = false,
 }: ADToolbarProps) {
   return (
     <TooltipProvider delayDuration={300}>
       <div className="flex items-center gap-1 px-4 py-2 border-b border-border bg-muted/30">
-        <div className="relative w-56">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Search records..."
-            value={searchValue || ''}
-            onChange={(e) => onSearchChange?.(e.target.value)}
-            className="h-8 pl-8 text-sm"
-          />
-        </div>
+        {/* Advanced Search trigger */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={isAdvancedSearchOpen ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={onAdvancedSearchToggle}
+              className="h-8 gap-1.5 px-2.5 text-sm"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Search</span>
+              {advancedFilterCount > 0 && (
+                <Badge variant="default" className="h-4 px-1 text-[10px] min-w-[16px]">
+                  {advancedFilterCount}
+                </Badge>
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Advanced Search (server-side, field filters)</p>
+          </TooltipContent>
+        </Tooltip>
 
         <Separator orientation="vertical" className="h-6 mx-1" />
 
