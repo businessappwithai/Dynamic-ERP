@@ -59,6 +59,7 @@ export interface FieldMetadata {
   font_weight?: string;
   font_style?: string;
   text_align?: string;
+  reference_name?: string; // Human-readable type name returned by the API (e.g. "String", "Integer", "Date")
   ref_table_name?: string; // Referenced table name for TABLE reference types (sys_reference_id = 18)
   tab_name?: string; // Tab name for i18n field labels
 }
