@@ -27,14 +27,14 @@ async function handleCopilotRequest(request: Request): Promise<Response> {
   return handler(request) as Promise<Response>;
 }
 
-export const Route = createFileRoute("/api/copilotkit")({
+export const Route = createFileRoute("/api/copilotkit/$")({
   server: {
     handlers: {
       GET: async ({ request }) => {
         try {
           return await handleCopilotRequest(request);
         } catch (error) {
-          console.error("CopilotKit GET error:", error);
+          console.error("CopilotKit subroute GET error:", error);
           return new Response(
             JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
             { status: 500, headers: { "Content-Type": "application/json" } },
@@ -45,7 +45,7 @@ export const Route = createFileRoute("/api/copilotkit")({
         try {
           return await handleCopilotRequest(request);
         } catch (error) {
-          console.error("CopilotKit POST error:", error);
+          console.error("CopilotKit subroute POST error:", error);
           return new Response(
             JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
             { status: 500, headers: { "Content-Type": "application/json" } },

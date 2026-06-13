@@ -34,6 +34,7 @@ import { Route as ProjectsIdDeployRouteImport } from './routes/projects/$id/depl
 import { Route as ApiRulesValidateRouteImport } from './routes/api/rules/validate'
 import { Route as ApiMermaidParseRouteImport } from './routes/api/mermaid/parse'
 import { Route as ApiMermaidFilenameRouteImport } from './routes/api/mermaid/$filename'
+import { Route as ApiCopilotkitSplatRouteImport } from './routes/api/copilotkit/$'
 import { Route as ApiAiRulesStreamRouteImport } from './routes/api/ai/rules-stream'
 import { Route as ApiAiConvertStreamRouteImport } from './routes/api/ai/convert-stream'
 import { Route as ApiAiConvertRouteImport } from './routes/api/ai/convert'
@@ -186,6 +187,11 @@ const ApiMermaidFilenameRoute = ApiMermaidFilenameRouteImport.update({
   id: '/api/mermaid/$filename',
   path: '/api/mermaid/$filename',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCopilotkitSplatRoute = ApiCopilotkitSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => ApiCopilotkitRoute,
 } as any)
 const ApiAiRulesStreamRoute = ApiAiRulesStreamRouteImport.update({
   id: '/api/ai/rules-stream',
@@ -346,7 +352,7 @@ export interface FileRoutesByFullPath {
   '/designer': typeof DesignerRoute
   '/settings': typeof SettingsRoute
   '/test': typeof TestRoute
-  '/api/copilotkit': typeof ApiCopilotkitRoute
+  '/api/copilotkit': typeof ApiCopilotkitRouteWithChildren
   '/api/deploy': typeof ApiDeployRoute
   '/api/generate': typeof ApiGenerateRoute
   '/api/health': typeof ApiHealthRoute
@@ -358,6 +364,7 @@ export interface FileRoutesByFullPath {
   '/api/ai/convert': typeof ApiAiConvertRoute
   '/api/ai/convert-stream': typeof ApiAiConvertStreamRoute
   '/api/ai/rules-stream': typeof ApiAiRulesStreamRoute
+  '/api/copilotkit/$': typeof ApiCopilotkitSplatRoute
   '/api/mermaid/$filename': typeof ApiMermaidFilenameRoute
   '/api/mermaid/parse': typeof ApiMermaidParseRoute
   '/api/rules/validate': typeof ApiRulesValidateRoute
@@ -400,7 +407,7 @@ export interface FileRoutesByTo {
   '/designer': typeof DesignerRoute
   '/settings': typeof SettingsRoute
   '/test': typeof TestRoute
-  '/api/copilotkit': typeof ApiCopilotkitRoute
+  '/api/copilotkit': typeof ApiCopilotkitRouteWithChildren
   '/api/deploy': typeof ApiDeployRoute
   '/api/generate': typeof ApiGenerateRoute
   '/api/health': typeof ApiHealthRoute
@@ -412,6 +419,7 @@ export interface FileRoutesByTo {
   '/api/ai/convert': typeof ApiAiConvertRoute
   '/api/ai/convert-stream': typeof ApiAiConvertStreamRoute
   '/api/ai/rules-stream': typeof ApiAiRulesStreamRoute
+  '/api/copilotkit/$': typeof ApiCopilotkitSplatRoute
   '/api/mermaid/$filename': typeof ApiMermaidFilenameRoute
   '/api/mermaid/parse': typeof ApiMermaidParseRoute
   '/api/rules/validate': typeof ApiRulesValidateRoute
@@ -455,7 +463,7 @@ export interface FileRoutesById {
   '/designer': typeof DesignerRoute
   '/settings': typeof SettingsRoute
   '/test': typeof TestRoute
-  '/api/copilotkit': typeof ApiCopilotkitRoute
+  '/api/copilotkit': typeof ApiCopilotkitRouteWithChildren
   '/api/deploy': typeof ApiDeployRoute
   '/api/generate': typeof ApiGenerateRoute
   '/api/health': typeof ApiHealthRoute
@@ -467,6 +475,7 @@ export interface FileRoutesById {
   '/api/ai/convert': typeof ApiAiConvertRoute
   '/api/ai/convert-stream': typeof ApiAiConvertStreamRoute
   '/api/ai/rules-stream': typeof ApiAiRulesStreamRoute
+  '/api/copilotkit/$': typeof ApiCopilotkitSplatRoute
   '/api/mermaid/$filename': typeof ApiMermaidFilenameRoute
   '/api/mermaid/parse': typeof ApiMermaidParseRoute
   '/api/rules/validate': typeof ApiRulesValidateRoute
@@ -523,6 +532,7 @@ export interface FileRouteTypes {
     | '/api/ai/convert'
     | '/api/ai/convert-stream'
     | '/api/ai/rules-stream'
+    | '/api/copilotkit/$'
     | '/api/mermaid/$filename'
     | '/api/mermaid/parse'
     | '/api/rules/validate'
@@ -577,6 +587,7 @@ export interface FileRouteTypes {
     | '/api/ai/convert'
     | '/api/ai/convert-stream'
     | '/api/ai/rules-stream'
+    | '/api/copilotkit/$'
     | '/api/mermaid/$filename'
     | '/api/mermaid/parse'
     | '/api/rules/validate'
@@ -631,6 +642,7 @@ export interface FileRouteTypes {
     | '/api/ai/convert'
     | '/api/ai/convert-stream'
     | '/api/ai/rules-stream'
+    | '/api/copilotkit/$'
     | '/api/mermaid/$filename'
     | '/api/mermaid/parse'
     | '/api/rules/validate'
@@ -674,7 +686,7 @@ export interface RootRouteChildren {
   DesignerRoute: typeof DesignerRoute
   SettingsRoute: typeof SettingsRoute
   TestRoute: typeof TestRoute
-  ApiCopilotkitRoute: typeof ApiCopilotkitRoute
+  ApiCopilotkitRoute: typeof ApiCopilotkitRouteWithChildren
   ApiDeployRoute: typeof ApiDeployRoute
   ApiGenerateRoute: typeof ApiGenerateRoute
   ApiHealthRoute: typeof ApiHealthRoute
@@ -900,6 +912,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMermaidFilenameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/copilotkit/$': {
+      id: '/api/copilotkit/$'
+      path: '/$'
+      fullPath: '/api/copilotkit/$'
+      preLoaderRoute: typeof ApiCopilotkitSplatRouteImport
+      parentRoute: typeof ApiCopilotkitRoute
+    }
     '/api/ai/rules-stream': {
       id: '/api/ai/rules-stream'
       path: '/api/ai/rules-stream'
@@ -1092,13 +1111,25 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ApiCopilotkitRouteChildren {
+  ApiCopilotkitSplatRoute: typeof ApiCopilotkitSplatRoute
+}
+
+const ApiCopilotkitRouteChildren: ApiCopilotkitRouteChildren = {
+  ApiCopilotkitSplatRoute: ApiCopilotkitSplatRoute,
+}
+
+const ApiCopilotkitRouteWithChildren = ApiCopilotkitRoute._addFileChildren(
+  ApiCopilotkitRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
   DesignerRoute: DesignerRoute,
   SettingsRoute: SettingsRoute,
   TestRoute: TestRoute,
-  ApiCopilotkitRoute: ApiCopilotkitRoute,
+  ApiCopilotkitRoute: ApiCopilotkitRouteWithChildren,
   ApiDeployRoute: ApiDeployRoute,
   ApiGenerateRoute: ApiGenerateRoute,
   ApiHealthRoute: ApiHealthRoute,

@@ -19,6 +19,18 @@ interface ServiceInfo {
   hooksCount: number;
 }
 
+const ICON_CYCLE = [
+  (key: number) => <Settings key={key} className="w-6 h-6" />,
+  (key: number) => <Code key={key} className="w-6 h-6" />,
+  (key: number) => <GitBranch key={key} className="w-6 h-6" />,
+  (key: number) => <Bolt key={key} className="w-6 h-6" />,
+];
+
+function parseEntityNamesFromErd(erdCode: string): string[] {
+  const matches = [...erdCode.matchAll(/^\s*([A-Za-z_]\w*)\s*\{/gm)];
+  return matches.map((m) => m[1]).filter((name) => name !== "erDiagram");
+}
+
 function EnhancePage() {
   const navigate = useNavigate();
   const { id: projectId } = Route.useParams();
@@ -38,40 +50,18 @@ function EnhancePage() {
     if (project) {
       setCurrentStep("enhance");
 
-      const availableServices: ServiceInfo[] = [
-        {
-          name: "UserService",
-          entity: "User",
-          description: "User management, authentication, and profile operations",
-          icon: <Settings className="w-6 h-6" />,
-          hooksCount: project.workflows?.filter((w) => w.serviceName === "UserService").length || 0,
-        },
-        {
-          name: "PostService",
-          entity: "Post",
-          description: "Blog post creation, editing, and publishing",
-          icon: <Code className="w-6 h-6" />,
-          hooksCount: project.workflows?.filter((w) => w.serviceName === "PostService").length || 0,
-        },
-        {
-          name: "CommentService",
-          entity: "Comment",
-          description: "Comment management and moderation",
-          icon: <GitBranch className="w-6 h-6" />,
-          hooksCount:
-            project.workflows?.filter((w) => w.serviceName === "CommentService").length || 0,
-        },
-        {
-          name: "CategoryService",
-          entity: "Category",
-          description: "Category organization and hierarchy",
-          icon: <Bolt className="w-6 h-6" />,
-          hooksCount:
-            project.workflows?.filter((w) => w.serviceName === "CategoryService").length || 0,
-        },
-      ];
+      const entityNames = project.erdCode ? parseEntityNamesFromErd(project.erdCode) : [];
 
-      setServices(availableServices);
+      const derivedServices: ServiceInfo[] = entityNames.map((entity, i) => ({
+        name: `${entity}Service`,
+        entity,
+        description: `Manage ${entity} records, business logic, and related operations`,
+        icon: ICON_CYCLE[i % ICON_CYCLE.length](i),
+        hooksCount:
+          project.workflows?.filter((w) => w.serviceName === `${entity}Service`).length || 0,
+      }));
+
+      setServices(derivedServices);
     }
   }, [project, setCurrentStep]);
 
@@ -110,7 +100,7 @@ function EnhancePage() {
       <header className="bg-background/80 backdrop-blur-md border-b border-border sticky top-0 z-50">
         <div className="max-w-[1800px] mx-auto px-6 py-4">
           <WizardStepHeader
-            stepNumber={4}
+            stepNumber={5}
             title="Add Features to Your App"
             description="Extend your generated application with AI-assisted features like authentication, validation, testing, and custom business logic. Select a service to define workflows and enhance."
             estimatedTime="5-10 min"

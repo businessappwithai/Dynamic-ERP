@@ -27,7 +27,7 @@ function InitPage() {
   const [formData, setFormData] = useState<{
     name: string;
     description: string;
-    stackType: "tanstackjs-nestjs" | "odata-ui5";
+    stackType: "tanstackjs-nestjs";
     databaseUrl: string;
   }>({
     name: "",
@@ -188,7 +188,7 @@ function InitPage() {
               : "Manage your project details. Stack type cannot be changed after generation."
           }
           estimatedTime="2-3 min"
-          subtitle={isNewProject ? "New Project" : "Generated Project"}
+          subtitle={currentProject.name}
         />
 
         <div className="space-y-6">
