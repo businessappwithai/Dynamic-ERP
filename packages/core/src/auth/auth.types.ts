@@ -133,6 +133,11 @@ export interface IAuthService {
   register(data: RegisterData): Promise<AuthSession>;
 
   /**
+   * Register new user with pending approval
+   */
+  registerPending(data: RegisterData): Promise<{ userId: string; email: string }>;
+
+  /**
    * Logout user (invalidate session)
    */
   logout(sessionToken: string): Promise<void>;

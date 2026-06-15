@@ -4,7 +4,7 @@ import { codeAgent } from "@erdwithai/ai";
 interface CodeAgentRequest {
   task: string;
   erdCode?: string;
-  stack?: "tanstackjs-nestjs" | "openui5-odata";
+  stack?: "tanstackjs-nestjs";
   options?: {
     includeTests?: boolean;
     includeMigrations?: boolean;

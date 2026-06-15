@@ -1,11 +1,23 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Database, FileCode2, Loader2, Menu, Plus, Search, Trash2, X } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { Database, FileCode2, Loader2, LogOut, Menu, Plus, Search, Share2, Trash2, User, X } from "lucide-react";
+import React, { useEffect, useRef, useState } from "react";
 import { LogsViewer } from "@/components/logs/LogsViewer";
 import { NewProjectModal } from "@/components/project";
+import { ShareProjectModal } from "@/components/project/ShareProjectModal";
+import { useAuthStore } from "@/store/authStore";
 import { useProjectStore } from "@/store/projectStore";
 
 export const Route = createFileRoute("/projects/")({
+  beforeLoad: async () => {
+    try {
+      const res = await fetch("/api/auth/me");
+      const data = await res.json();
+      if (!data.user) throw redirect({ to: "/login" });
+    } catch (e) {
+      if (e && typeof e === "object" && "to" in e) throw e;
+      throw redirect({ to: "/login" });
+    }
+  },
   component: ProjectsPage,
 });
 
@@ -19,6 +31,25 @@ const colorMap: Record<string, string> = {
 
 function ProjectsPage() {
   const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    navigate({ to: "/login" });
+  };
+
   const {
     projects,
     isLoading,
@@ -38,6 +69,7 @@ function ProjectsPage() {
   const [showMobileNav, setShowMobileNav] = useState(false);
   const [showLogsViewer, setShowLogsViewer] = useState(false);
   const [showNewProjectModal, setShowNewProjectModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState<string | null>(null);
   const [isCreatingProject, setIsCreatingProject] = useState(false);
 
   useEffect(() => {
@@ -54,15 +86,14 @@ function ProjectsPage() {
       computedStatus === statusFilter.toLowerCase();
     const matchesType =
       typeFilter === "All Types" ||
-      (typeFilter === "TanStack Start/NestJS" && p.stackType === "tanstackjs-nestjs") ||
-      (typeFilter === "OpenUI5/OData" && p.stackType === "odata-ui5");
+      (typeFilter === "TanStack Start/NestJS" && p.stackType === "tanstackjs-nestjs");
     return matchesSearch && matchesStatus && matchesType;
   });
 
   const handleNewProject = async (data: {
     name: string;
     description: string;
-    stackType: "tanstackjs-nestjs" | "odata-ui5";
+    stackType: "tanstackjs-nestjs";
   }) => {
     setIsCreatingProject(true);
     try {
@@ -145,14 +176,14 @@ function ProjectsPage() {
               <div className="hidden sm:flex items-center gap-3">
                 <Link
                   to="/admin/mermaid"
-                  className="flex items-center gap-2 px-4 py-2.5 bg-secondary hover:bg-secondary/80 text-muted-foreground hover:text-foreground rounded-xl text-sm font-medium transition-colors"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-secondary hover:bg-secondary/80 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-xl text-sm font-medium transition-colors"
                 >
                   <FileCode2 className="w-4 h-4" />
                   Mermaid Library
                 </Link>
                 <Link
                   to="/admin/rules"
-                  className="flex items-center gap-2 px-4 py-2.5 bg-secondary hover:bg-secondary/80 text-muted-foreground hover:text-foreground rounded-xl text-sm font-medium transition-colors"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-secondary hover:bg-secondary/80 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white rounded-xl text-sm font-medium transition-colors"
                 >
                   Rules Admin
                 </Link>
@@ -185,6 +216,48 @@ function ProjectsPage() {
                   <Plus className="w-4 h-4 text-white" />
                 )}
               </button>
+              {/* User menu */}
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setShowUserMenu((v) => !v)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-secondary hover:bg-secondary/80 transition-colors text-sm font-medium"
+                >
+                  <User className="w-4 h-4" />
+                  <span className="hidden sm:block max-w-[120px] truncate">
+                    {user?.name ?? user?.email ?? "Account"}
+                  </span>
+                </button>
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-100 dark:border-gray-800 py-1 z-50">
+                    <div className="px-4 py-2.5 border-b border-gray-100 dark:border-gray-800">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Signed in as</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {user?.email}
+                      </p>
+                    </div>
+                    {user?.role === "admin" && (
+                      <>
+                        <Link
+                          to="/admin/users"
+                          onClick={() => setShowUserMenu(false)}
+                          className="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                        >
+                          <User className="w-4 h-4" />
+                          User Management
+                        </Link>
+                        <div className="border-t border-gray-100 dark:border-gray-800" />
+                      </>
+                    )}
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
               <button
                 onClick={() => setShowMobileNav((v) => !v)}
                 className="sm:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-secondary hover:bg-secondary/80 transition-colors"
@@ -244,7 +317,6 @@ function ProjectsPage() {
             >
               <option>All Types</option>
               <option>TanStack Start/NestJS</option>
-              <option>OpenUI5/OData</option>
             </select>
           </div>
         </div>
@@ -339,11 +411,18 @@ function ProjectsPage() {
                     >
                       {project.icon}
                     </div>
-                    <span
-                      className={`px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide border ${statusBadge.className}`}
-                    >
-                      {statusBadge.text}
-                    </span>
+                    <div className="flex gap-2 flex-wrap justify-end">
+                      {project.ownerId && project.ownerId !== user?.id && (
+                        <span className="px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide border bg-purple-500/20 text-purple-400 border-purple-500/30">
+                          Shared
+                        </span>
+                      )}
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wide border ${statusBadge.className}`}
+                      >
+                        {statusBadge.text}
+                      </span>
+                    </div>
                   </div>
 
                   <h3 className="text-lg font-bold mb-2 text-foreground">{project.name}</h3>
@@ -377,7 +456,7 @@ function ProjectsPage() {
                         <polyline points="14,2 14,8 20,8" />
                       </svg>
                       <span>
-                        {project.stackType === "tanstackjs-nestjs" ? "TanStack Start" : "OpenUI5"}
+                        TanStack Start
                       </span>
                     </div>
                   </div>
@@ -430,15 +509,29 @@ function ProjectsPage() {
                         {project.deploymentStatus === "completed" ? "Edit" : "Continue"}
                       </button>
                     )}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowMenu(showMenu === project.id ? null : project.id);
-                      }}
-                      className="p-2 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {!project.ownerId || project.ownerId === user?.id ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowShareModal(project.id);
+                        }}
+                        className="p-2 text-muted-foreground hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                        title="Share project"
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </button>
+                    ) : null}
+                    {!project.ownerId || project.ownerId === user?.id ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowMenu(showMenu === project.id ? null : project.id);
+                        }}
+                        className="p-2 text-muted-foreground hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    ) : null}
                   </div>
 
                   {showMenu === project.id && (
@@ -512,6 +605,15 @@ function ProjectsPage() {
           projectName={
             projects.find((p) => p.id === useProjectStore.getState().currentProject?.id)?.name
           }
+        />
+      )}
+
+      {/* Share Project Modal */}
+      {showShareModal && (
+        <ShareProjectModal
+          projectId={showShareModal}
+          isOpen={!!showShareModal}
+          onClose={() => setShowShareModal(null)}
         />
       )}
 

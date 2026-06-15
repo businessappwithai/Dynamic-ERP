@@ -57,15 +57,8 @@ export const Route = createFileRoute("/api/generate")({ server: { handlers: {
             return;
           }
 
-          let finalStackType = stackType;
-          let finalStackOption = stackOption;
-          if (stackOption) {
-            finalStackType = stackOption === "tanstackjs-nestjs" ? "tanstackjs-nestjs" : "odata-ui5";
-          } else if (!finalStackType) {
-            finalStackType = project.stackType || "tanstackjs-nestjs";
-            finalStackOption =
-              finalStackType === "tanstackjs-nestjs" ? "tanstackjs-nestjs" : "openui5-odatav4";
-          }
+          const finalStackType = stackOption || stackType || project.stackType || "tanstackjs-nestjs";
+          const finalStackOption = finalStackType === "tanstackjs-nestjs" ? "tanstackjs-nestjs" : finalStackType;
 
           sendLog("info", `Initializing generator for stack: ${finalStackType}`);
 

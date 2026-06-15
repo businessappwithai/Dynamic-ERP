@@ -5,7 +5,7 @@
 export interface CodeGenerationOptions {
   task: string;
   erdCode?: string;
-  stack?: "tanstackjs-nestjs" | "openui5-odata";
+  stack?: "tanstackjs-nestjs";
   options?: {
     includeTests?: boolean;
     includeMigrations?: boolean;
@@ -148,8 +148,8 @@ export function validateCodeGenerationOptions(options: CodeGenerationOptions): {
     errors.push("Task description is required");
   }
 
-  if (options.stack && !["tanstackjs-nestjs", "openui5-odata"].includes(options.stack)) {
-    errors.push('Invalid stack. Must be "tanstackjs-nestjs" or "openui5-odata"');
+  if (options.stack && options.stack !== "tanstackjs-nestjs") {
+    errors.push('Invalid stack. Must be "tanstackjs-nestjs"');
   }
 
   if (

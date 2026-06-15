@@ -40,7 +40,8 @@
     "test:playwright:debug": "playwright test --debug",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "setup:gstack": "git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup"
+    "setup:gstack": "git clone --single-branch --depth 1 https://github.com/garrytan/gstack.git ~/.claude/skills/gstack && cd ~/.claude/skills/gstack && ./setup",
+    "seed:admin": "bun scripts/seed-admin.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.14",

@@ -99,6 +99,43 @@ export class AuthService implements IAuthService {
   }
 
   /**
+   * Register user with pending approval
+   */
+  async registerPending(data: RegisterData): Promise<{ userId: string; email: string }> {
+    // Better Auth API returns a dynamic response object — cast to access data
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = (await this.auth.api.signUpEmail({
+      body: {
+        email: data.email,
+        password: data.password,
+        name: data.name,
+      },
+    })) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
+    if (!result) {
+      throw new Error("REGISTRATION_FAILED");
+    }
+
+    if (result.error) {
+      throw new Error(result.error.message || "REGISTRATION_FAILED");
+    }
+
+    const userId = (result.data.user as { id: string }).id;
+
+    // Set user status to pending and role to user
+    await this.db
+      .updateTable("auth_users" as any)
+      .set({ status: "pending", role: "user" })
+      .where("id" as any, "=", userId)
+      .execute();
+
+    return {
+      userId,
+      email: data.email,
+    };
+  }
+
+  /**
    * Logout user (invalidate session)
    */
   async logout(sessionToken: string): Promise<void> {

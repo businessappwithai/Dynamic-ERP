@@ -313,6 +313,39 @@ async function _runMigrationsImpl(db: Kysely<Database>): Promise<void> {
       .addColumn("createdAt", "varchar(64)", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`))
       .execute();
   } catch { /* already exists */ }
+
+  try {
+    await db.schema
+      .alterTable("auth_users")
+      .addColumn("status", "varchar(32)", (col) => col.defaultTo("approved"))
+      .execute();
+  } catch { /* column already exists */ }
+
+  try {
+    await db.schema
+      .alterTable("auth_users")
+      .addColumn("role", "varchar(64)", (col) => col.defaultTo("user"))
+      .execute();
+  } catch { /* column already exists */ }
+
+  try {
+    await db.schema
+      .alterTable("projects")
+      .addColumn("owner_user_id", "varchar(128)")
+      .execute();
+  } catch { /* column already exists */ }
+
+  try {
+    await db.schema
+      .createTable("project_members")
+      .ifNotExists()
+      .addColumn("id", "varchar(128)", (col) => col.primaryKey())
+      .addColumn("project_id", "varchar(128)", (col) => col.notNull())
+      .addColumn("user_id", "varchar(128)", (col) => col.notNull())
+      .addColumn("permission", "varchar(32)", (col) => col.notNull().defaultTo("read_only"))
+      .addColumn("created_at", "varchar(64)", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`))
+      .execute();
+  } catch { /* already exists */ }
 }
 
 // ─── Transform helpers ─────────────────────────────────────────────────────────

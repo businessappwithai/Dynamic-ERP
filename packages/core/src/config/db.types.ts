@@ -25,8 +25,17 @@ export interface ProjectsTable {
   deployment_status: string | null;
   deployment_url: string | null;
   uptime: string | null;
+  owner_user_id: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface ProjectMembersTable {
+  id: string;
+  project_id: string;
+  user_id: string;
+  permission: string;
+  created_at: string;
 }
 
 export interface ErdVersionsTable {
@@ -164,6 +173,8 @@ export interface AuthUsersTable {
   name: string | null;
   image: string | null;
   emailVerified: boolean;
+  status: string;
+  role: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -207,6 +218,7 @@ export interface RulesTable {
 
 export interface Database {
   projects: ProjectsTable;
+  project_members: ProjectMembersTable;
   erd_versions: ErdVersionsTable;
   workflows: WorkflowsTable;
   generation_history: GenerationHistoryTable;

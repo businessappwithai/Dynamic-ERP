@@ -8,11 +8,10 @@ export interface Project {
   updatedAt: string;
   status: "draft" | "active" | "archived";
   isDeleted: boolean;
+  ownerId?: string;
 
   // Configuration (Step 1)
-  stackType:
-    | "tanstackjs-nestjs" // Option 1
-    | "odata-ui5"; // Option 2
+  stackType: "tanstackjs-nestjs";
   port: number;
   databaseUrl?: string;
 
@@ -78,5 +77,4 @@ export interface MermaidFile {
 
 export const STACK_LABELS: Record<Project["stackType"], string> = {
   "tanstackjs-nestjs": "tanstackjs-nestjs: NestJS + TanStack Start",
-  "odata-ui5": "openui5-odatav4: OData + OpenUI5",
 };

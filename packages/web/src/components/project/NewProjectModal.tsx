@@ -10,7 +10,7 @@ interface NewProjectModalProps {
   onCreateProject: (data: {
     name: string;
     description: string;
-    stackType: "tanstackjs-nestjs" | "odata-ui5";
+    stackType: "tanstackjs-nestjs";
   }) => Promise<void>;
   isLoading?: boolean;
 }
@@ -19,12 +19,11 @@ export function NewProjectModal({
   isOpen,
   onClose,
   onCreateProject,
-  // isLoading = false,
 }: NewProjectModalProps) {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    stackType: "tanstackjs-nestjs" as "tanstackjs-nestjs" | "odata-ui5",
+    stackType: "tanstackjs-nestjs" as const,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,7 +34,6 @@ export function NewProjectModal({
 
     try {
       await onCreateProject(formData);
-      // Reset form after successful creation
       setFormData({ name: "", description: "", stackType: "tanstackjs-nestjs" });
       onClose();
     } catch (error) {
@@ -53,7 +51,7 @@ export function NewProjectModal({
       <div className="bg-card border border-border rounded-2xl max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-xl font-bold">Create New Project</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Create New Project</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-muted rounded-lg transition-colors"
@@ -69,7 +67,7 @@ export function NewProjectModal({
           <div>
             <label
               htmlFor="project-name"
-              className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block"
+              className="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-2 block"
             >
               Project Name <span className="text-red-500">*</span>
             </label>
@@ -89,7 +87,7 @@ export function NewProjectModal({
           <div>
             <label
               htmlFor="description"
-              className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block"
+              className="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-2 block"
             >
               Description <span className="text-red-500">*</span>
             </label>
@@ -107,114 +105,24 @@ export function NewProjectModal({
 
           {/* Stack Type */}
           <div>
-            <label
-              htmlFor="stack-type"
-              className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block"
-            >
+            <label className="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider mb-2 block">
               Stack Type <span className="text-red-500">*</span>
             </label>
-            <div className="space-y-2">
-              <label
-                className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-colors ${
-                  formData.stackType === "tanstackjs-nestjs"
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="stack-type"
-                  value="tanstackjs-nestjs"
-                  checked={formData.stackType === "tanstackjs-nestjs"}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      stackType: e.target.value as "tanstackjs-nestjs" | "odata-ui5",
-                    })
-                  }
-                  className="sr-only"
-                  disabled={isSubmitting}
-                />
-                <div className="flex-1">
-                  <p className="font-semibold">Full Stack: TanStack Start + NestJS</p>
-                  <p className="text-sm text-muted-foreground">
-                    Modern web framework with React, TypeScript, and PostgreSQL
-                  </p>
-                </div>
-                {formData.stackType === "tanstackjs-nestjs" && (
-                  <div className="w-5 h-5 rounded-full border-2 border-primary bg-primary flex items-center justify-center">
-                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                )}
-              </label>
-
-              <label
-                className={`flex items-center p-4 border-2 rounded-xl cursor-pointer transition-colors ${
-                  formData.stackType === "odata-ui5"
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/50"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="stack-type"
-                  value="odata-ui5"
-                  checked={formData.stackType === "odata-ui5"}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      stackType: e.target.value as "tanstackjs-nestjs" | "odata-ui5",
-                    })
-                  }
-                  className="sr-only"
-                  disabled={isSubmitting}
-                />
-                <div className="flex-1">
-                  <p className="font-semibold">Enterprise: OData V4 + OpenUI5</p>
-                  <p className="text-sm text-muted-foreground">
-                    SAP enterprise stack with OData services and Fiori UI
-                  </p>
-                </div>
-                {formData.stackType === "odata-ui5" && (
-                  <div className="w-5 h-5 rounded-full border-2 border-primary bg-primary flex items-center justify-center">
-                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                )}
-              </label>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              ⚠️ Stack type cannot be changed after project creation
-            </p>
-          </div>
-
-          {/* Dates Info - For new projects, show blank dates */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
-                Created
-              </label>
-              <div className="bg-muted/30 border border-border px-4 py-3 rounded-xl text-sm text-muted-foreground">
-                -
+            <div className="flex items-center p-4 border-2 border-primary bg-primary/5 rounded-xl">
+              <div className="flex-1">
+                <p className="font-semibold text-gray-900 dark:text-white">Full Stack: TanStack Start + NestJS</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Modern web framework with React, TypeScript, and PostgreSQL
+                </p>
               </div>
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
-                Modified
-              </label>
-              <div className="bg-muted/30 border border-border px-4 py-3 rounded-xl text-sm text-muted-foreground">
-                -
+              <div className="w-5 h-5 rounded-full border-2 border-primary bg-primary flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    fillRule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
               </div>
             </div>
           </div>
@@ -225,7 +133,7 @@ export function NewProjectModal({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 bg-muted hover:bg-muted/80 py-3 rounded-xl text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 py-3 rounded-xl text-sm font-bold text-gray-900 dark:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>

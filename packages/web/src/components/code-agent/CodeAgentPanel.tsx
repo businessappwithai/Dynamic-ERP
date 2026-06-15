@@ -151,11 +151,10 @@ export function CodeAgentPanel({ erdCode }: CodeAgentPanelProps) {
         </label>
         <select
           value={stack}
-          onChange={(e) => setStack(e.target.value as "tanstack-start-nestjs" | "openui5-odata")}
+          onChange={(e) => setStack(e.target.value as "tanstack-start-nestjs")}
           className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-violet-500"
         >
           <option value="tanstack-start-nestjs">TanStack Start + NestJS</option>
-          <option value="openui5-odata">OpenUI5 + OData</option>
         </select>
       </div>
 
@@ -200,8 +199,8 @@ export function CodeAgentPanel({ erdCode }: CodeAgentPanelProps) {
       {status && (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-medium">{status.message}</span>
-            <span className="text-slate-600">{status.progress}%</span>
+            <span className="font-medium text-slate-900 dark:text-white">{status.message}</span>
+            <span className="text-slate-600 dark:text-slate-400">{status.progress}%</span>
           </div>
           <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
             <div
