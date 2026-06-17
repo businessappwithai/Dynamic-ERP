@@ -13,7 +13,7 @@ export const entityAgent = new Agent({
 5. Defaults: timestamps, boolean flags
 
 Return refined entity with confidence score.`,
-  model: "openai/gpt-4-turbo",
+  model: "anthropic/claude-sonnet-4-20250514",
 });
 
 export async function refineEntity(entity: unknown) {

@@ -207,7 +207,7 @@ Rate your confidence in each extraction:
 - **0.1-0.2**: Guess, low confidence
 
 Generate complete, valid Mermaid ERD syntax that can be directly rendered.`,
-  model: "openai/gpt-4-turbo",
+  model: "anthropic/claude-sonnet-4-20250514",
 });
 
 export async function analyzeDomain(description: string) {

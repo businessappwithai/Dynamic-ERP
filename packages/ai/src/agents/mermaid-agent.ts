@@ -31,7 +31,7 @@ Cardinality symbols:
 - ||--o{ : oneToMany
 - }o--|| : manyToOne
 - }o--o{ : manyToMany`,
-  model: "openai/gpt-4-turbo",
+  model: "anthropic/claude-sonnet-4-20250514",
 });
 
 export async function generateMermaid(

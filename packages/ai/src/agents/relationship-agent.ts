@@ -15,7 +15,7 @@ Common patterns:
 - "users create posts" → User 1:N Post (FK: authorId in Post)
 - "post has comments" → Post 1:N Comment (FK: postId in Comment)
 - "posts tagged with tags" → Post M:N Tag (junction table)`,
-  model: "openai/gpt-4-turbo",
+  model: "anthropic/claude-sonnet-4-20250514",
 });
 
 export async function refineRelationship(relationship: unknown) {
