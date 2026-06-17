@@ -2,10 +2,31 @@ import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { CheckCircle2, XCircle, Clock, AlertCircle } from "lucide-react";
 
+async function checkAdminAuth() {
+  let fetchInit: RequestInit = {};
+  let baseUrl = "";
+
+  if (typeof window === "undefined") {
+    try {
+      const { getRequest } = await import("@tanstack/react-start/server");
+      const req = getRequest();
+      if (req) {
+        const cookie = req.headers.get("cookie") ?? "";
+        if (cookie) fetchInit = { headers: { cookie } };
+        baseUrl = new URL(req.url).origin;
+      }
+    } catch {
+      baseUrl = process.env.VITE_APP_URL ?? "http://localhost:3000";
+    }
+  }
+
+  const res = await fetch(`${baseUrl}/api/auth/me`, fetchInit);
+  return res.json() as Promise<{ user: { id: string; email: string; role: string } | null }>;
+}
+
 export const Route = createFileRoute("/admin/users")({
   beforeLoad: async () => {
-    const res = await fetch("/api/auth/me");
-    const data = await res.json();
+    const data = await checkAdminAuth();
     if (!data.user || data.user.role !== "admin") {
       throw redirect({ to: "/login" });
     }

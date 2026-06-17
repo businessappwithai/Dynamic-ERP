@@ -7,11 +7,34 @@ import { ShareProjectModal } from "@/components/project/ShareProjectModal";
 import { useAuthStore } from "@/store/authStore";
 import { useProjectStore } from "@/store/projectStore";
 
+async function checkAuthMe() {
+  // Server-side: forward the incoming request's cookies to /api/auth/me.
+  // Client-side: use relative URL — browser automatically includes cookies.
+  let fetchInit: RequestInit = {};
+  let baseUrl = "";
+
+  if (typeof window === "undefined") {
+    try {
+      const { getRequest } = await import("@tanstack/react-start/server");
+      const req = getRequest();
+      if (req) {
+        const cookie = req.headers.get("cookie") ?? "";
+        if (cookie) fetchInit = { headers: { cookie } };
+        baseUrl = new URL(req.url).origin;
+      }
+    } catch {
+      baseUrl = process.env.VITE_APP_URL ?? "http://localhost:3000";
+    }
+  }
+
+  const res = await fetch(`${baseUrl}/api/auth/me`, fetchInit);
+  return res.json() as Promise<{ user: { id: string; email: string; role: string } | null }>;
+}
+
 export const Route = createFileRoute("/projects/")({
   beforeLoad: async () => {
     try {
-      const res = await fetch("/api/auth/me");
-      const data = await res.json();
+      const data = await checkAuthMe();
       if (!data.user) throw redirect({ to: "/login" });
     } catch (e) {
       if (e && typeof e === "object" && "to" in e) throw e;
