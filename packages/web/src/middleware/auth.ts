@@ -39,17 +39,30 @@ export async function isAuthenticated(request: Request): Promise<boolean> {
   const sessionToken = cookieHeader
     .split(";")
     .map((c) => c.trim())
-    .find((c) => c.startsWith("better-auth.session_token="))
+    .find((c) => c.startsWith("erdwithai-session="))
     ?.split("=")[1];
 
   if (!sessionToken) {
     return false;
   }
 
-  // TODO: Validate session with better-auth
-  // For now, just check presence of token
-  // In production, you would call: await authClient.getSession({ headers: request.headers })
-  return true;
+  // Validate session exists and hasn't expired
+  try {
+    const { getDatabase } = await import("@erdwithai/core/services");
+    const db = getDatabase();
+    const now = new Date().toISOString();
+
+    const session = await db
+      .selectFrom("auth_sessions" as any)
+      .selectAll()
+      .where("token" as any, "=", sessionToken)
+      .where("expiresAt" as any, ">", now)
+      .executeTakeFirst();
+
+    return !!session;
+  } catch {
+    return false;
+  }
 }
 
 /**
