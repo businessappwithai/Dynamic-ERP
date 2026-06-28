@@ -35,7 +35,7 @@ function SetupDictionaryButton({ tableId }: { tableId: string }) {
     }
   };
 
-  if (!tableRecord?.table_name?.startsWith('bus_')) return null;
+  if (!tableRecord?.table_name) return null;
 
   return (
     <div className="flex items-center gap-3 px-6 py-3 border-b bg-amber-50">

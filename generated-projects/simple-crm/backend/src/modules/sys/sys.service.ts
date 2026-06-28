@@ -8,6 +8,7 @@
 
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { sql } from 'kysely';
+import { randomUUID } from 'crypto';
 import { DatabaseService } from '../../database/database.service';
 import { BusService } from '../bus/bus.service';
 import type { Kysely } from 'kysely';
@@ -147,10 +148,98 @@ export class SysService {
   async createTable(data: Record<string, unknown>) {
     const now = new Date().toISOString();
     const [table] = await this.db.kysely.insertInto('sys_table')
-      .values({ ...data, created_at: now, updated_at: now, created_by: 'system', updated_by: 'system' } as any)
+      .values({ is_active: true, entity_type: 'U', ...data, created_at: now, updated_at: now, created_by: 'system', updated_by: 'system' } as any)
       .returningAll()
       .execute();
+
+    // Create actual Postgres table with standard bus columns
+    const dbTableName = `bus_${data.table_name}`;
+    await sql`
+      CREATE TABLE IF NOT EXISTS ${sql.id(dbTableName)} (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        deleted_at TIMESTAMPTZ,
+        created_by VARCHAR(100),
+        updated_by VARCHAR(100),
+        version INTEGER NOT NULL DEFAULT 0
+      )
+    `.execute(this.db.kysely);
+
+    // Auto-bootstrap sys_window / sys_tab / sys_field for the new entity
+    try {
+      await this.busService.setupEntityDictionary(data.table_name as string);
+    } catch (_e) {
+      // Dictionary may already exist or table has no columns yet — non-fatal
+    }
+
     return table;
+  }
+
+  private mapRefToSqlType(refId: number): string {
+    const map: Record<number, string> = {
+      10: 'VARCHAR(255)',
+      11: 'INTEGER',
+      12: 'DECIMAL(20,2)',
+      13: 'UUID',
+      14: 'TEXT',
+      15: 'DATE',
+      16: 'TIMESTAMPTZ',
+      17: 'VARCHAR(40)',
+      18: 'UUID',
+      19: 'UUID',
+      20: 'BOOLEAN',
+      24: 'VARCHAR(255)',
+    };
+    return map[refId] ?? 'TEXT';
+  }
+
+  async createColumn(data: Record<string, unknown>) {
+    // Accept either sys_table_id or tableId (parentField param from ADListShell)
+    const tableId = (data.sys_table_id ?? data.tableId) as string;
+    if (!tableId) throw new NotFoundException('sys_table_id is required');
+    const parentTable = await this.findTableById(tableId);
+    const dbTableName = `bus_${parentTable.table_name}`;
+    const sqlType = this.mapRefToSqlType(data.sys_reference_id as number);
+
+    // ALTER TABLE ADD COLUMN on the actual Postgres table
+    await sql`
+      ALTER TABLE ${sql.id(dbTableName)}
+      ADD COLUMN IF NOT EXISTS ${sql.id(data.column_name as string)} ${sql.raw(sqlType)}
+    `.execute(this.db.kysely);
+
+    // Insert sys_column metadata
+    const now = new Date().toISOString();
+    const [column] = await this.db.kysely.insertInto('sys_column')
+      .values({
+        sys_column_id: randomUUID(),
+        sys_table_id: tableId,
+        column_name: data.column_name,
+        name: data.name ?? data.column_name,
+        description: data.description ?? null,
+        sys_reference_id: data.sys_reference_id,
+        field_length: data.field_length ?? null,
+        default_value: data.default_value ?? null,
+        is_key: data.is_key ?? false,
+        is_parent: data.is_parent ?? false,
+        is_mandatory: data.is_mandatory ?? false,
+        is_updateable: data.is_updateable ?? true,
+        is_identifier: data.is_identifier ?? false,
+        is_selection_column: data.is_selection_column ?? false,
+        is_encrypted: data.is_encrypted ?? false,
+        seq_no: data.seq_no ?? 0,
+        entity_type: data.entity_type ?? 'U',
+        is_active: true,
+        created_by: 'system',
+        updated_by: 'system',
+        created_at: now,
+        updated_at: now,
+      } as any)
+      .returningAll()
+      .execute();
+
+    this.busService.clearMetadataCache();
+    return column;
   }
 
   async updateTable(id: string, data: Record<string, unknown>) {

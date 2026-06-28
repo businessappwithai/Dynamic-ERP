@@ -259,13 +259,24 @@ export class BusService {
 
   private async verifyEntity(entity: string): Promise<void> {
     const tableName = this.getTableName(entity);
+    const bareEntity = entity.startsWith('bus_') ? entity.slice(4) : entity;
 
-    const tableRecord = await this.kysely
+    let tableRecord = await this.kysely
       .selectFrom('sys_table')
       .selectAll()
       .where('table_name', '=', tableName)
       .where('is_active', '=', true)
       .executeTakeFirst();
+
+    if (!tableRecord) {
+      // Also accept user-created tables stored without bus_ prefix
+      tableRecord = await this.kysely
+        .selectFrom('sys_table')
+        .selectAll()
+        .where('table_name', '=', bareEntity)
+        .where('is_active', '=', true)
+        .executeTakeFirst();
+    }
 
     if (!tableRecord) {
       throw new NotFoundException(`Entity '${entity}' not found in Application Dictionary`);
@@ -279,12 +290,21 @@ export class BusService {
       return this.metadataCache.get(tableName)!;
     }
 
-    const table = await this.kysely
+    const bareEntity = entity.startsWith('bus_') ? entity.slice(4) : entity;
+    let table = await this.kysely
       .selectFrom('sys_table')
       .selectAll()
       .where('table_name', '=', tableName)
       .where('is_active', '=', true)
       .executeTakeFirst();
+    if (!table) {
+      table = await this.kysely
+        .selectFrom('sys_table')
+        .selectAll()
+        .where('table_name', '=', bareEntity)
+        .where('is_active', '=', true)
+        .executeTakeFirst();
+    }
 
     if (!table) {
       throw new NotFoundException(`Entity '${entity}' not found`);
@@ -506,12 +526,20 @@ export class BusService {
     const created: string[] = [];
     const systemUser = 'system';
 
-    // 1. Find the sys_table record
-    const sysTable = await this.kysely
+    // 1. Find the sys_table record — try both bus_entity and entity (user-created tables store plain name)
+    const bareEntity = entity.startsWith('bus_') ? entity.slice(4) : entity;
+    let sysTable = await this.kysely
       .selectFrom('sys_table')
       .selectAll()
       .where('table_name', '=', tableName)
       .executeTakeFirst();
+    if (!sysTable) {
+      sysTable = await this.kysely
+        .selectFrom('sys_table')
+        .selectAll()
+        .where('table_name', '=', bareEntity)
+        .executeTakeFirst();
+    }
 
     if (!sysTable) {
       throw new NotFoundException(`No sys_table record found for table '${tableName}'. Register the table first via the admin Tables UI.`);

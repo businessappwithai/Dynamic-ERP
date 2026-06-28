@@ -72,12 +72,19 @@ interface TablesResponse {
  */
 function useBusTables() {
   return useQuery({
-    queryKey: ['sys-tables', 'bus_'],
+    queryKey: ['sys-tables', 'bus_+U'],
     queryFn: async () => {
-      const response = await apiClient.get<TablesResponse>('/sys/tables?prefix=bus_');
-      return response;
+      const [bus, user] = await Promise.all([
+        apiClient.get<TablesResponse>('/sys/tables?prefix=bus_'),
+        apiClient.get<TablesResponse>('/sys/tables?entity_type=U&limit=100'),
+      ]);
+      const busData = bus?.data ?? [];
+      const userData = user?.data ?? [];
+      const seen = new Set(busData.map((t: TableMetadata) => t.sys_table_id));
+      const merged = [...busData, ...userData.filter((t: TableMetadata) => !seen.has(t.sys_table_id))];
+      return { data: merged, meta: bus?.meta ?? { total: merged.length, page: 1, pageSize: merged.length } };
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes - table metadata rarely changes
+    staleTime: 10 * 60 * 1000,
   });
 }
 
@@ -127,7 +134,7 @@ function QuickAccessCard({ table }: { table: TableMetadata }) {
 
   return (
     <a
-      href={`/${table.table_name}`}
+      href={`/${table.table_name.startsWith('bus_') ? table.table_name : `bus_${table.table_name}`}`}
       className="swiss-card p-6 group hover:border-primary/50 transition-all hover:shadow-lg"
     >
       <div className="space-y-4">

@@ -122,6 +122,12 @@ export class SysController {
     return this.sysService.findAllColumns({ tableId, page: page ? (parseInt(page, 10) || 1) : 1, limit: limit ? (parseInt(limit, 10) || 100) : 100 }, parseFilters(rawFilters));
   }
 
+  @Post('columns')
+  @ApiOperation({ summary: 'Create a new column (inserts sys_column metadata + ALTER TABLE ADD COLUMN)' })
+  async createColumn(@Body() data: Record<string, unknown>) {
+    return this.sysService.createColumn(data);
+  }
+
   @Get('columns/:id')
   @ApiOperation({ summary: 'Get column by ID' })
   async findColumnById(@Param('id', ParseUUIDPipe) id: string) {
