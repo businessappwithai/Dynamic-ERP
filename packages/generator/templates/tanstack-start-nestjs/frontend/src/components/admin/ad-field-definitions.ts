@@ -181,22 +181,35 @@ export const SYS_TAB_GRID_FIELDS: FieldMetadata[] = [
 // ============================================================================
 
 export const SYS_FIELD_FORM_FIELDS: FieldMetadata[] = [
+  // Core
   field('name', 'Name', REF.STRING, { is_mandatory: true, seq_no: 10, field_length: 100 }),
   field('description', 'Description', REF.TEXT, { seq_no: 20 }),
   field('help', 'Help', REF.TEXT, { seq_no: 30 }),
   field('sys_reference_id', 'Reference Type Override', REF.TABLE, { seq_no: 35, ...SYS_REF_LOOKUP }),
+  // Sequence / layout
   field('seq_no', 'Sequence', REF.INTEGER, { seq_no: 40 }),
   field('seq_no_grid', 'Grid Sequence', REF.INTEGER, { seq_no: 50 }),
   field('display_length', 'Display Length', REF.INTEGER, { seq_no: 60 }),
   field('column_span', 'Column Span', REF.INTEGER, { seq_no: 70 }),
+  field('num_lines', 'Num Lines', REF.INTEGER, { seq_no: 77 }),
+  // Display flags
   field('is_displayed', 'Displayed', REF.YES_NO, { seq_no: 80 }),
   field('is_displayed_grid', 'Displayed in Grid', REF.YES_NO, { seq_no: 90 }),
   field('is_read_only', 'Read Only', REF.YES_NO, { seq_no: 100 }),
   field('is_same_line', 'Same Line', REF.YES_NO, { seq_no: 110 }),
   field('is_heading', 'Heading', REF.YES_NO, { seq_no: 120 }),
+  field('is_field_only', 'Field Only (no label)', REF.YES_NO, { seq_no: 125 }),
+  field('is_encrypted', 'Encrypted', REF.YES_NO, { seq_no: 126 }),
+  // Defaults
   field('default_value', 'Default Value', REF.STRING, { seq_no: 130, field_length: 255 }),
   field('sort_no', 'Sort Number', REF.INTEGER, { seq_no: 140 }),
-  field('is_active', 'Active', REF.YES_NO, { seq_no: 150 }),
+  field('obscure_type', 'Obscure Type', REF.STRING, { seq_no: 145, field_length: 40 }),
+  // Conditional logic
+  field('display_logic', 'Display Logic', REF.TEXT, { seq_no: 150 }),
+  field('read_only_logic', 'Read Only Logic', REF.TEXT, { seq_no: 160 }),
+  field('mandatory_logic', 'Mandatory Logic', REF.TEXT, { seq_no: 170 }),
+  // Active
+  field('is_active', 'Active', REF.YES_NO, { seq_no: 180 }),
 ];
 
 export const SYS_FIELD_GRID_FIELDS: FieldMetadata[] = [

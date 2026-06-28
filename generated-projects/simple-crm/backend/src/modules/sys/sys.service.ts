@@ -3,7 +3,7 @@
  *
  * Provides data access for all sys_ tables using Kysely.
  *
- * Generated: {{now}}
+ * Generated: 2026-06-09T07:37:08.049Z
  */
 
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
@@ -324,6 +324,7 @@ export class SysService {
 
   async findAllFieldGroups(tableName?: string) {
     if (tableName) {
+      // Find the sys_tab_id for this table, then return field groups linked to it
       const tab = await this.db.kysely
         .selectFrom('sys_tab')
         .innerJoin('sys_table', 'sys_table.sys_table_id', 'sys_tab.sys_table_id')
