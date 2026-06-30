@@ -32,19 +32,72 @@ async function ensureAdminUser(logger: Logger) {
   try {
     const auth = getAuth();
 
-    // Check if admin user already exists
-    const existing = await db.selectFrom('user').select(['id', 'role']).where('email', '=', adminEmail).executeTakeFirst();
+    // 1. Ensure Better Auth user exists with admin role
+    let baUser = await db.selectFrom('user').select(['id', 'role', 'sysUserId']).where('email', '=', adminEmail).executeTakeFirst();
 
-    if (!existing) {
-      // Create admin user via Better Auth server-side API
+    if (!baUser) {
       await auth.api.signUpEmail({ body: { email: adminEmail, password: adminPassword, name: 'Admin User' } });
-      // Update role to 'admin' — Better Auth defaults new users to 'user'
-      await db.updateTable('user').set({ role: 'admin' }).where('email', '=', adminEmail).execute();
+      baUser = await db.selectFrom('user').select(['id', 'role', 'sysUserId']).where('email', '=', adminEmail).executeTakeFirst();
       logger.log(`Admin user created: ${adminEmail} (password: ${adminPassword})`);
-    } else if (existing.role !== 'admin') {
-      await db.updateTable('user').set({ role: 'admin' }).where('email', '=', adminEmail).execute();
-      logger.log(`Admin user role updated to 'admin': ${adminEmail}`);
     }
+
+    if (!baUser) throw new Error('Could not find or create admin Better Auth user');
+
+    if (baUser.role !== 'admin') {
+      await db.updateTable('user').set({ role: 'admin' }).where('email', '=', adminEmail).execute();
+    }
+
+    // 2. Ensure sys_user record exists for admin
+    let sysUser = await db.selectFrom('sys_user').select(['sys_user_id']).where('email', '=', adminEmail).executeTakeFirst();
+
+    if (!sysUser) {
+      const { randomUUID } = await import('crypto');
+      const newSysUserId = randomUUID();
+      await db.insertInto('sys_user').values({
+        sys_user_id: newSysUserId,
+        name: 'Admin User',
+        email: adminEmail,
+        password_hash: 'managed-by-better-auth',
+        is_system_user: true,
+        is_active: true,
+        created_by: 'system',
+        updated_by: 'system',
+      }).execute();
+      sysUser = { sys_user_id: newSysUserId };
+      logger.log(`sys_user created for ${adminEmail}`);
+    }
+
+    // 3. Link sysUserId on the Better Auth user if not already set
+    if (!baUser.sysUserId) {
+      await db.updateTable('user').set({ sysUserId: sysUser.sys_user_id }).where('email', '=', adminEmail).execute();
+    }
+
+    // 4. Ensure Administrator role assignment (look up by name)
+    const adminRole = await db.selectFrom('sys_role').select(['sys_role_id']).where('name', '=', 'Administrator').executeTakeFirst();
+
+    if (adminRole) {
+      const existing = await db.selectFrom('sys_user_roles')
+        .select('sys_user_roles_id')
+        .where('sys_user_id', '=', sysUser.sys_user_id)
+        .where('sys_role_id', '=', adminRole.sys_role_id)
+        .executeTakeFirst();
+
+      if (!existing) {
+        const { randomUUID } = await import('crypto');
+        await db.insertInto('sys_user_roles').values({
+          sys_user_roles_id: randomUUID(),
+          sys_user_id: sysUser.sys_user_id,
+          sys_role_id: adminRole.sys_role_id,
+          entity_type: 'S',
+          is_active: true,
+          created_by: 'system',
+          updated_by: 'system',
+        }).execute();
+        logger.log(`Administrator role assigned to sys_user ${adminEmail}`);
+      }
+    }
+
+    logger.log(`Admin user ready: ${adminEmail} → sys_user ${sysUser.sys_user_id}`);
   } catch (err: any) {
     logger.warn(`Could not ensure admin user: ${err?.message ?? err}`);
   } finally {

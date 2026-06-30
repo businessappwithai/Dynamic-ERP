@@ -292,6 +292,14 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
     const dashboardPageContent = await this.renderTemplate("src/routes/dashboard.tsx.hbs", context);
     await fs.writeFile(path.join(outputDir, "src/routes/dashboard.tsx"), dashboardPageContent);
 
+    // Admin layout route (guards /admin/* from non-admin users)
+    try {
+      const adminLayoutContent = await this.renderTemplate("src/routes/admin.tsx.hbs", context);
+      await fs.writeFile(path.join(outputDir, "src/routes/admin.tsx"), adminLayoutContent);
+    } catch (e) {
+      console.warn("Admin layout route template not found");
+    }
+
     // Providers index (rendered template)
     const providersContent = await this.renderTemplate("src/providers/index.tsx.hbs", context);
     await fs.writeFile(path.join(outputDir, "src/providers/index.tsx"), providersContent);
@@ -742,6 +750,22 @@ export class TanStackStartFrontendGenerator extends BaseGenerator {
       );
     } catch (e) {
       console.warn("Admin audit page not found");
+    }
+
+    // Users page (admin/users.tsx)
+    try {
+      const usersContent = await this.renderTemplate("src/routes/admin/users.tsx.hbs", context);
+      await fs.writeFile(path.join(adminDir, "users.tsx"), usersContent);
+    } catch (e) {
+      console.warn("Admin users page template not found");
+    }
+
+    // Roles page (admin/roles.tsx)
+    try {
+      const rolesContent = await this.renderTemplate("src/routes/admin/roles.tsx.hbs", context);
+      await fs.writeFile(path.join(adminDir, "roles.tsx"), rolesContent);
+    } catch (e) {
+      console.warn("Admin roles page template not found");
     }
 
     // Recursively copy admin subdirectories (table/$tableId/, window/$windowId/, etc.)

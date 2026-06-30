@@ -746,4 +746,58 @@ export class SysService {
       return query.orderBy('sys_field.seq_no_grid').execute();
     });
   }
+
+  async findAllSysUsers() {
+    const rows = await this.db.kysely
+      .selectFrom('sys_user as u')
+      .leftJoin('sys_user_roles as ur', (join) =>
+        join.onRef('ur.sys_user_id', '=', 'u.sys_user_id').on('ur.is_active', '=', true),
+      )
+      .leftJoin('sys_role as r', 'r.sys_role_id', 'ur.sys_role_id')
+      .select([
+        'u.sys_user_id',
+        'u.name',
+        'u.email',
+        'u.is_active',
+        'u.created_at',
+        'r.name as role_name',
+      ])
+      .orderBy('u.name')
+      .execute();
+
+    const map = new Map<string, any>();
+    for (const row of rows) {
+      if (!map.has(row.sys_user_id)) {
+        map.set(row.sys_user_id, {
+          sys_user_id: row.sys_user_id,
+          name: row.name,
+          email: row.email,
+          is_active: row.is_active,
+          created_at: row.created_at,
+          roles: [],
+        });
+      }
+      if (row.role_name) map.get(row.sys_user_id).roles.push(row.role_name);
+    }
+
+    return { data: Array.from(map.values()) };
+  }
+
+  async findAllSysRoles() {
+    const roles = await this.db.kysely
+      .selectFrom('sys_role')
+      .select([
+        'sys_role_id',
+        'name',
+        'description',
+        'is_master_role',
+        'is_active',
+        'created_at',
+      ])
+      .where('is_active', '=', true)
+      .orderBy('name')
+      .execute();
+
+    return { data: roles };
+  }
 }

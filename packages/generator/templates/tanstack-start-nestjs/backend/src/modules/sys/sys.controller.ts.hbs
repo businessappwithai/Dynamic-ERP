@@ -362,4 +362,24 @@ export class SysController {
   async updateTab(@Param('id') id: string, @Body() data: Record<string, unknown>) {
     return this.sysService.updateTab(id, data);
   }
+
+  // ============================================================================
+  // SYS_USER Endpoints
+  // ============================================================================
+
+  @Get('users')
+  @ApiOperation({ summary: 'List all system users with their roles' })
+  async findAllSysUsers() {
+    return this.sysService.findAllSysUsers();
+  }
+
+  // ============================================================================
+  // SYS_ROLE Endpoints
+  // ============================================================================
+
+  @Get('roles')
+  @ApiOperation({ summary: 'List all system roles' })
+  async findAllSysRoles() {
+    return this.sysService.findAllSysRoles();
+  }
 }
