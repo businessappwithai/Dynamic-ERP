@@ -1817,6 +1817,104 @@ CREATE TABLE IF NOT EXISTS item_supplier (
 
 CREATE INDEX IF NOT EXISTS idx_item_supplier_item ON item_supplier(item_id);
 CREATE INDEX IF NOT EXISTS idx_item_supplier_supplier ON item_supplier(supplier_id);
+
+-- =========================================================================
+-- Wave 2 M5: putaway + pick list + persisted hard reservation (ADR-0026).
+-- Owned + written exclusively by erpclaw-inventory. Created here for fresh
+-- installs; migration 025 adds them to existing DBs (same column shapes).
+-- Warehouse-level granularity V1: no bin schema; pick_list_item.source_warehouse_bin
+-- is a free-TEXT hint only.
+-- =========================================================================
+
+-- Warehouse-routing rule. Match precedence: item match > item_group match;
+-- within a class, priority ASC (lower number wins). Soft-deleted via is_active=0.
+CREATE TABLE IF NOT EXISTS putaway_rule (
+    id                  TEXT PRIMARY KEY,
+    name                TEXT NOT NULL,
+    priority            INTEGER NOT NULL DEFAULT 100,
+    match_item_id       TEXT REFERENCES item(id) ON DELETE RESTRICT,
+    match_item_group    TEXT,
+    target_warehouse_id TEXT NOT NULL REFERENCES warehouse(id) ON DELETE RESTRICT,
+    company_id          TEXT NOT NULL REFERENCES company(id) ON DELETE RESTRICT,
+    is_active           INTEGER NOT NULL DEFAULT 1 CHECK(is_active IN (0,1)),
+    created_at          TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TEXT DEFAULT CURRENT_TIMESTAMP,
+    CHECK(match_item_id IS NOT NULL OR match_item_group IS NOT NULL)
+);
+
+CREATE INDEX IF NOT EXISTS idx_putaway_active ON putaway_rule(is_active, priority);
+
+-- Pick-list header (SO-driven or standalone). Created before pick_list_item so
+-- the child FK target exists at CREATE time (Postgres).
+CREATE TABLE IF NOT EXISTS pick_list (
+    id                  TEXT PRIMARY KEY,
+    name                TEXT NOT NULL,
+    sales_order_id      TEXT REFERENCES sales_order(id) ON DELETE RESTRICT,
+    from_warehouse_id   TEXT NOT NULL REFERENCES warehouse(id) ON DELETE RESTRICT,
+    status              TEXT NOT NULL DEFAULT 'draft'
+                        CHECK(status IN ('draft','submitted','picked','completed','cancelled')),
+    picked_by_user_id   TEXT,
+    picked_at           TEXT,
+    company_id          TEXT NOT NULL REFERENCES company(id) ON DELETE RESTRICT,
+    created_at          TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TEXT DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_pick_list_so ON pick_list(sales_order_id);
+
+CREATE TABLE IF NOT EXISTS pick_list_item (
+    id                   TEXT PRIMARY KEY,
+    pick_list_id         TEXT NOT NULL REFERENCES pick_list(id) ON DELETE RESTRICT,
+    item_id              TEXT NOT NULL REFERENCES item(id) ON DELETE RESTRICT,
+    expected_qty         TEXT NOT NULL DEFAULT '0',
+    picked_qty           TEXT NOT NULL DEFAULT '0',
+    source_warehouse_bin TEXT  -- free-TEXT hint only (NO bin schema in V1)
+);
+
+CREATE INDEX IF NOT EXISTS idx_pick_list_item_list ON pick_list_item(pick_list_id);
+
+-- Hard, persisted stock reservation (ADR-0026). An active row reduces available
+-- qty and BLOCKS a conflicting consumption. get-projected-qty reads active rows
+-- as reserved_qty (SO-derived fallback when no rows exist — back-compat).
+CREATE TABLE IF NOT EXISTS stock_reservation_entry (
+    id                  TEXT PRIMARY KEY,
+    voucher_type        TEXT NOT NULL CHECK(voucher_type IN ('sales_order','pick_list','manual')),
+    voucher_id          TEXT,
+    item_id             TEXT NOT NULL REFERENCES item(id) ON DELETE RESTRICT,
+    warehouse_id        TEXT NOT NULL REFERENCES warehouse(id) ON DELETE RESTRICT,
+    reserved_qty        TEXT NOT NULL DEFAULT '0',
+    status              TEXT NOT NULL DEFAULT 'active'
+                        CHECK(status IN ('active','released','consumed')),
+    company_id          TEXT NOT NULL REFERENCES company(id) ON DELETE RESTRICT,
+    reserved_at         TEXT DEFAULT CURRENT_TIMESTAMP,
+    released_at         TEXT,
+    consumed_at         TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_reservation_item_wh ON stock_reservation_entry(item_id, warehouse_id, status);
+
+-- =========================================================================
+-- Wave 2 S7: item-global alternatives / substitutes.
+-- Owned + written exclusively by erpclaw-inventory. Created here for fresh
+-- installs; migration 027 adds it to existing DBs (same column shape).
+-- Directional: (item_id -> alternative_item_id); UNIQUE(item_id, alternative_item_id)
+-- blocks a duplicate pair, but (a,b) and (b,a) are BOTH valid distinct rows.
+-- CHECK forbids self-substitution. Manufacturing reads (never writes) this table.
+-- =========================================================================
+CREATE TABLE IF NOT EXISTS item_alternative (
+    id                  TEXT PRIMARY KEY,
+    item_id             TEXT NOT NULL REFERENCES item(id) ON DELETE RESTRICT,
+    alternative_item_id TEXT NOT NULL REFERENCES item(id) ON DELETE RESTRICT,
+    priority            INTEGER NOT NULL DEFAULT 100,  -- lower = preferred
+    conversion_factor   TEXT NOT NULL DEFAULT '1',     -- Decimal-as-text qty multiplier
+    notes               TEXT,
+    is_active           INTEGER NOT NULL DEFAULT 1 CHECK(is_active IN (0,1)),
+    created_at          TEXT DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(item_id, alternative_item_id),
+    CHECK(item_id != alternative_item_id)  -- no self-substitution
+);
+
+CREATE INDEX IF NOT EXISTS idx_item_alt_item ON item_alternative(item_id, is_active, priority);
 """
 
 
@@ -2229,6 +2327,12 @@ CREATE TABLE IF NOT EXISTS subcontracting_order (
                     CHECK(status IN ('draft','submitted','partially_received','completed','cancelled')),
     materials_transferred TEXT NOT NULL DEFAULT '0',
     received_qty    TEXT NOT NULL DEFAULT '0',
+    -- Wave 2 S5: Decimal-as-text per-unit subcontracting fee; nullable until a
+    -- receipt supplies a rate. FG cost on receipt = raw cost + (rate × received_qty).
+    subcontract_charge_rate TEXT,
+    -- Wave 2 S5: completion timestamp; set when received_qty reaches qty (status
+    -- 'completed'). Nullable until completion.
+    final_received_at TEXT,
     company_id      TEXT NOT NULL REFERENCES company(id) ON DELETE RESTRICT,
     created_at      TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at      TEXT DEFAULT CURRENT_TIMESTAMP

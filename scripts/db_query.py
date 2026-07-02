@@ -359,6 +359,8 @@ ACTION_MAP = {
     "update-warehouse": "erpclaw-inventory",
     "list-warehouses": "erpclaw-inventory",
     "add-stock-entry": "erpclaw-inventory",
+    "add-repack-stock-entry": "erpclaw-inventory",
+    "add-material-consumption": "erpclaw-inventory",
     "get-stock-entry": "erpclaw-inventory",
     "list-stock-entries": "erpclaw-inventory",
     "submit-stock-entry": "erpclaw-inventory",
@@ -393,6 +395,26 @@ ACTION_MAP = {
     "list-item-variants": "erpclaw-inventory",
     "add-item-supplier": "erpclaw-inventory",
     "list-item-suppliers": "erpclaw-inventory",
+    # Wave 2 M5: putaway + pick list + persisted hard reservation (ADR-0026)
+    "add-putaway-rule": "erpclaw-inventory",
+    "list-putaway-rules": "erpclaw-inventory",
+    "update-putaway-rule": "erpclaw-inventory",
+    "delete-putaway-rule": "erpclaw-inventory",
+    "apply-putaway-on-receipt": "erpclaw-inventory",
+    "create-pick-list": "erpclaw-inventory",
+    "add-pick-list-item": "erpclaw-inventory",
+    "submit-pick-list": "erpclaw-inventory",
+    "mark-picked": "erpclaw-inventory",
+    "complete-pick-list": "erpclaw-inventory",
+    "cancel-pick-list": "erpclaw-inventory",
+    "add-reservation": "erpclaw-inventory",
+    "release-reservation": "erpclaw-inventory",
+    "list-reservations": "erpclaw-inventory",
+    # Wave 2 S7: item-global alternatives / substitutes
+    "add-item-alternative": "erpclaw-inventory",
+    "list-item-alternatives": "erpclaw-inventory",
+    "get-best-alternative-for-item": "erpclaw-inventory",
+    "remove-item-alternative": "erpclaw-inventory",
 
     # === Billing & Metering (22 actions) ===
     "add-meter": "erpclaw-billing",
@@ -683,6 +705,9 @@ DANGEROUS_ACTIONS = frozenset({
     # Inventory mutations
     "submit-stock-entry", "cancel-stock-entry",
     "submit-stock-reconciliation", "cancel-stock-revaluation",
+    # Wave 2 M5: pick-list lifecycle that creates/consumes/releases hard
+    # reservations (and complete-pick-list generates a delivery note).
+    "submit-pick-list", "complete-pick-list", "cancel-pick-list",
     # Intercompany approvals
     "approve-ic-transaction",
     # HR approvals
