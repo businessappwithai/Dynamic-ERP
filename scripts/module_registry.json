@@ -121,7 +121,7 @@
       "version": "1.0.0"
     },
     "educlaw": {
-      "action_count": 177,
+      "action_count": 176,
       "category": "vertical",
       "description": "Education management: students, academics, grading, attendance, staff, fees, enrollment, and communications. K-12 and higher education. 177 actions across 8 domains.",
       "display_name": "EduClaw",
@@ -252,7 +252,7 @@
       "version": "1.0.0"
     },
     "educlaw-k12": {
-      "action_count": 77,
+      "action_count": 76,
       "category": "sub-vertical",
       "description": "K-12 school management: grade levels, sections, behavior tracking, parent communication, school calendar, and IDEA/COPPA compliance. 77 actions.",
       "display_name": "EduClaw K-12",
@@ -296,7 +296,7 @@
       "version": "1.0.0"
     },
     "educlaw-lms": {
-      "action_count": 26,
+      "action_count": 25,
       "category": "sub-vertical",
       "description": "Learning management system: online courses, assignments, quizzes, gradebook, discussion forums, and content management. 26 actions.",
       "display_name": "EduClaw LMS",
@@ -344,7 +344,7 @@
       "version": "1.0.0"
     },
     "educlaw-scheduling": {
-      "action_count": 58,
+      "action_count": 57,
       "category": "sub-vertical",
       "description": "Academic scheduling: course scheduling, room assignments, instructor availability, conflict detection, and timetable generation. 58 actions.",
       "display_name": "EduClaw Scheduling",
@@ -387,7 +387,7 @@
       "version": "1.0.0"
     },
     "educlaw-statereport": {
-      "action_count": 99,
+      "action_count": 98,
       "category": "sub-vertical",
       "description": "State and federal education reporting: Ed-Fi, CEDS, enrollment reports, attendance reports, assessment data, and compliance filing. 99 actions.",
       "display_name": "EduClaw State Reporting",
@@ -433,14 +433,14 @@
       "version": "1.0.0"
     },
     "erpclaw": {
-      "action_count": 505,
+      "action_count": 488,
       "category": "core",
       "description": "Complete ERP foundation: accounting, inventory, selling, buying, billing, payments, tax, journals, GL, HR, payroll, reports, and setup. 475 actions across 14 domains.",
       "display_name": "ERPClaw Core",
       "files_sha256": {
         "CHANGELOG.md": "3f39015640f1b490316a3d19ddea29f029218f01d3f28dfaaa5121e7c6139af5",
         "LICENSE.txt": "7bb0c0eb1db8b40884cd154315e459fadacd2bff10190df3516639282608ed0c",
-        "README.md": "ed448fd8ab6e65856040699d58f6a897368d57fdc4630b7af033795611c6c187",
+        "README.md": "75f324a466b15a25c144eac8e9e5644c542ea989c23a88322dbddf7f4788b53b",
         "SKILL.md": "36c0d333d9c677cece34864387b8574b3a1ebc32b56d5070b47edf15d65b3d77",
         "UI.yaml": "7c7062cdbc7877a3daa5b22dc6b4e296ce0b1dad7cdf615fd0ddcf0f278b581c",
         "assets/demo.svg": "a54a4d95a3bc98d4408c9f952899f1f37dd22b7a5d18b4b5a8b17a79acaa784f",
@@ -688,7 +688,7 @@
       "version": "1.0.0"
     },
     "erpclaw-documents": {
-      "action_count": 25,
+      "action_count": 32,
       "category": "infrastructure",
       "description": "Document management system: folders, file metadata, versions, tags, sharing, and search. 25 actions.",
       "display_name": "ERPClaw Documents",
@@ -788,7 +788,7 @@
       "version": "1.0.0"
     },
     "erpclaw-growth": {
-      "action_count": 110,
+      "action_count": 159,
       "category": "expansion",
       "description": "CRM, analytics, AI engine, and advanced CRM capabilities. Leads, opportunities, campaigns, KPIs, anomaly detection, forecasting, and scoring. 110 actions across 4 domains.",
       "display_name": "ERPClaw Growth",
@@ -848,7 +848,7 @@
       "version": "2.7.0"
     },
     "erpclaw-integrations": {
-      "action_count": 80,
+      "action_count": 91,
       "category": "expansion",
       "description": "Integration connectors for booking, delivery, real estate, financial, and productivity platforms. Connector configs, field mappings, sync logs, webhooks. 80 actions across 9 domains.",
       "display_name": "ERPClaw Integrations",
@@ -969,7 +969,7 @@
       "version": "1.1.3"
     },
     "erpclaw-integrations-stripe": {
-      "action_count": 67,
+      "action_count": 66,
       "category": "expansion",
       "description": "Deep native Stripe integration: transaction sync, auto-reconciliation, GL posting, revenue reports",
       "display_name": "ERPClaw Stripe Integration",
@@ -1109,7 +1109,7 @@
       "version": "1.0.0"
     },
     "erpclaw-ops": {
-      "action_count": 135,
+      "action_count": 142,
       "category": "expansion",
       "description": "Manufacturing, advanced manufacturing, projects, assets, quality, and support. BOMs, work orders, MRP, routing, tasks, timesheets, depreciation, inspections, SLAs. 126 actions across 6 domains.",
       "display_name": "ERPClaw Operations",
@@ -1246,7 +1246,7 @@
       "version": "1.0.0"
     },
     "erpclaw-pos": {
-      "action_count": 28,
+      "action_count": 29,
       "category": "infrastructure",
       "description": "Point of sale: registers, shifts, transactions, cash management, returns, and end-of-day reconciliation. 34 actions.",
       "display_name": "ERPClaw POS",
@@ -1494,13 +1494,13 @@
       "version": "1.0.0"
     },
     "foodclaw": {
-      "action_count": 80,
+      "action_count": 79,
       "category": "vertical",
       "description": "Food service and restaurant management: menus, recipes, ingredients, orders, kitchen operations, inventory, and food safety compliance. 80 actions.",
       "display_name": "FoodClaw",
       "files_sha256": {
         "LICENSE.txt": "7bb0c0eb1db8b40884cd154315e459fadacd2bff10190df3516639282608ed0c",
-        "README.md": "396889e4aaaeef1904d31a9d014d42f9f96bb4de61d3dc8e050a5fee173d7452",
+        "README.md": "33853fc397279a6ae9b9d7a7865148ec760b176524f2ab70935d4da55535ce6e",
         "SKILL.md": "b46bb00b49d13d7c0149baba3e9d6cc3822e19c40d418cd1439df5a1ffc75223",
         "UI.yaml": "ab3bbceb7c9f47b2dc6b3b643b23a8475b00246ebca0075b07b32db6f63e8b32",
         "init_db.py": "20297b256d924e2b0e0965fb9c429a8092623411cecf31d386d95d3b3ac2a190",
@@ -1533,7 +1533,7 @@
       "version": "1.0.0"
     },
     "healthclaw": {
-      "action_count": 231,
+      "action_count": 230,
       "category": "vertical",
       "description": "Healthcare practice management: patients, providers, appointments, clinical notes, prescriptions, lab orders, billing/claims, insurance verification, and compliance (HIPAA). 231 actions across 8 domains.",
       "display_name": "HealthClaw",
@@ -1701,13 +1701,13 @@
       "version": "1.0.0"
     },
     "hospitalityclaw": {
-      "action_count": 73,
+      "action_count": 72,
       "category": "vertical",
       "description": "Hospitality management: properties, rooms, reservations, guests, housekeeping, front desk operations, F&B, and revenue management. 73 actions.",
       "display_name": "HospitalityClaw",
       "files_sha256": {
         "LICENSE.txt": "7bb0c0eb1db8b40884cd154315e459fadacd2bff10190df3516639282608ed0c",
-        "README.md": "e2591baf61e454404e4cbfe922cc0a6c52229af164811302ac678488dcb220af",
+        "README.md": "471ddfd4e4a0618060168dab0fbcda5c0dac8691e5a306db23993899aadd31e4",
         "SKILL.md": "0a94e27420086ed42ab53c85d085759b20c9042d8655d4d474f9ba11d87bcdd3",
         "UI.yaml": "2ef45de479e26bd08ee7ad99a70975dd31fbf9ab26287ceab4d139b4b0b3e986",
         "init_db.py": "6f69364b0b8802e964bf2efc2a3b904810fa8af3541576d7495656f0ca9ada41",
@@ -1781,13 +1781,13 @@
       "version": "1.0.0"
     },
     "nonprofitclaw": {
-      "action_count": 57,
+      "action_count": 58,
       "category": "vertical",
       "description": "Nonprofit management: donors, donations, campaigns, grants, programs, volunteers, events, and fund accounting. 63 actions.",
       "display_name": "NonprofitClaw",
       "files_sha256": {
         "LICENSE.txt": "7bb0c0eb1db8b40884cd154315e459fadacd2bff10190df3516639282608ed0c",
-        "README.md": "b430a736c945713ab6675e1d4af243488f7f949fc438f5d68c04cf3a74310164",
+        "README.md": "8cf83a84301e77bd87315346405e244dffe92a2601bde36aca0599d1f5c04b60",
         "SKILL.md": "0f1351822b80037f1e0732e09d8f7e07aa85074668f71efa46a0fef3a6f13ce3",
         "UI.yaml": "da66197a36800c487c850cdddcc3308e268e7db5f89960c35af04a4d5e65430f",
         "init_db.py": "09647b6fb45f49c8db8d7cad364beac68090caf285ea0d3d04257b7201a53772",
@@ -1819,7 +1819,7 @@
       "version": "1.0.0"
     },
     "propertyclaw": {
-      "action_count": 103,
+      "action_count": 102,
       "category": "vertical",
       "description": "Property management: properties, units, leases, tenants, maintenance requests, and property accounting. 103 actions across 5 domains.",
       "display_name": "PropertyClaw",
@@ -1857,7 +1857,7 @@
       "version": "1.0.0"
     },
     "propertyclaw-commercial": {
-      "action_count": 31,
+      "action_count": 30,
       "category": "sub-vertical",
       "description": "Commercial property management: commercial leases, CAM charges, tenant improvements, lease abstracts, and commercial property accounting. 31 actions.",
       "display_name": "PropertyClaw Commercial",
@@ -1930,8 +1930,8 @@
       "version": "1.0.0"
     }
   },
-  "registry_version": 62,
-  "signed_at": "2026-07-01T20:56:36Z",
-  "total_actions": 3169,
+  "registry_version": 63,
+  "signed_at": "2026-07-02T02:40:30Z",
+  "total_actions": 3217,
   "version": "4.11.0"
 }
