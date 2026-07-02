@@ -4,7 +4,7 @@ version: 4.11.0
 description: >
   AI-native ERP system. Full accounting, invoicing, inventory, purchasing,
   tax, billing, HR, payroll, advanced accounting (ASC 606/842, intercompany, consolidation),
-  and financial reporting (including P&L / trial balance / spend grouped by department, project, cost center, location, or fund). 505 actions across 14 domains, 45 optional expansion modules (user-approved install from GitHub).
+  and financial reporting (including P&L / trial balance / spend grouped by department, project, cost center, location, or fund). 488 actions across 14 domains, 45 optional expansion modules (user-approved install from GitHub).
   Double-entry GL, immutable audit trail, US GAAP compliant. Licensed under GNU GPL v3 (the marketplace "MIT-0" badge is a ClawHub platform default; the LICENSE.txt in the bundle is GPL v3).
 author: AvanSaber
 homepage: https://github.com/avansaber/erpclaw
@@ -104,9 +104,9 @@ High-impact actions require the `--user-confirmed` flag on every invocation; the
 
 Re-confirm a second time ONLY for the small destructive set, where a mistake is hard or impossible to undo: closing the fiscal year (`close-fiscal-year`), restoring from backup (`restore-database`), installing a module (`install-module`), reconciling foundation files (`rollback-foundation`), and generating a bank-payment file (`generate-nacha-file`). For these, state plainly what will happen and get an explicit yes before passing the flag.
 
-## All 505 Actions
+## All 488 Actions
 
-### Setup & Admin (50)
+### Setup & Admin (66)
 | Action | Description |
 |--------|-------------|
 | `initialize-database` / `setup-company` / `update-company` / `get-company` / `list-companies` | DB init & company CRUD |
@@ -145,7 +145,7 @@ Re-confirm a second time ONLY for the small destructive set, where a mistake is 
 | `create-intercompany-je` | Intercompany JE |
 | `add-recurring-template` / `update-recurring-template` / `list-recurring-templates` / `get-recurring-template` / `process-recurring` / `delete-recurring-template` | Recurring JEs |
 
-### Payments (13)
+### Payments (15)
 | Action | Description |
 |--------|-------------|
 | `add-payment` / `update-payment` / `get-payment` / `list-payments` / `submit-payment` / `cancel-payment` / `delete-payment` | Payment CRUD & lifecycle |
@@ -160,7 +160,7 @@ Re-confirm a second time ONLY for the small destructive set, where a mistake is 
 | `add-item-tax-template` / `add-tax-withholding-category` / `get-withholding-details` | Withholding |
 | `record-withholding-entry` / `record-1099-payment` / `generate-1099-data` | 1099 reporting |
 
-### Financial Reports (22)
+### Financial Reports (21)
 | Action | Description |
 |--------|-------------|
 | `trial-balance` / `profit-and-loss` / `balance-sheet` / `cash-flow` / `general-ledger` / `party-ledger` / `multi-dim-trial-balance` / `dimension-balance-report` | Core statements. **For a "P&L by DEPARTMENT / project / cost center / location / fund / any dimension" ask, call `profit-and-loss --group-by <dimension>` — it returns revenue / expenses / net per dimension value (with an explicit `(untagged)` bucket), so you NEVER hand-roll the split or write SQL over `cost_center`.** Example: "show me this month's P&L broken down by department" → `profit-and-loss --group-by department --from-date <start> --to-date <end>`. For grouping the WHOLE trial balance (all account types, not just income/expense) use `multi-dim-trial-balance --group-by "project,department"`; `dimension-balance-report --dimension K` gives one dimension's balances. `--group-by` takes ONE dimension on `profit-and-loss`; group by an UNREGISTERED dimension errors (run `list-dimensions`). Without `--group-by`, `profit-and-loss` returns ONE company-wide statement. All four headline statements + `general-ledger` also accept repeated `--dimension-key/--dimension-value` filters to scope (and `profit-and-loss` filters THEN groups) |
@@ -168,7 +168,7 @@ Re-confirm a second time ONLY for the small destructive set, where a mistake is 
 | `tax-summary` / `payment-summary` / `gl-summary` / `comparative-pl` / `check-overdue` | Summaries |
 | `add-elimination-rule` / `list-elimination-rules` / `run-elimination` / `list-elimination-entries` | Intercompany |
 
-### Selling (53)
+### Selling (57)
 | Action | Description |
 |--------|-------------|
 | `add-customer` / `update-customer` / `get-customer` / `list-customers` / `import-customers` | Customer CRUD (add/update accept `--email` / `--phone` — dedicated structured columns) |
@@ -184,7 +184,7 @@ Re-confirm a second time ONLY for the small destructive set, where a mistake is 
 | `check-credit-limit` / `place-customer-on-hold` | Credit control: compute available credit (limit minus outstanding AR); place customer on hold / suspend / restore active |
 | `add-dunning-level` / `run-dunning-cycle` / `list-dunning-runs` | Dunning: configure escalation levels (at N days overdue → email / call / hold / suspend); run a cycle that matches overdue invoices to their highest applicable level and applies the configured action — `email` levels enqueue a dunning email via the erpclaw-alerts send-email action and record the outbox id on `dunning_run.generated_email_id` (missing customer email or template skips-with-note, never failing the cycle); view run history |
 
-### Buying (40)
+### Buying (43)
 | Action | Description |
 |--------|-------------|
 | `add-supplier` / `update-supplier` / `get-supplier` / `list-suppliers` / `import-suppliers` | Supplier CRUD (add/update accept `--email` / `--phone` — dedicated structured columns) |
@@ -198,7 +198,7 @@ Re-confirm a second time ONLY for the small destructive set, where a mistake is 
 
 **Receiving purchased stock — flow:** to bring purchased goods into inventory, receive them against their source document so valuation carries automatically. Canonical flow: `submit-purchase-order` (confirms the order + rate) → `create-purchase-receipt --purchase-order-id <PO>` then `submit-purchase-receipt` (this values the stock at the PO rate and posts inventory GL) → `create-purchase-invoice` + `submit-purchase-invoice` for the bill (leave stock update off — the receipt already moved it) → pay. Do NOT use a standalone `add-stock-entry --type material_receipt` to receive purchased goods unless you restate the unit cost; a rate-less receipt cannot be valued and will be refused.
 
-### Inventory (62)
+### Inventory (65)
 | Action | Description |
 |--------|-------------|
 | `add-item` / `update-item` / `get-item` / `list-items` / `resolve-item` / `import-items` / `add-item-group` / `list-item-groups` | Item master (`resolve-item`: resolve a loose/plural user phrase like "20 Brake Pad Sets" to the stored item) |
@@ -215,7 +215,7 @@ Re-confirm a second time ONLY for the small destructive set, where a mistake is 
 | `add-batch` / `list-batches` / `add-serial-number` / `list-serial-numbers` / `add-price-list` / `add-item-price` / `get-item-price` / `add-pricing-rule` | Batch & serial; pricing |
 | `add-stock-reconciliation` / `submit-stock-reconciliation` / `revalue-stock` / `list-stock-revaluations` / `get-stock-revaluation` / `cancel-stock-revaluation` / `check-reorder` | Reconciliation, revaluation & reorder |
 
-### Billing & Metering (23)
+### Billing & Metering (24)
 | Action | Description |
 |--------|-------------|
 | `add-meter` / `update-meter` / `get-meter` / `list-meters` / `add-meter-reading` / `list-meter-readings` | Meters |
@@ -225,7 +225,7 @@ Re-confirm a second time ONLY for the small destructive set, where a mistake is 
 | `add-billing-adjustment` / `add-prepaid-credit` / `get-prepaid-balance` | Adjustments & prepaid |
 | `add-recurring-bill-template` / `list-recurring-bill-templates` / `generate-recurring-bills` | Recurring bills |
 
-### Advanced Accounting (45)
+### Advanced Accounting (48)
 | Action | Description |
 |--------|-------------|
 | `add-revenue-contract` / `update-revenue-contract` / `get-revenue-contract` / `list-revenue-contracts` | Revenue contracts |
@@ -243,7 +243,7 @@ Re-confirm a second time ONLY for the small destructive set, where a mistake is 
 | `run-consolidation` / `generate-elimination-entries` / `consolidation-trial-balance-report` / `consolidation-summary` | Consolidation |
 | `standards-compliance-dashboard` | ASC 606/842 compliance |
 
-### HR & Payroll (58)
+### HR & Payroll (68)
 | Action | Description |
 |--------|-------------|
 | `add-employee` / `update-employee` / `get-employee` / `list-employees` / `record-lifecycle-event` | Employee CRUD |
@@ -262,11 +262,11 @@ Re-confirm a second time ONLY for the small destructive set, where a mistake is 
 | `generate-w2-data` / `generate-nacha-file` / `add-garnishment` / `update-garnishment` / `get-garnishment` / `list-garnishments` | W-2, NACHA, garnishments |
 | `get-amendment-history` | Amendment tracking |
 
-### Module Management & Schema (19)
+### Module Management & Schema (22)
 | Action | Description |
 |--------|-------------|
 | `install-module` / `remove-module` / `update-modules` / `list-modules` / `available-modules` / `search-modules` / `module-status` | Module catalog (install/remove require user approval) |
-| `rebuild-action-cache` / `list-all-actions` / `list-profiles` / `onboard` / `list-industries` | Actions & profiles |
+| `rebuild-action-cache` / `list-all-actions` / `list-profiles` / `onboard` | Actions & profiles |
 | `validate-module` / `list-articles` / `build-table-registry` | Constitution + module discovery (read-only) |
 | `schema-plan` / `schema-apply` / `schema-rollback` / `schema-drift` | Schema migration (apply/rollback require user approval) |
 | `regenerate-skill-md` | Regenerate SKILL.md |
