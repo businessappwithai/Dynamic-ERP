@@ -1195,6 +1195,72 @@ def _foundation_db_initialized(runner, db_path):
             pass
 
 
+def _bump_foundation_version_row(version):
+    """Heal the ``erpclaw_module.version`` bookkeeping row for the foundation to
+    ``version`` on a CONFIRMED-SUCCESS ``update-foundation`` (ADR-0028 §2 rider,
+    M33 Item 7).
+
+    ``list_modules`` reads ``erpclaw_module.version``; before this heal an
+    upgraded ClawHub install under-reported its version indefinitely, because
+    ``update-foundation`` reconciled files and (since M31) ran pending migrations
+    but never touched the bookkeeping row. Fresh installs were unaffected —
+    ``install-module`` inserts the current version.
+
+    Called ONLY on converged-success paths (files AND migrations both green),
+    extending ADR-0028's "a run reporting ok means files AND schema are converged"
+    to include the observable version row. NEVER called on:
+      - dry-run / preview (§2 previews are read-only), or
+      - a failed migration (§3 leaves the DB at the last good migration and exits
+        1 — the version row must reflect a fully-converged upgrade, never a
+        half-applied one).
+
+    Idempotent: re-setting the same version is a no-op UPDATE, so the in-sync
+    early-return path also HEALS rows left stale by pre-rider upgrades (files
+    already in sync, row never bumped) on the next reconcile.
+
+    DB-less / uninitialized installs skip cleanly and visibly (§6): the SQLite
+    file short-circuit avoids opening a connection (never creates a stray empty
+    DB, mirroring ``_foundation_db_initialized``), and the target-table probe
+    catches an initialized-but-tableless DB / an uninitialized Postgres.
+
+    Uses ``get_connection`` (no arg) — the exact dialect-aware resolution
+    ``list_modules`` reads with — so the healed row is the one the reader
+    observes. Returns a JSON-safe dict for the caller to surface.
+    """
+    if not version:
+        return {"bumped": False, "reason": "registry has no foundation version"}
+
+    # DB-less / uninitialized SQLite install: short-circuit before opening a
+    # connection so we never create a stray empty DB. Postgres resolves via URL,
+    # so skip the file probe there and let the table probe below decide.
+    if os.environ.get("ERPCLAW_DB_DIALECT", "sqlite") != "postgresql":
+        db_path = os.environ.get("ERPCLAW_DB_PATH") or db_default()
+        if not os.path.isfile(db_path):
+            return {"bumped": False, "reason": "foundation DB not initialized"}
+
+    conn = get_connection()
+    try:
+        # Initialized-but-tableless DB (or uninitialized Postgres): probe the
+        # target the same "any error means not initialized" way
+        # _foundation_db_initialized probes `company`.
+        try:
+            conn.execute("SELECT 1 FROM erpclaw_module LIMIT 1")
+        except Exception:  # noqa: BLE001 — absent table / uninitialized DB
+            return {"bumped": False, "reason": "foundation DB not initialized"}
+        cur = conn.execute(
+            "UPDATE erpclaw_module SET version = ?, updated_at = ? WHERE name = ?",
+            (version, _now_iso(), "erpclaw"),
+        )
+        conn.commit()
+        rows = cur.rowcount if getattr(cur, "rowcount", None) is not None else 0
+        return {"bumped": rows > 0, "version": version, "rows": rows}
+    finally:
+        try:
+            conn.close()
+        except Exception:  # noqa: BLE001
+            pass
+
+
 def _mark_failed(conn, module_name, error_msg):
     """Mark a module installation as failed."""
     conn.execute(
@@ -2051,6 +2117,15 @@ def update_foundation_action(args):
                     )
                     print(json.dumps(result, indent=2))
                     sys.exit(1)
+                # ADR-0028 §2 rider (M33 Item 7): converged-success also heals the
+                # observable erpclaw_module.version row. This in-sync path is
+                # exactly where a pre-rider upgrade left the row stale (files
+                # already in sync, row never bumped) — the idempotent bump heals
+                # it here. Reached only when NOT dry-run (previews stay read-only)
+                # and migrations did not fail (exited above).
+                version_bump = _bump_foundation_version_row(foundation.get("version"))
+                _sync_log(f"foundation version-row bump (in-sync path): {version_bump}")
+                result["version_bump"] = version_bump
             print(json.dumps(result))
             return
 
@@ -2144,6 +2219,15 @@ def update_foundation_action(args):
             )
             print(json.dumps(result, indent=2))
             sys.exit(1)
+
+        # ADR-0028 §2 rider (M33 Item 7): a converged apply-path reconcile also
+        # heals the observable erpclaw_module.version row (list-modules reads it).
+        # Reached only on confirmed apply-path success — dry-run returned above, a
+        # failed migration exited above — so this never fires on a preview or a
+        # half-applied upgrade.
+        version_bump = _bump_foundation_version_row(foundation.get("version"))
+        _sync_log(f"foundation version-row bump: {version_bump}")
+        result["version_bump"] = version_bump
 
         print(json.dumps(result))
     finally:

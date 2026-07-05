@@ -2,6 +2,12 @@
 
 All notable changes to the ERPClaw foundation skill.
 
+## [4.12.1] — 2026-07-05 — M33 Item 7 rider (upgrade version-row bookkeeping)
+
+### Fixed
+- **`update-foundation` now heals the `erpclaw_module.version` bookkeeping row (ADR-0028 §2 rider, M33 Item 7).** Since M31, a confirmed `update-foundation` reconciled files and ran pending migrations but never updated the module-version row that `list-modules` reads, so an upgraded ClawHub install under-reported its version indefinitely (fresh installs were unaffected — `install-module` writes the current version). The confirmed-success paths — both the applied path and the in-sync early return — now bump the row to the registry's foundation version, extending ADR-0028's "a run reporting `ok` means files AND schema converged" to include the observable version row. The bump is idempotent, so the in-sync path also HEALS rows left stale by pre-rider upgrades on the next reconcile. It never fires on a dry-run/preview (§2 previews stay read-only) or a failed migration (§3 leaves the DB at the last good migration and exits 1 — never a half-converged `ok`), and is a clean no-op on the DB-less skip (§6). Implements — does not amend — ADR-0028; no schema change, no migration, no new action.
+- **erpclaw-meta `SKILL_TABLES` stale CRM entry corrected.** The `erpclaw-crm` presence-check row referenced pre-rename table names (`crm_lead`/`crm_opportunity`/`crm_campaign`); the live foundation tables are `lead`/`opportunity`/`campaign`, so the `check-skills` `tables_ok` flag for CRM could never read true. The ratified hygiene rider named `crm_lead` → `lead`; the two adjacent names on the same line were the same staleness and are corrected together so the presence check is actually functional (map-only change; no action, schema, or GL impact).
+
 ## [4.12.0] — 2026-07-05 — M31 foundation-hygiene mini-wave
 
 ### Fixed

@@ -135,7 +135,7 @@ SKILL_TABLES = {
     "erpclaw-projects": ["project", "task", "timesheet", "timesheet_detail"],
     "erpclaw-assets": ["asset", "asset_category", "asset_depreciation_schedule"],
     "erpclaw-quality": ["quality_inspection", "quality_inspection_reading"],
-    "erpclaw-crm": ["crm_lead", "crm_opportunity", "crm_campaign"],
+    "erpclaw-crm": ["lead", "opportunity", "campaign"],
     "erpclaw-support": ["support_issue", "support_sla", "warranty_claim"],
     "erpclaw-billing": ["subscription", "subscription_plan", "billing_invoice"],
     "erpclaw-ai-engine": ["ai_anomaly", "ai_forecast"],
