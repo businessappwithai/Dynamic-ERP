@@ -1,6 +1,6 @@
 """Migration 024: Displace the hardcoded opportunity.stage CHECK + add pipeline_stage_id (Wave 1B F3).
 
-Per ADR-0023 (internal/decisions/ADR-0023-foundation-fk-columns-for-addon-owned-entities.md),
+Per ADR-0023 (foundation FK columns for addon-owned entities),
 foundation `opportunity` gains a nullable FK column `pipeline_stage_id` pointing at the
 addon-owned `crm_pipeline_stage` table (owning addon: erpclaw-growth). The hardcoded
 7-value `stage` CHECK is dropped so customizable pipelines can introduce novel stage

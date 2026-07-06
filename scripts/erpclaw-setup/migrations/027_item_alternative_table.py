@@ -19,7 +19,7 @@ is read, never written, by manufacturing.
 
 Pure CREATE TABLE / CREATE INDEX IF NOT EXISTS. Idempotent, dialect-aware, no
 rebuild / no FK-rewrite trap. Columns match init_schema exactly. SIM-0-validated
-(internal/legacy-erp/_sim0_wave2_rehearsal.py, _DDL_027_ITEM_ALTERNATIVE):
+(wave rehearsal harness, _DDL_027_ITEM_ALTERNATIVE):
 creation, FK targets, idempotency, cross-dialect shape all PASS.
 """
 import argparse

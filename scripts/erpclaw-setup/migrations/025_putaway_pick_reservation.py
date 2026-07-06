@@ -26,7 +26,7 @@ pick_list_item → stock_reservation_entry.
 
 Pure CREATE TABLE / CREATE INDEX IF NOT EXISTS. Idempotent, dialect-aware, no
 rebuild / no FK-rewrite trap. Columns match init_schema exactly. SIM-0-validated
-(internal/legacy-erp/_sim0_wave2_rehearsal.py): creation + FK ordering,
+(wave rehearsal harness): creation + FK ordering,
 idempotency, cross-dialect shape, hard-reservation read path, get-projected-qty
 back-compat all PASS.
 """

@@ -1,6 +1,6 @@
 """Migration 023: Foundation nullable FK columns to addon-owned CRM entities (Wave 1B F1).
 
-Per ADR-0023 (internal/decisions/ADR-0023-foundation-fk-columns-for-addon-owned-entities.md),
+Per ADR-0023 (foundation FK columns for addon-owned entities),
 foundation schema MAY carry nullable FK columns pointing at tables owned by the
 erpclaw-growth addon (crm_contact / crm_company), so a "show the contact for this
 lead" read needs at most one optional JOIN rather than forcing the addon to be a

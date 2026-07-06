@@ -2,6 +2,11 @@
 
 All notable changes to the ERPClaw foundation skill.
 
+## [4.12.2] — 2026-07-06 — documentation hygiene
+
+### Changed
+- Internal design-document references in migration docstrings, the table provenance manifest, and repository prose were replaced with stable opaque provenance keys and neutral descriptions. No functional change to any migration, action, or schema (verified by AST comparison); the provenance governance gate keeps full strength through a maintainer-side reference map.
+
 ## [4.12.1] — 2026-07-05 — M33 Item 7 rider (upgrade version-row bookkeeping)
 
 ### Fixed
@@ -55,7 +60,7 @@ All notable changes to the ERPClaw foundation skill.
 
 ## [4.7.0] — 2026-06-10
 
-Wave 1 Financials depth (partial bundle: P0 + M6 + M7 + S3). Additive only — no breaking changes. M2 and AI1 ship in a later bundle. No ClawHub upload this release (bundled into the next functional release per ADR-0006 / internal_backlog M5; ClawHub foundation stays v4.1.6, propagated to the OpenClaw box via signed reconciliation).
+Wave 1 Financials depth (partial bundle: P0 + M6 + M7 + S3). Additive only — no breaking changes. M2 and AI1 ship in a later bundle. No ClawHub upload this release (bundled into the next functional release per ADR-0006; ClawHub foundation stays v4.1.6, propagated to the OpenClaw box via signed reconciliation).
 
 ### Added
 - **Multi-dimensional GL (M6).** A `dimension_registry` (seeded `project` / `department` / `cost_center`) now drives optional per-entry GL dimensions. `insert_gl_entries` serializes a `dimensions` dict into the existing `dimensions_json` column (default `'{}'`, so every existing GL caller is byte-unchanged), GL validation gains step 13 (required-dimension enforcement per `account_type` + `uuid_fk` referential-integrity check), and `reverse_gl_entries` preserves the original dimensions on the mirror entry. Four CRUD actions in `erpclaw-gl` (`add-dimension`, `list-dimensions`, `update-dimension`, `deactivate-dimension`; deactivation is blocked while recent live GL references the key) and two new reports in `erpclaw-reports` (`multi-dim-trial-balance --group-by "project,department"`, `dimension-balance-report --dimension K`). `general-ledger` / `profit-and-loss` / `balance-sheet` / `cash-flow` accept repeated `--dimension-key` / `--dimension-value` filters. All dimension SQL routes through `erpclaw_lib.query.json_get()` for dialect-safe extraction (no raw `json_extract` literals). Migration `017`. (Wave 1 M6 / AVA-38)
@@ -132,7 +137,7 @@ Customer credit limit + dunning levels (ROADMAP S1). B2B AR depth: enforce credi
 
 ## [4.2.3] — 2026-05-10
 
-Operational follow-up to the v4.2.x publish saga. Three small fixes from `internal/PENDING_WORK_PLAN_2026-05-10.md` Tier 1.
+Operational follow-up to the v4.2.x publish saga. Three small Tier-1 fixes from the pending-work backlog.
 
 ### Changed
 - **Shared skip filters.** Extracted `SKIP_DIRS`, `SKIP_SUFFIXES`, `SKIP_FILE_EXACT` into `source/erpclaw/scripts/erpclaw-setup/lib/erpclaw_lib/skip_filters.py`. Both `release/regen_module_manifests.py` (manifest hashing) and `source/erpclaw/scripts/module_manager.py` (install-time integrity walk) now import from the canonical module. Prevents the v4.2.1-class "extra files" failure where the two walks drifted out of sync.
@@ -162,11 +167,11 @@ Fix-up release for v4.2.0. Two install-blocking issues caught during cold-instal
 
 ### Fixed
 - **Manifest / shipped-package alignment.** `release/regen_module_manifests.py` was hashing files (`tests/`, `.github/`, `bin/`, `*.sig`, `.gitkeep`) that ClawHub strips during publish/install. Result: every `install-module` call against a v4.2.0 install failed integrity check with "100 mismatched/missing files" because the manifest claimed files that don't ship. Fixed by aligning the walk's exclude set to ClawHub's actual ship contract: `SKIP_DIRS` now includes `tests`, `.github`, `bin`; `SKIP_FILE_SUFFIXES` adds `.sig`; `SKIP_FILE_EXACT` adds `.gitkeep`, `.clawhubignore`. Foundation manifest dropped from 183 file entries to 84 entries that exactly match what users see post-install. Registry re-signed; signer fingerprint unchanged: `d471:335b:0e4d:75ce`.
-- **Vertical parser fixes propagated to public `avansaber/*` repos.** The four argparse duplicate-flag fixes that shipped in v4.2.0's foundation manifest were not pushed to the public repos that `install-module` clones from (`avansaber/healthclaw`, `avansaber/constructclaw`, `avansaber/legalclaw`, `avansaber/retailclaw`). Result: `install-module healthclaw` cloned the broken parser, hash-verified successfully (we'd hashed the broken file), and crashed at first invocation. Fixed by running `internal/publish/publish_manager.py publish-all --execute`.
+- **Vertical parser fixes propagated to public `avansaber/*` repos.** The four argparse duplicate-flag fixes that shipped in v4.2.0's foundation manifest were not pushed to the public repos that `install-module` clones from (`avansaber/healthclaw`, `avansaber/constructclaw`, `avansaber/legalclaw`, `avansaber/retailclaw`). Result: `install-module healthclaw` cloned the broken parser, hash-verified successfully (we'd hashed the broken file), and crashed at first invocation. Fixed by re-running the public-repo publish across all `avansaber/*` targets.
 
 ### Notes
 - v4.2.0 was published to ClawHub Marketplace 2026-05-10 with these latent bugs. v4.2.1 supersedes; users should `clawhub update erpclaw --force` to receive the fixed package.
-- Cold-install smoke plan: `internal/POST_CLAWHUB_REPUBLISH_SMOKE_PLAN_2026-05-10.md` (run on 2026-05-10 caught both bugs before any external user encountered them).
+- Cold-install smoke plan run on 2026-05-10 caught both bugs before any external user encountered them.
 - `clawhub install erpclaw` still requires `--force` due to a VirusTotal Code Insight flag that fires on our crypto/external-API patterns. This is a marketplace-side scanner over which we have no control; the flag does not indicate actual malware. Out-of-scope for v4.2.1.
 
 ## [4.2.0] — 2026-05-05 (republished 2026-05-10)
@@ -180,8 +185,8 @@ License change plus four parser bug fixes in vertical modules. ERPClaw moves fro
 - Marketing prose on `erpclaw.ai` updated to say "open source" generically, with explicit "GPL v3" only on license-specific pages.
 - Comparison pages drop "MIT vs. GPL" wedge framing; positioning shifts to architecture (AI-native vs. AI-decorated).
 - `release/scripts/security_audit.py` `check_licence` now accepts either GPL v3 or MIT (the latter retained as legacy-compatible for v4.1.x).
-- `release/scripts/publish.py` and `internal/publish/publish_manager.py` `LICENSE_TEMPLATE` re-templated with a short GPL v3 notice + license-history line.
-- `internal/strategy/COMPETITOR_FEATURE_GAP_2026-05-02.md` Section 9 (Open Source Sourcing) rewritten: GPL v3 is now license-compatible with ERPNext, Odoo Community, and other GPL/LGPL upstreams for direct inclusion; AGPL v3 is the new forbidden inbound boundary.
+- Publish/packaging tooling `LICENSE_TEMPLATE` re-templated with a short GPL v3 notice + license-history line.
+- Internal open-source sourcing guidance rewritten: GPL v3 is now license-compatible with ERPNext, Odoo Community, and other GPL/LGPL upstreams for direct inclusion; AGPL v3 is the new forbidden inbound boundary.
 
 ### Fixed
 - Removed duplicate argparse flag registrations that crashed the parser at load time across four vertical modules. None of the affected verticals were callable for any action until the dup was removed.
@@ -201,7 +206,7 @@ License change plus four parser bug fixes in vertical modules. ERPClaw moves fro
 ### Notes
 - Tested on OpenClaw 2026.5.7 with ClawHub CLI v0.12.3. Foundation passes the full 6-gate pipeline (270 L0 + 3,088 L2 + 248 L3 tests + invariants + smoke).
 - NL routing validated end-to-end on the OpenClaw test server: foundation 5/5 scenarios (companies, customers, invoices, employees, items), three verticals 3/3 (healthclaw patient, educlaw student, constructclaw job).
-- Plan + lawyer-level analysis for the license re-anchor: `internal/strategy/LICENSE_DECISION_2026-05-05.md`.
+- The license re-anchor was backed by a lawyer-level internal analysis.
 
 ## [4.1.6] — 2026-05-04
 
@@ -229,8 +234,7 @@ Rotation is one of the few legitimate triggers for a future ClawHub re-publish, 
 - Long-running processes hold imported modules in memory; foundation file changes take effect on next launch.
 
 ### Plan + audit
-- `internal/completed/2026/sprints/CLAWHUB_FIX_v416_PLAN_2026-05-04.md`
-- `internal/completed/2026/sprints/CLAWHUB_FIX_v416_AUDIT_2026-05-04.md` (8 BLOCK + 7 SHOULD adopted from external + internal audits)
+- Backed by an internal fix plan and audit (8 BLOCK + 7 SHOULD items adopted from external + internal audits).
 
 ## [4.1.5] — 2026-05-04
 
@@ -385,7 +389,7 @@ Removing the decorative blocks eliminates the trigger at the source without chan
 - `module_registry.json` top-level `version: "4.0.2"`.
 
 ### Notes
-- No code paths read SKILL.md cron blocks. Verified via grep across `source/`, `internal/`, `scripts/` — zero hits for cron-block consumption.
+- No code paths read SKILL.md cron blocks. Verified via grep across the source tree and internal tooling — zero hits for cron-block consumption.
 - All 4 daily action targets (`process-recurring`, `generate-recurring-invoices`, `check-reorder`, `check-overdue`) remain in foundation as on-demand callable actions. No capability removed.
 - Users who want automatic daily runs use `openclaw cron add --name <id> --cron "<expr>" --message "Using erpclaw, run the <action> action."` — the same path that was always required for actual scheduling.
 - Plan + audit + B1 verification: `apps/CLAWHUB_FIX_v402_PLAN_2026-05-04.md` + `apps/CLAWHUB_FIX_v402_AUDIT_2026-05-04.md` + this CHANGELOG entry.

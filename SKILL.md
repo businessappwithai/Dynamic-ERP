@@ -1,6 +1,6 @@
 ---
 name: erpclaw
-version: 4.12.1
+version: 4.12.2
 description: >
   AI-native ERP system. Full accounting, invoicing, inventory, purchasing,
   tax, billing, HR, payroll, advanced accounting (ASC 606/842, intercompany, consolidation),
@@ -150,7 +150,7 @@ Re-confirm a second time ONLY for the small destructive set, where a mistake is 
 |--------|-------------|
 | `add-payment` / `update-payment` / `get-payment` / `list-payments` / `submit-payment` / `cancel-payment` / `delete-payment` | Payment CRUD & lifecycle |
 | `create-payment-ledger-entry` / `get-outstanding` / `get-unallocated-payments` / `allocate-payment` / `reconcile-payments` / `bank-reconciliation` | Reconciliation |
-| `list-open-advances` / `apply-advance-to-invoice` | Advances (S2): legacy-erp-vocabulary aliases for `get-unallocated-payments` / `allocate-payment` (same semantics) |
+| `list-open-advances` / `apply-advance-to-invoice` | Advances (S2): SAP Business One vocabulary aliases for `get-unallocated-payments` / `allocate-payment` (same semantics) |
 
 ### Tax (17)
 | Action | Description |

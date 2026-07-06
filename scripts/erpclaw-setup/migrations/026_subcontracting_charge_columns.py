@@ -16,7 +16,7 @@ added to existing DBs here, mirroring the additive-column precedent (023).
 Plain ADD COLUMN of plain nullable TEXT columns (no DEFAULT, no rebuild, no
 FK-rewrite). Idempotent (SQLite guarded by _sqlite_has_column; Postgres
 ADD COLUMN IF NOT EXISTS). Dialect-aware. SIM-0-validated
-(internal/legacy-erp/_sim0_wave2_rehearsal.py): creation, idempotency, and
+(wave rehearsal harness): creation, idempotency, and
 cross-dialect shape all PASS — the columns are pure additive TEXT, so a
 foundation-only install carries them simply unpopulated.
 """

@@ -1565,7 +1565,7 @@ ACTIONS = {
     "get-outstanding": get_outstanding,
     "get-unallocated-payments": get_unallocated_payments,
     "allocate-payment": allocate_payment,
-    # S2: legacy-erp-vocabulary aliases for the existing advance lifecycle (same semantics)
+    # S2: SAP Business One vocabulary aliases for the existing advance lifecycle (same semantics)
     "list-open-advances": get_unallocated_payments,
     "apply-advance-to-invoice": allocate_payment,
     "reconcile-payments": reconcile_payments,

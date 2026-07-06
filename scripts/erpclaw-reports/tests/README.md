@@ -10,9 +10,8 @@ foundation tier:
 - **L0 constitutional:** `testing/unit/constitution/` (action-completeness
   + GL invariants apply across all sub-skills).
 
-Per the 2026-05-25 hygiene scan triage (and the closed
-`internal/completed/2026/sprints/META_L2_CONTRACT_GAP_PLAN_2026-05-25.md`):
-empty per-sub-skill `tests/` dirs are expected because functions named for
+Per the 2026-05-25 test-hygiene triage: empty per-sub-skill `tests/` dirs are
+expected because functions named for
 the *action* (`test_<action_name>`), not the sub-module, land in the
 foundation contract test.
 
