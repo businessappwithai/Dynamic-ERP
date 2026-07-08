@@ -49,6 +49,10 @@ export default defineConfig({
       "@erdwithai/ai/*": path.resolve(__dirname, "./packages/ai/src/*"),
       "@erdwithai/web": path.resolve(__dirname, "./packages/web/src"),
       "@erdwithai/web/*": path.resolve(__dirname, "./packages/web/src/*"),
+      "@erdwithai/erpclaw-client": path.resolve(__dirname, "./packages/erpclaw-client/src"),
+      "@erdwithai/erpclaw-client/*": path.resolve(__dirname, "./packages/erpclaw-client/src/*"),
+      "@erdwithai/erpclaw-bridge": path.resolve(__dirname, "./packages/erpclaw-bridge/src"),
+      "@erdwithai/erpclaw-bridge/*": path.resolve(__dirname, "./packages/erpclaw-bridge/src/*"),
     },
   },
 });

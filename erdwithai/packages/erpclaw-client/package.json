@@ -1,0 +1,27 @@
+{
+  "name": "@erdwithai/erpclaw-client",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "erpclaw-codegen": "./dist/cli/codegen.js"
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun build src/index.ts src/cli/codegen.ts --outdir dist --target node --format esm --external commander && tsc -p tsconfig.json --emitDeclarationOnly",
+    "test": "bun test",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "commander": "^11.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

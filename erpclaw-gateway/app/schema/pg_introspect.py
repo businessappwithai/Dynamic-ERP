@@ -19,6 +19,23 @@ def _connect():
     return psycopg2.connect(settings.erpclaw_db_url)
 
 
+_INTERNAL_TABLE_PREFIXES = ("erpclaw_", "schema_version", "erpclaw_schema_migration")
+
+
+def list_entities() -> list[str]:
+    """All public-schema tables, minus erpclaw's own bookkeeping tables
+    (schema_version, migration ledgers, module/action registries) — the
+    entity list a dictionary-sync consumer actually wants."""
+    with _connect() as conn, conn.cursor() as cur:
+        cur.execute(
+            "SELECT table_name FROM information_schema.tables "
+            "WHERE table_schema = 'public' AND table_type = 'BASE TABLE' "
+            "ORDER BY table_name"
+        )
+        names = [row[0] for row in cur.fetchall()]
+    return [n for n in names if not n.startswith(_INTERNAL_TABLE_PREFIXES)]
+
+
 def table_exists(table_name: str) -> bool:
     with _connect() as conn, conn.cursor() as cur:
         cur.execute(

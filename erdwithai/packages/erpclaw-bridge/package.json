@@ -1,0 +1,18 @@
+{
+  "name": "@erdwithai/erpclaw-bridge",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target node --format esm --external @erdwithai/core --external @erdwithai/generator --external @erdwithai/erpclaw-client"
+  },
+  "dependencies": {
+    "@erdwithai/core": "workspace:*",
+    "@erdwithai/generator": "workspace:*",
+    "@erdwithai/erpclaw-client": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}
