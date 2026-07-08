@@ -1,8 +1,13 @@
 """JWT verification and RBAC for the gateway.
 
-No external IdP in this slice: tokens are signed HS256 against a pre-shared
-``JWT_SECRET``. ``_get_signing_key()`` is the seam a later JWKS-based verifier
-plugs into without touching the route dependencies.
+Two verification modes, selected by whether ``JWKS_URL`` is set:
+  - Unset (default): HS256 against a pre-shared ``JWT_SECRET`` — dev/test mode,
+    same as before.
+  - Set: real external IdP verification against that IdP's published JWKS
+    (RS256/ES256/... — whatever the token header's ``alg`` says), with
+    ``OIDC_ISSUER``/``OIDC_AUDIENCE`` checked if configured. Provider-agnostic:
+    any standard OIDC IdP (Auth0, Okta, Keycloak, Cognito, ...) works, since
+    JWKS itself is the standard, not anything vendor-specific.
 
 Authorization is two layers:
   1. ``require_invoke_scope`` — a valid token carrying the fixed
@@ -21,6 +26,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt as _jose_jwt
 
+from app.auth import jwks as _jwks
 from app.config import settings
 
 _bearer = HTTPBearer(auto_error=True)
@@ -44,10 +50,29 @@ class Principal:
     role: str
 
 
-def _get_signing_key() -> str:
-    """Indirection so a future JWKS fetch-and-cache implementation can drop in
-    without changing ``verify_token`` or any route dependency."""
-    return settings.jwt_secret
+def _decode_hs256(token: str) -> dict:
+    """Dev/test mode: HS256 against the pre-shared JWT_SECRET."""
+    return _jose_jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+
+
+def _decode_via_jwks(token: str) -> dict:
+    """Real external IdP mode: verify against the IdP's published JWKS."""
+    unverified_header = _jose_jwt.get_unverified_header(token)
+    alg = unverified_header.get("alg", "RS256")
+    kid = unverified_header.get("kid")
+    key = _jwks.get_signing_key(kid, url=settings.jwks_url)  # type: ignore[arg-type]
+
+    decode_kwargs: dict = {"algorithms": [alg]}
+    if settings.oidc_audience:
+        decode_kwargs["audience"] = settings.oidc_audience
+    if settings.oidc_issuer:
+        decode_kwargs["issuer"] = settings.oidc_issuer
+    if not settings.oidc_audience:
+        # jose refuses to skip audience verification unless told to — we only
+        # have one to check when OIDC_AUDIENCE is configured.
+        decode_kwargs["options"] = {"verify_aud": False}
+
+    return _jose_jwt.decode(token, key, **decode_kwargs)
 
 
 def verify_token(
@@ -55,9 +80,7 @@ def verify_token(
 ) -> Principal:
     token = credentials.credentials
     try:
-        payload = _jose_jwt.decode(
-            token, _get_signing_key(), algorithms=[settings.jwt_algorithm]
-        )
+        payload = _decode_via_jwks(token) if settings.jwks_url else _decode_hs256(token)
     except JWTError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

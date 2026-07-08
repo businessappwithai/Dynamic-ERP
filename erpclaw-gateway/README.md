@@ -72,6 +72,22 @@ layers (`app/auth/jwt.py`):
 python -m app.auth.mint_test_token --role operator   # mint a token for that role
 ```
 
+## External IdP (JWKS)
+
+By default the gateway verifies HS256 tokens against a pre-shared
+`JWT_SECRET` (dev/test only). Set `JWKS_URL` to switch to verifying real
+tokens issued by an external IdP against that IdP's published JWKS document
+instead — this works with **any** standard OIDC provider (Auth0, Okta,
+Keycloak, Cognito, ...), since JWKS (RFC 7517) is the standard, not anything
+IdP-specific. The gateway fetches and caches the JWKS by `kid`
+(`app/auth/jwks.py`), refetching once on a cache miss to pick up key
+rotation, and re-fetches the whole document after `JWKS_CACHE_TTL_S` (default
+1 hour). Set `OIDC_ISSUER`/`OIDC_AUDIENCE` to also validate `iss`/`aud`.
+
+The `role` claim (for RBAC, above) and `scope` claim (for the invoke gate)
+are read the same way regardless of which mode verified the token — configure
+your IdP to include them (e.g. as a custom claim or via a post-login Action/rule).
+
 ## Environment variables
 
 | Var | Required | Purpose |
@@ -79,8 +95,12 @@ python -m app.auth.mint_test_token --role operator   # mint a token for that rol
 | `ERPCLAW_DB_URL` | yes | Postgres connection string, forwarded to the erpclaw subprocess and used directly for schema introspection |
 | `ERPCLAW_REPO_ROOT` | no (defaults to `../erpclaw`) | Path to the merged erpclaw checkout |
 | `ERPCLAW_HOME` | no | erpclaw install root; forwarded to the subprocess like any erpclaw deployment |
-| `JWT_SECRET` | no (dev default, change for anything real) | HS256 signing secret for both verification and `mint_test_token` |
+| `JWT_SECRET` | no (dev default, change for anything real) | HS256 signing secret for both verification and `mint_test_token` — only used when `JWKS_URL` is unset |
 | `JWT_REQUIRED_SCOPE` | no (default `erpclaw:invoke`) | Scope string required on `/api/v1/actions/*` calls |
+| `JWKS_URL` | no | External IdP's JWKS endpoint; when set, switches verification from HS256 to real IdP verification |
+| `OIDC_ISSUER` | no | Expected `iss` claim, checked only when `JWKS_URL` is set |
+| `OIDC_AUDIENCE` | no | Expected `aud` claim, checked only when `JWKS_URL` is set |
+| `JWKS_CACHE_TTL_S` | no (default `3600`) | How long a fetched JWKS document is cached before an unconditional refresh |
 
 ## Local run (no Docker)
 
