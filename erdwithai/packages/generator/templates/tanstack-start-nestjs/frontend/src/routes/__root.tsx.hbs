@@ -1,0 +1,101 @@
+import { createRootRoute, Outlet, Link } from '@tanstack/react-router'
+import { Meta, Scripts } from '@tanstack/start'
+import { Providers } from '../providers'
+import { Toaster } from 'sonner'
+import '../styles/globals.css'
+
+function RootErrorComponent({ error }: { error: Error }) {
+  return (
+    <html lang="en">
+      <head>
+        <title>Error - {{project.name}}</title>
+        <Meta />
+      </head>
+      <body className="font-sans antialiased">
+        <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+          <div className="swiss-card p-8 max-w-md w-full text-center space-y-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-destructive/20 mx-auto">
+              <span className="text-2xl font-bold text-destructive">!</span>
+            </div>
+            <h2 className="font-display text-xl font-semibold text-foreground">
+              Something went wrong
+            </h2>
+            <p className="text-sm text-muted-foreground">{error?.message || 'An unexpected error occurred'}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="text-sm text-primary hover:underline font-medium"
+            >
+              Reload page
+            </button>
+          </div>
+        </div>
+        <Scripts />
+      </body>
+    </html>
+  )
+}
+
+function RootNotFoundComponent() {
+  return (
+    <html lang="en">
+      <head>
+        <title>Not Found - {{project.name}}</title>
+        <Meta />
+      </head>
+      <body className="font-sans antialiased">
+        <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+          <div className="swiss-card p-8 max-w-md w-full text-center space-y-4">
+            <p className="font-display text-6xl font-bold text-muted-foreground/30">404</p>
+            <h2 className="font-display text-xl font-semibold text-foreground">Page not found</h2>
+            <p className="text-sm text-muted-foreground">
+              The page you are looking for does not exist.
+            </p>
+            <Link to="/dashboard" className="text-sm text-primary hover:underline font-medium">
+              Go to Dashboard
+            </Link>
+          </div>
+        </div>
+        <Scripts />
+      </body>
+    </html>
+  )
+}
+
+export const Route = createRootRoute({
+  head: () => ({
+    meta: [
+      { charSet: 'utf-8' },
+      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+    ],
+    links: [
+      { rel: 'icon', href: '/favicon.ico' },
+      { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+      { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
+      { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap' },
+    ],
+  }),
+  errorComponent: RootErrorComponent,
+  notFoundComponent: RootNotFoundComponent,
+  component: RootLayout,
+})
+
+function RootLayout() {
+  return (
+    <html lang="en"{{#if config.enableDarkMode}} className="dark"{{/if}}>
+      <head>
+        <title>{{project.name}}</title>
+        <meta name="description" content="{{project.description}}" />
+        <Meta />
+      </head>
+      <body className="font-sans antialiased">
+        <Providers>
+          <main className="min-h-screen bg-background">
+            <Outlet />
+          </main>
+          <Toaster richColors position="top-right" />
+        </Providers>
+        <Scripts />
+      </body>
+    </html>
+  )
+}

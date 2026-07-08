@@ -1,0 +1,41 @@
+/**
+ * Mastra.ai Configuration for AI Natural Language Data Access
+ *
+ * This module initializes Mastra with data query agents and workflows.
+ * Used by BOTH Option 1 (NestJS + Next.js) and Option 2 (OData + OpenUI5).
+ *
+ * Generated: {{now}}
+ * Project: {{project.name}}
+ */
+
+import { Mastra } from '@mastra/core';
+import { dataQueryAgent } from './agents/data-query-agent';
+{{#if (eq config.aiNlAddon 'advanced')}}
+import { insightsAgent } from './agents/insights-agent';
+{{/if}}
+import { dataQueryWorkflow } from './workflows/data-query-workflow';
+
+/**
+ * Mastra instance for AI Natural Language features
+ */
+export const mastra = new Mastra({
+  agents: {
+    dataQueryAgent,
+    {{#if (eq config.aiNlAddon 'advanced')}}
+    insightsAgent,
+    {{/if}}
+  },
+  workflows: {
+    dataQueryWorkflow,
+  },
+});
+
+export type MastraAgents = typeof mastra.agents;
+export type MastraWorkflows = typeof mastra.workflows;
+
+// Re-export agents and workflows for direct access
+export { dataQueryAgent } from './agents/data-query-agent';
+{{#if (eq config.aiNlAddon 'advanced')}}
+export { insightsAgent } from './agents/insights-agent';
+{{/if}}
+export { dataQueryWorkflow } from './workflows/data-query-workflow';

@@ -1,0 +1,52 @@
+import { defineConfig } from '@tanstack/start/config'
+import path from 'path'
+
+export default defineConfig({
+  tsr: {
+    appDirectory: 'src',
+    routesDirectory: 'src/routes',
+    generatedRouteTree: 'src/routeTree.gen.ts',
+    quoteStyle: 'single',
+    semicolons: false,
+  },
+  react: {
+    jsxRuntime: 'automatic',
+    jsxImportSource: 'react',
+  },
+  vite: {
+    esbuild: {
+      jsx: 'automatic',
+      jsxImportSource: 'react',
+    },
+    resolve: {
+      alias: {
+        '@': path.resolve('./src'),
+      },
+    },
+    optimizeDeps: {
+      exclude: ['@electric-sql/pglite', '@electric-sql/pglite-sync'],
+    },
+    // @ts-expect-error - server proxy is valid Vite config but not typed in StartUserViteConfig
+    server: {
+      proxy: {
+        '/api': {
+          target: process.env.VITE_API_URL || '{{config.baseUrl}}',
+          changeOrigin: true,
+          configure: (proxy: any) => {
+            proxy.on('error', (_err: Error, req: any, res: any) => {
+              if (res.headersSent) return
+              const isAuth = (req.url as string)?.includes('/auth/')
+              if (isAuth) {
+                res.writeHead(200, { 'Content-Type': 'application/json' })
+                res.end(JSON.stringify({ user: null, session: null }))
+              } else {
+                res.writeHead(503, { 'Content-Type': 'application/json' })
+                res.end(JSON.stringify({ error: 'Backend unavailable' }))
+              }
+            })
+          },
+        },
+      },
+    },
+  },
+})

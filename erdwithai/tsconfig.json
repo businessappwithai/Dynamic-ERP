@@ -1,0 +1,93 @@
+{
+  "compilerOptions": {
+    /* Language and Environment */
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "preserve",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
+    /* Modules */
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "checkJs": false,
+    "allowImportingTsExtensions": false,
+
+    /* Emit */
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "./dist",
+    "removeComments": true,
+    "noEmit": false,
+    "importHelpers": true,
+
+    /* Interop Constraints */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+
+    /* Type Checking */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "skipLibCheck": true,
+
+    /* Completeness */
+    "skipDefaultLibCheck": true,
+
+    /* Path Mapping */
+    "paths": {
+      "@erdwithai/core": ["./packages/core/src"],
+      "@erdwithai/core/*": ["./packages/core/src/*"],
+      "@erdwithai/generator": ["./packages/generator/src"],
+      "@erdwithai/generator/*": ["./packages/generator/src/*"],
+      "@erdwithai/ai": ["./packages/ai/src"],
+      "@erdwithai/ai/*": ["./packages/ai/src/*"],
+      "@erdwithai/web": ["./packages/web/src"],
+      "@erdwithai/web/*": ["./packages/web/src/*"],
+      "@/*": ["./packages/web/src/*"]
+    }
+  },
+  "include": [
+    "packages/core/**/*.ts",
+    "packages/core/**/*.tsx",
+    "packages/generator/src/**/*.ts",
+    "packages/generator/src/**/*.tsx",
+    "packages/generator/migrations/**/*.ts",
+    "packages/ai/src/**/*.ts",
+    "packages/ai/src/**/*.tsx",
+    "packages/web/src/**/*.ts",
+    "packages/web/src/**/*.tsx",
+    "packages/web/vitest.config.ts",
+    "tests/**/*.ts",
+    "tests/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "out",
+    "build",
+    "database",
+    "**/*.d.ts",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "generated-projects",
+    "packages/web/generated-projects",
+    "packages/generator/templates",
+    "tests/e2e-output",
+    "webapp",
+    "vitest.config.ts"
+  ],
+  "ts-node": {
+    "transpileOnly": true,
+    "experimentalSpecifierResolution": "node"
+  }
+}
