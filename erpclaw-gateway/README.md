@@ -3,8 +3,8 @@
 FastAPI gateway exposing erpclaw's action catalog, Postgres schema, and action
 dispatch over HTTP: `/api/v1/catalog`, `/api/v1/actions/{domain}/{action}`,
 `/api/v1/schema/{entity}`, `/api/v1/events` (SSE), `/api/v1/modules/provision`,
-HS256 JWT auth. Real per-action/per-role RBAC and a real external IdP/JWKS
-verifier are still deferred — see the repo-root implementation plan.
+HS256 JWT auth with per-role RBAC. A real external IdP/JWKS verifier is still
+deferred — see the repo-root implementation plan.
 
 It does not reimplement erpclaw's execution logic — every action call (and
 module-provisioning call) shells out to the unchanged
@@ -42,6 +42,34 @@ route, so it inherits the same destructive-action confirmation gate
 curl -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   http://localhost:8000/api/v1/modules/provision \
   -d '{"module_name": "healthclaw", "user_confirmed": true}'
+```
+
+## RBAC
+
+Authorization on `/api/v1/actions/*` and `/api/v1/modules/provision` is two
+layers (`app/auth/jwt.py`):
+
+1. **Scope** — `require_invoke_scope`: the token must carry `JWT_REQUIRED_SCOPE`
+   (default `erpclaw:invoke`) at all, same as before.
+2. **Role** — `authorize_action`: the token's `role` claim (`readonly` |
+   `operator` | `admin`, default `readonly` if absent/unrecognized) is checked
+   against the action's `kind` (`query` | `report` | `mutation`, from the
+   catalog's own classification — see `app/catalog/cache.py`) and whether it's
+   `destructive` (the same flag `mcp/confirm.py`'s confirmation gate uses, so
+   this can never disagree with the router's own destructive-action list):
+
+   | Role | query / report | non-destructive mutation | destructive mutation |
+   |---|---|---|---|
+   | `readonly` | ✅ | ❌ | ❌ |
+   | `operator` | ✅ | ✅ | ❌ |
+   | `admin` | ✅ | ✅ | ✅ (still subject to the confirmation gate) |
+
+   A role failure is a `403` raised before the erpclaw subprocess is ever
+   spawned — distinct from the confirmation gate's `409`, which fires only
+   after RBAC passes.
+
+```bash
+python -m app.auth.mint_test_token --role operator   # mint a token for that role
 ```
 
 ## Environment variables

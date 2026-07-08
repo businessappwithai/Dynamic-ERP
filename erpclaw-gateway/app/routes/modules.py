@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from app.auth.jwt import Principal, require_invoke_scope
+from app.auth.jwt import Principal, authorize_action, require_invoke_scope
 from app.erpclaw_bridge import loader as bridge_loader
 from app.events.bus import event_bus
 
@@ -37,6 +37,11 @@ def provision_module(
     body: ProvisionRequest,
     principal: Principal = Depends(require_invoke_scope),
 ) -> JSONResponse:
+    # install-module is always a mutation and always destructive (see
+    # scripts/db_query.py's DANGEROUS_ACTIONS) — no catalog lookup needed to
+    # know its kind, unlike /api/v1/actions/*.
+    authorize_action(principal, kind="mutation", destructive=True)
+
     tool_router = bridge_loader.tool_router()
     result = tool_router.dispatch(
         "install-module",

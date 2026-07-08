@@ -1,7 +1,7 @@
 """Mint a test HS256 JWT for local curl/Postman verification.
 
 Usage:
-    python -m app.auth.mint_test_token --sub tester --scope erpclaw:invoke [--expires-hours 24]
+    python -m app.auth.mint_test_token --sub tester --scope erpclaw:invoke --role admin [--expires-hours 24]
 
 Signs against the same JWT_SECRET the gateway verifies with (env var,
 defaults to the dev-only placeholder in app.config). Prints only the raw
@@ -22,6 +22,10 @@ def main() -> None:
         "--scope", default=settings.jwt_required_scope,
         help="Space-separated scope string (default: the gateway's required scope)",
     )
+    parser.add_argument(
+        "--role", default="admin", choices=["readonly", "operator", "admin"],
+        help="Role claim, drives per-action RBAC (default: admin)",
+    )
     parser.add_argument("--expires-hours", type=float, default=24.0)
     args = parser.parse_args()
 
@@ -29,6 +33,7 @@ def main() -> None:
     payload = {
         "sub": args.sub,
         "scope": args.scope,
+        "role": args.role,
         "iat": now,
         "exp": now + int(args.expires_hours * 3600),
     }

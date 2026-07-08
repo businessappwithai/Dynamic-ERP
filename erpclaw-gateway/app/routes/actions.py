@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from app.auth.jwt import Principal, require_invoke_scope
+from app.auth.jwt import Principal, authorize_action, require_invoke_scope
 from app.catalog.cache import find_action
 from app.erpclaw_bridge import loader as bridge_loader
 from app.events.bus import event_bus
@@ -46,6 +46,8 @@ def run_action(
             status_code=404,
             detail=f"Unknown action '{action}' under domain '{domain}'.",
         )
+
+    authorize_action(principal, kind=entry["kind"], destructive=entry["destructive"])
 
     tool_router = bridge_loader.tool_router()
     result = tool_router.dispatch(action, body.args, body.user_confirmed)
