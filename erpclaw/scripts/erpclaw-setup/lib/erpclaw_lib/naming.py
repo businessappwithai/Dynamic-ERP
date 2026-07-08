@@ -7,7 +7,6 @@ Each entity type has a unique prefix. The sequence counter is stored
 in the `naming_series` table and incremented atomically per call.
 """
 import uuid
-import sqlite3
 from datetime import datetime, timezone
 
 
@@ -265,7 +264,7 @@ def register_prefix(entity_type: str, prefix: str):
     ENTITY_PREFIXES[entity_type] = prefix
 
 
-def get_next_name(conn: sqlite3.Connection, entity_type: str,
+def get_next_name(conn, entity_type: str,
                   year: int = None, company_id: str = None) -> str:
     """Generate the next sequential name for an entity type.
 

@@ -20,7 +20,6 @@ Two posting shapes share `record_cwip_accumulation`:
   - buying/journals hooks: the *document's* submit posts GL (routed to the CWIP
     account); the accumulation row links to that GL leg (no extra GL posted).
 """
-import sqlite3
 import uuid
 from decimal import Decimal
 
@@ -29,7 +28,7 @@ from erpclaw_lib.decimal_utils import to_decimal, round_currency
 CWIP_ACCOUNT_TYPE = "capital_work_in_progress"
 
 
-def get_under_construction_asset(conn: sqlite3.Connection, asset_id: str) -> dict:
+def get_under_construction_asset(conn, asset_id: str) -> dict:
     """Fetch an asset row and assert it is under construction.
 
     Raises ValueError if the asset is missing or not `under_construction` — the
@@ -46,7 +45,7 @@ def get_under_construction_asset(conn: sqlite3.Connection, asset_id: str) -> dic
     return asset
 
 
-def cwip_account_for_asset(conn: sqlite3.Connection, asset_id: str):
+def cwip_account_for_asset(conn, asset_id: str):
     """The single capital_work_in_progress account this asset has accumulated to,
     read from the DR leg each submitted accumulation row points at via gl_entry_id.
     Returns the account id or None (no accumulations yet). Raises ValueError if
@@ -69,7 +68,7 @@ def cwip_account_for_asset(conn: sqlite3.Connection, asset_id: str):
     return next(iter(accts)) if accts else None
 
 
-def resolve_cwip_account(conn: sqlite3.Connection, asset_id: str, company_id: str) -> str:
+def resolve_cwip_account(conn, asset_id: str, company_id: str) -> str:
     """The CWIP account to debit for a new accumulation against `asset_id`.
 
     Prefers the account the asset has already accumulated to (one CWIP account per
@@ -96,7 +95,7 @@ def resolve_cwip_account(conn: sqlite3.Connection, asset_id: str, company_id: st
     return rows[0]["id"]
 
 
-def cwip_debit_legs(conn: sqlite3.Connection, gl_entries: list[dict]) -> list[tuple]:
+def cwip_debit_legs(conn, gl_entries: list[dict]) -> list[tuple]:
     """Return [(index, account_id, Decimal debit)] for every gl_entry whose account
     is a capital_work_in_progress account debited > 0. Used by the journal-entry
     hook to locate the user-supplied CWIP leg(s) the accumulation attaches to."""
@@ -112,7 +111,7 @@ def cwip_debit_legs(conn: sqlite3.Connection, gl_entries: list[dict]) -> list[tu
     return legs
 
 
-def record_cwip_accumulation(conn: sqlite3.Connection, asset: dict, amount,
+def record_cwip_accumulation(conn, asset: dict, amount,
                              *, source_voucher_type: str, source_voucher_id: str,
                              gl_entry_id: str, accumulated_at: str,
                              notes: str = None, accum_id: str = None) -> str:
@@ -142,7 +141,7 @@ def record_cwip_accumulation(conn: sqlite3.Connection, asset: dict, amount,
     return accum_id
 
 
-def reverse_cwip_accumulations(conn: sqlite3.Connection, source_voucher_type: str,
+def reverse_cwip_accumulations(conn, source_voucher_type: str,
                               source_voucher_id: str) -> int:
     """Unwind the accumulation rows a now-cancelled document created: mark each
     'reversed' and decrement its asset's gross_value + current_book_value. The

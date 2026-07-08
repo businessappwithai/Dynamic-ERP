@@ -238,7 +238,7 @@ def _resolve_pg_url(db_path=None) -> str:
     url = db_path or os.environ.get("ERPCLAW_DB_URL") or os.environ.get("ERPCLAW_DB_PATH")
     if not url:
         raise RuntimeError(
-            "ERPCLAW_DB_DIALECT=postgresql but no connection URL "
+            "No PostgreSQL connection URL configured "
             "(set ERPCLAW_DB_URL or pass db_path)."
         )
     return url

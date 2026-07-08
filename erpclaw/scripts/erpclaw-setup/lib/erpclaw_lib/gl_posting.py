@@ -15,7 +15,6 @@ import hashlib
 import json
 import re
 import uuid
-import sqlite3
 from decimal import Decimal
 from typing import Optional
 
@@ -26,7 +25,7 @@ from erpclaw_lib.query import rowid_col
 
 # --- Helper: fetch account row ---
 
-def _get_account(conn: sqlite3.Connection, account_id: str) -> dict:
+def _get_account(conn, account_id: str) -> dict:
     """Fetch an account row. Raises ValueError if not found."""
     row = conn.execute(
         "SELECT * FROM account WHERE id = ?", (account_id,)
@@ -66,7 +65,7 @@ def _normalize_entries(entries: list[dict]) -> list[dict]:
 # --- 12-Step Validation Checklist ---
 
 def validate_gl_entries(
-    conn: sqlite3.Connection,
+    conn,
     entries: list[dict],
     company_id: str,
     posting_date: str,
@@ -421,7 +420,7 @@ def _validate_dimensions(conn, entries, account_cache):
 # --- Insert GL Entries ---
 
 def insert_gl_entries(
-    conn: sqlite3.Connection,
+    conn,
     entries: list[dict],
     voucher_type: str,
     voucher_id: str,
@@ -616,7 +615,7 @@ def insert_gl_entries(
 # --- Reverse GL Entries ---
 
 def reverse_gl_entries(
-    conn: sqlite3.Connection,
+    conn,
     voucher_type: str,
     voucher_id: str,
     posting_date: str,
@@ -725,7 +724,7 @@ def prepare_multicurrency_entries(entries, currency, exchange_rate):
 # --- Query: Account Balance ---
 
 def get_account_balance(
-    conn: sqlite3.Connection,
+    conn,
     account_id: str,
     as_of_date: Optional[str] = None,
 ) -> dict:

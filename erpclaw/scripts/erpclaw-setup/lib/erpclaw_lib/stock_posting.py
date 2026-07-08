@@ -22,7 +22,6 @@ NOTE: This file is in SAFETY_EXCLUDED_FILES for DGM, but it is modified by
 the developer directly. All FIFO logic is clearly commented.
 """
 import uuid
-import sqlite3
 from decimal import Decimal
 from typing import Optional
 
@@ -35,7 +34,7 @@ from erpclaw_lib.query import latest_insert_order
 # FIFO Layer Management
 # ---------------------------------------------------------------------------
 
-def _get_item_valuation_method(conn: sqlite3.Connection, item_id: str) -> str:
+def _get_item_valuation_method(conn, item_id: str) -> str:
     """Return the valuation method for an item ('moving_average' or 'fifo').
 
     Falls back to 'moving_average' if item not found or column missing.
@@ -56,7 +55,7 @@ def _get_item_valuation_method(conn: sqlite3.Connection, item_id: str) -> str:
 
 
 def _insert_fifo_layer(
-    conn: sqlite3.Connection,
+    conn,
     item_id: str,
     warehouse_id: str,
     posting_date: str,
@@ -94,7 +93,7 @@ def _insert_fifo_layer(
 
 
 def _consume_fifo_layers(
-    conn: sqlite3.Connection,
+    conn,
     item_id: str,
     warehouse_id: str,
     qty_to_consume: Decimal,
@@ -173,7 +172,7 @@ def _consume_fifo_layers(
 
 
 def _reverse_fifo_layers(
-    conn: sqlite3.Connection,
+    conn,
     voucher_type: str,
     voucher_id: str,
 ) -> None:
@@ -193,7 +192,7 @@ def _reverse_fifo_layers(
 
 
 def get_fifo_valuation_rate(
-    conn: sqlite3.Connection,
+    conn,
     item_id: str,
     warehouse_id: str,
     qty: Decimal,
@@ -248,7 +247,7 @@ def get_fifo_valuation_rate(
 # ---------------------------------------------------------------------------
 
 def validate_stock_entries(
-    conn: sqlite3.Connection,
+    conn,
     entries: list[dict],
     posting_date: str,
     company_id: str,
@@ -370,7 +369,7 @@ def validate_stock_entries(
 # ---------------------------------------------------------------------------
 
 def insert_sle_entries(
-    conn: sqlite3.Connection,
+    conn,
     entries: list[dict],
     voucher_type: str,
     voucher_id: str,
@@ -502,7 +501,7 @@ def insert_sle_entries(
 
 
 def _compute_moving_avg_sle(
-    conn: sqlite3.Connection,
+    conn,
     item_id: str,
     actual_qty: Decimal,
     incoming_rate: Decimal,
@@ -553,7 +552,7 @@ def _compute_moving_avg_sle(
 
 
 def _compute_fifo_sle(
-    conn: sqlite3.Connection,
+    conn,
     item_id: str,
     warehouse_id: str,
     posting_date: str,
@@ -635,7 +634,7 @@ def _compute_fifo_sle(
 # ---------------------------------------------------------------------------
 
 def reverse_sle_entries(
-    conn: sqlite3.Connection,
+    conn,
     voucher_type: str,
     voucher_id: str,
     posting_date: str,
@@ -749,7 +748,7 @@ def reverse_sle_entries(
 # ---------------------------------------------------------------------------
 
 def get_stock_balance(
-    conn: sqlite3.Connection,
+    conn,
     item_id: str,
     warehouse_id: str,
     as_of_date: Optional[str] = None,
@@ -843,7 +842,7 @@ def get_stock_balance(
 # ---------------------------------------------------------------------------
 
 def get_valuation_rate(
-    conn: sqlite3.Connection,
+    conn,
     item_id: str,
     warehouse_id: Optional[str] = None,
 ) -> Decimal:
@@ -896,7 +895,7 @@ def get_valuation_rate(
 # ---------------------------------------------------------------------------
 
 def create_perpetual_inventory_gl(
-    conn: sqlite3.Connection,
+    conn,
     sle_entries: list[dict],
     voucher_type: str,
     voucher_id: str,

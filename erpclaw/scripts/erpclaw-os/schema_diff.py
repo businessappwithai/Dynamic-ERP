@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 """ERPClaw OS — Schema Diff Engine
 
-Compares the live database schema (sqlite_master) against the declared schema
-in init_db.py files. Detects drift (manual DB modifications that diverge from
-declared schema) and produces migration DDL.
+Compares the live database schema (information_schema, PostgreSQL) against
+the declared schema in init_db.py files. Detects drift (manual DB
+modifications that diverge from declared schema) and produces migration DDL.
 
 Used by schema_migrator.py for plan/apply/rollback operations.
 """
 import os
 import re
-import sqlite3
 
 
 # ---------------------------------------------------------------------------
@@ -98,45 +97,104 @@ def parse_ddl_text(ddl_text):
     return tables
 
 
+# Postgres information_schema.columns.data_type strings, mapped back to the
+# SQLite-flavored type vocabulary parse_ddl_text() extracts from init_db.py
+# files (TEXT, INTEGER, REAL, NUMERIC, BLOB) so live-vs-declared type
+# comparisons in diff_schema() stay meaningful now that the live side is
+# introspected from Postgres instead of sqlite_master/PRAGMA table_info.
+# Unrecognized Postgres types pass through uppercased as-is — a resulting
+# mismatch surfaces as a type_change finding rather than silently hiding a
+# real difference.
+_PG_TO_DECLARED_TYPE = {
+    "text": "TEXT",
+    "character varying": "TEXT",
+    "varchar": "TEXT",
+    "char": "TEXT",
+    "character": "TEXT",
+    "integer": "INTEGER",
+    "bigint": "INTEGER",
+    "smallint": "INTEGER",
+    "real": "REAL",
+    "double precision": "REAL",
+    "numeric": "NUMERIC",
+    "decimal": "NUMERIC",
+    "bytea": "BLOB",
+    "boolean": "INTEGER",  # declared DDL uses INTEGER 0/1 for booleans (SQLite convention)
+}
+
+
+def _pg_type_to_declared(data_type):
+    """Map an information_schema.columns.data_type value to the declared
+    (SQLite-flavored) type vocabulary. See _PG_TO_DECLARED_TYPE for why."""
+    return _PG_TO_DECLARED_TYPE.get(data_type.lower(), data_type.upper())
+
+
 def get_live_schema(db_path):
-    """Query sqlite_master for current tables and their columns.
+    """Query information_schema for current tables and their columns.
 
     Returns dict: {table_name: {columns: [{name, type, is_pk}], indexes: [...]}}
+
+    Best-effort: any connection failure (no ERPCLAW_DB_URL configured yet,
+    server unreachable, ...) returns an empty schema, mirroring the old
+    "file doesn't exist yet" behavior rather than raising.
     """
-    if not os.path.isfile(db_path):
+    from erpclaw_lib.db import get_connection
+
+    try:
+        conn = get_connection(db_path)
+    except Exception:
         return {}
 
-    conn = sqlite3.connect(db_path)
-    from erpclaw_lib.db import setup_pragmas
-    setup_pragmas(conn)
-    tables = {}
+    try:
+        tables = {}
 
-    # Get all user tables (skip sqlite_ internal tables)
-    rows = conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
-    ).fetchall()
+        # Get all user tables in the public schema
+        rows = conn.execute(
+            "SELECT table_name FROM information_schema.tables "
+            "WHERE table_schema = 'public' AND table_type = 'BASE TABLE'"
+        ).fetchall()
 
-    for (table_name,) in rows:
-        columns = []
-        for col in conn.execute(f"PRAGMA table_info('{table_name}')").fetchall():
-            # col: (cid, name, type, notnull, dflt_value, pk)
-            columns.append({
-                "name": col[1],
-                "type": col[2].upper() if col[2] else "TEXT",
-                "is_pk": bool(col[5]),
-            })
-        tables[table_name] = {"columns": columns, "indexes": []}
+        # Primary-key columns per table (information_schema has no single
+        # "pk flag" column the way PRAGMA table_info did).
+        pk_rows = conn.execute(
+            "SELECT tc.table_name, kcu.column_name "
+            "FROM information_schema.table_constraints tc "
+            "JOIN information_schema.key_column_usage kcu "
+            "  ON tc.constraint_name = kcu.constraint_name "
+            " AND tc.table_schema = kcu.table_schema "
+            "WHERE tc.constraint_type = 'PRIMARY KEY' AND tc.table_schema = 'public'"
+        ).fetchall()
+        pk_cols = {}
+        for tbl, col in pk_rows:
+            pk_cols.setdefault(tbl, set()).add(col)
 
-    # Get indexes
-    idx_rows = conn.execute(
-        "SELECT name, tbl_name FROM sqlite_master WHERE type='index' AND name NOT LIKE 'sqlite_%'"
-    ).fetchall()
-    for idx_name, tbl_name in idx_rows:
-        if tbl_name in tables:
-            tables[tbl_name]["indexes"].append(idx_name)
+        for (table_name,) in rows:
+            columns = []
+            col_rows = conn.execute(
+                "SELECT column_name, data_type FROM information_schema.columns "
+                "WHERE table_schema = 'public' AND table_name = ? "
+                "ORDER BY ordinal_position",
+                (table_name,),
+            ).fetchall()
+            for col_name, data_type in col_rows:
+                columns.append({
+                    "name": col_name,
+                    "type": _pg_type_to_declared(data_type) if data_type else "TEXT",
+                    "is_pk": col_name in pk_cols.get(table_name, set()),
+                })
+            tables[table_name] = {"columns": columns, "indexes": []}
 
-    conn.close()
-    return tables
+        # Get indexes
+        idx_rows = conn.execute(
+            "SELECT indexname, tablename FROM pg_indexes WHERE schemaname = 'public'"
+        ).fetchall()
+        for idx_name, tbl_name in idx_rows:
+            if tbl_name in tables:
+                tables[tbl_name]["indexes"].append(idx_name)
+
+        return tables
+    finally:
+        conn.close()
 
 
 def diff_schema(db_path, init_db_path):

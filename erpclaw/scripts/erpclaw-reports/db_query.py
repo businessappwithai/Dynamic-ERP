@@ -10,7 +10,6 @@ Output: JSON to stdout, exit 0 on success, exit 1 on error.
 import argparse
 import json
 import os
-import sqlite3
 import sys
 import uuid
 from datetime import datetime

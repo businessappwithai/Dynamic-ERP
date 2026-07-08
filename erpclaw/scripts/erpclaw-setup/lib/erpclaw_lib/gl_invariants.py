@@ -1,8 +1,7 @@
 """Post-test GL invariant verification.
 
-Connects to a sandbox (or any) ERPClaw database — SQLite or PostgreSQL — and
-verifies that all General Ledger entries satisfy the fundamental accounting
-invariants:
+Connects to a sandbox (or any) ERPClaw PostgreSQL database and verifies that
+all General Ledger entries satisfy the fundamental accounting invariants:
 
 1. Global balance: SUM(debit) == SUM(credit) across all non-cancelled entries
 2. Per-voucher balance: each voucher balances independently
@@ -12,11 +11,9 @@ invariants:
 
 All comparisons use Python Decimal — never float.
 
-Dialect note: the connection is opened via the dialect-aware
-``erpclaw_lib.db.get_connection`` so ``db_path`` may be a SQLite file path OR a
-PostgreSQL URL (``ERPCLAW_DB_DIALECT=postgresql``). Table-existence probes are
-likewise dialect-aware — SQLite has ``sqlite_master``; PostgreSQL exposes
-``information_schema.tables`` instead.
+The connection is opened via ``erpclaw_lib.db.get_connection`` so ``db_path``
+may be a PostgreSQL URL, or omitted to resolve from ``ERPCLAW_DB_URL`` /
+``ERPCLAW_DB_PATH``. Table-existence probes use ``information_schema.tables``.
 """
 from decimal import Decimal, ROUND_HALF_UP
 
@@ -26,25 +23,13 @@ _TOLERANCE = Decimal("0.001")
 
 
 def _table_exists(conn, name: str) -> bool:
-    """Dialect-aware table-existence probe.
-
-    SQLite catalogs tables in ``sqlite_master``; PostgreSQL has no such relation
-    and uses ``information_schema.tables`` (excluding the system schemas).
-    """
-    from erpclaw_lib.db import get_dialect
-    if get_dialect() == "postgresql":
-        row = conn.execute(
-            "SELECT COUNT(*) FROM information_schema.tables "
-            "WHERE table_schema NOT IN ('pg_catalog', 'information_schema') "
-            "AND table_name = ?",
-            (name,),
-        ).fetchone()
-    else:
-        row = conn.execute(
-            "SELECT COUNT(*) FROM sqlite_master "
-            "WHERE type='table' AND name = ?",
-            (name,),
-        ).fetchone()
+    """Table-existence probe via information_schema.tables."""
+    row = conn.execute(
+        "SELECT COUNT(*) FROM information_schema.tables "
+        "WHERE table_schema NOT IN ('pg_catalog', 'information_schema') "
+        "AND table_name = ?",
+        (name,),
+    ).fetchone()
     return row[0] > 0
 
 
@@ -52,8 +37,8 @@ def check_gl_invariants(db_path: str) -> dict:
     """Run GL invariant checks against a database.
 
     Args:
-        db_path: SQLite database file path, or a PostgreSQL URL when
-                 ``ERPCLAW_DB_DIALECT=postgresql``.
+        db_path: A PostgreSQL connection URL, or None to resolve from
+                 ERPCLAW_DB_URL / ERPCLAW_DB_PATH.
 
     Returns:
         {

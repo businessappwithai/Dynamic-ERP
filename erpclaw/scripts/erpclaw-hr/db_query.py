@@ -11,7 +11,6 @@ import argparse
 import json
 import os
 import re
-import sqlite3
 import sys
 import uuid
 from datetime import datetime, date, timedelta, timezone

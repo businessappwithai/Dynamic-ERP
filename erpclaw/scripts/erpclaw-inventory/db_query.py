@@ -12,7 +12,7 @@ import argparse
 import itertools
 import json
 import os
-import sqlite3
+import psycopg2
 import sys
 import uuid
 from datetime import datetime, timezone
@@ -173,7 +173,7 @@ def add_item(conn, args):
              valuation_method, is_stock_item, has_batch, has_serial,
              standard_rate),
         )
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         sys.stderr.write(f"[erpclaw-inventory] {e}\n")
         err("Item creation failed — check for duplicates or invalid data")
 
@@ -527,7 +527,7 @@ def add_item_group(conn, args):
     q = Q.into(t).columns("id", "name", "company_id", "parent_id").insert(P(), P(), P(), P())
     try:
         conn.execute(q.get_sql(), (ig_id, args.name, company_id, args.parent_id))
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         sys.stderr.write(f"[erpclaw-inventory] {e}\n")
         err(f"Item group '{args.name}' already exists"
             f"{' for this company' if company_id else ''}"
@@ -1701,7 +1701,7 @@ def add_batch(conn, args):
             (batch_id, args.batch_name, args.item_id,
              args.manufacturing_date, args.expiry_date),
         )
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         sys.stderr.write(f"[erpclaw-inventory] {e}\n")
         err("Batch creation failed — check for duplicates or invalid data")
 
@@ -1813,7 +1813,7 @@ def add_serial_number(conn, args):
             (sn_id, args.serial_no, args.item_id,
              args.warehouse_id, args.batch_id),
         )
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         sys.stderr.write(f"[erpclaw-inventory] {e}\n")
         err("Serial number creation failed — check for duplicates or invalid data")
 
@@ -1901,7 +1901,7 @@ def add_price_list(conn, args):
     q = Q.into(t).columns("id", "name", "currency", "buying", "selling").insert(P(), P(), P(), P(), P())
     try:
         conn.execute(q.get_sql(), (pl_id, args.name, currency, is_buying, is_selling))
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         sys.stderr.write(f"[erpclaw-inventory] {e}\n")
         err("Price list creation failed — check for duplicates or invalid data")
 
@@ -3042,7 +3042,7 @@ def create_item_variant(conn, args):
             template["has_serial"], template["standard_rate"],
             args.template_item_id,
         ))
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         sys.stderr.write(f"[erpclaw-inventory] {e}\n")
         err("Variant creation failed — check for duplicates")
 
@@ -3231,7 +3231,7 @@ def add_item_supplier(conn, args):
     ).insert(P(), P(), P(), P(), P(), P())
     try:
         conn.execute(q.get_sql(), (is_id, args.item_id, args.supplier_id, min_order_qty, lead_time, priority))
-    except sqlite3.IntegrityError:
+    except psycopg2.IntegrityError:
         err("This item-supplier link already exists")
 
     audit(conn, "erpclaw-inventory", "add-item-supplier", "item_supplier", is_id,

@@ -11,7 +11,7 @@ Output: JSON to stdout, exit 0 on success, exit 1 on error.
 import argparse
 import json
 import os
-import sqlite3
+import psycopg2
 import sys
 import uuid
 import calendar
@@ -199,7 +199,7 @@ def add_supplier(conn, args):
              args.payment_terms_id, args.tax_id, is_1099,
              primary_address, getattr(args, "email", None),
              getattr(args, "phone", None), args.company_id))
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         sys.stderr.write(f"[erpclaw-buying] {e}\n")
         err("Supplier creation failed — check for duplicates or invalid data")
 

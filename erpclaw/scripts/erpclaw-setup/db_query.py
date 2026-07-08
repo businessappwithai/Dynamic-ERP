@@ -11,9 +11,9 @@ import argparse
 import glob as glob_mod
 import json
 import os
+import psycopg2
 import re
 import shutil
-import sqlite3
 import sys
 import urllib.error
 import urllib.request
@@ -120,7 +120,7 @@ def setup_company(conn, args):
                new_values={"name": name, "abbr": abbr},
                description=f"Created company '{name}'")
         conn.commit()
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         sys.stderr.write(f"[erpclaw-setup] {e}\n")
         err("Company creation failed — check for duplicates or invalid data")
 
@@ -400,7 +400,7 @@ def add_currency(conn, args):
         audit(conn, "erpclaw-setup", "create", "currency", code,
                new_values={"code": code, "name": name})
         conn.commit()
-    except sqlite3.IntegrityError:
+    except psycopg2.IntegrityError:
         err(f"Currency '{code}' already exists")
     ok({"code": code.upper(), "name": name})
 
@@ -448,7 +448,7 @@ def add_exchange_rate(conn, args):
                new_values={"from": args.from_currency, "to": args.to_currency,
                            "rate": args.rate, "date": effective_date})
         conn.commit()
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         sys.stderr.write(f"[erpclaw-setup] {e}\n")
         err("Exchange rate creation failed — check for duplicates or invalid data")
 
@@ -538,7 +538,7 @@ def add_payment_terms(conn, args):
         audit(conn, "erpclaw-setup", "create", "payment_terms", pt_id,
                new_values={"name": name})
         conn.commit()
-    except sqlite3.IntegrityError:
+    except psycopg2.IntegrityError:
         err(f"Payment terms '{name}' already exists")
     ok({"payment_terms_id": pt_id, "name": name})
 
@@ -577,7 +577,7 @@ def add_uom(conn, args):
         )
         audit(conn, "erpclaw-setup", "create", "uom", uom_id, new_values={"name": name})
         conn.commit()
-    except sqlite3.IntegrityError:
+    except psycopg2.IntegrityError:
         err(f"UoM '{name}' already exists")
     ok({"uom_id": uom_id, "name": name})
 
@@ -616,7 +616,7 @@ def add_uom_conversion(conn, args):
                new_values={"from": args.from_uom, "to": args.to_uom,
                            "factor": args.conversion_factor})
         conn.commit()
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         sys.stderr.write(f"[erpclaw-setup] {e}\n")
         err("UoM conversion creation failed — check for duplicates or invalid data")
     ok({"uom_conversion_id": conv_id})
@@ -653,7 +653,7 @@ def seed_defaults(conn, args):
                      c.get("decimal_places", 2), c.get("enabled", 0)),
                 )
                 counts["currencies_seeded"] += 1
-            except sqlite3.IntegrityError:
+            except psycopg2.IntegrityError:
                 pass
 
     # Seed UoMs
@@ -668,7 +668,7 @@ def seed_defaults(conn, args):
                     (str(uuid.uuid4()), u["name"], u.get("must_be_whole_number", 0)),
                 )
                 counts["uoms_seeded"] += 1
-            except sqlite3.IntegrityError:
+            except psycopg2.IntegrityError:
                 pass
 
     # Seed payment terms
@@ -687,7 +687,7 @@ def seed_defaults(conn, args):
                      t.get("description")),
                 )
                 counts["payment_terms_seeded"] += 1
-            except sqlite3.IntegrityError:
+            except psycopg2.IntegrityError:
                 pass
 
     audit(conn, "erpclaw-setup", "seed", "system", company_id,
@@ -1070,7 +1070,6 @@ def restore_database(conn, args):
         err("Backup is not a valid ERPClaw database (missing schema_version table)")
 
     # Determine target DB
-    import psycopg2
     from erpclaw_lib.db import _resolve_pg_url, get_connection
     db_url = _resolve_pg_url(args.db_path)
 
@@ -2478,7 +2477,7 @@ def add_account_type(conn, args):
         audit(conn, "erpclaw-setup", "create", "account_type_registry", at,
               new_values={"account_type": at, "label": label})
         conn.commit()
-    except sqlite3.IntegrityError:
+    except psycopg2.IntegrityError:
         err(f"account_type '{at}' is already registered")
     ok({"result": "registered", "account_type": at, "label": label})
 
@@ -2531,7 +2530,7 @@ def add_voucher_type(conn, args):
         audit(conn, "erpclaw-setup", "create", "voucher_type_registry", f"{vt}/{target}",
               new_values={"voucher_type": vt, "target_table": target, "label": label})
         conn.commit()
-    except sqlite3.IntegrityError:
+    except psycopg2.IntegrityError:
         err(f"voucher_type '{vt}' is already registered for {target}")
     ok({"result": "registered", "voucher_type": vt, "target_table": target, "label": label})
 
@@ -2577,11 +2576,20 @@ def deactivate_voucher_type(conn, args):
 def validate_registry_completeness(conn, args):
     """Diagnostic: report type/status values used in live data that are NOT
     registered+active (i.e. would now be rejected on new writes). Read-only."""
+    from erpclaw_lib.db import db_error_types
+    _MissingTableErrors, _ = db_error_types()
+
     def _distinct(table, col, extra=""):
         try:
             return {r[0] for r in conn.execute(
                 f"SELECT DISTINCT {col} FROM {table} WHERE {col} IS NOT NULL AND {col} != ''{extra}")}
-        except sqlite3.OperationalError:
+        except _MissingTableErrors:
+            # A failed statement leaves the Postgres transaction aborted —
+            # every subsequent conn.execute() on this connection (the loop
+            # above calls _distinct()/_active() repeatedly) would otherwise
+            # itself fail with "current transaction is aborted" until rolled
+            # back (SQLite has no equivalent gotcha).
+            conn.rollback()
             return set()  # table not present on a minimal install
 
     def _active(table, col, target=None):
@@ -2665,7 +2673,7 @@ def add_custom_field_action(conn, args):
             conn, table, field, ftype, owner_skill=args.skill_name or "erpclaw-setup",
             label=args.label, required=bool(args.required),
             default_value=args.default, field_options=field_options)
-    except sqlite3.IntegrityError:
+    except psycopg2.IntegrityError:
         err(f"Custom field '{field}' already exists on {table}")
     audit(conn, "erpclaw-setup", "create", "custom_field", field_id,
           new_values={"table_name": table, "field_name": field, "field_type": ftype})

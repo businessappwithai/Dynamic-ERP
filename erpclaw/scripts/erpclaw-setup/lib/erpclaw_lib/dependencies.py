@@ -5,7 +5,6 @@ when optional dependencies are not installed, and return helpful error
 messages when required dependencies are missing.
 """
 import os
-import sqlite3
 from typing import Optional
 
 
@@ -155,28 +154,19 @@ TABLE_TO_SKILL = {
 
 
 def table_exists(conn, table_name: str) -> bool:
-    """Check if a table exists in the database. Dialect-aware (closes pending M19;
-    Wave 1B F3 surfaced it on PostgreSQL): SQLite catalogs tables in ``sqlite_master``;
-    PostgreSQL has no such relation and uses ``information_schema.tables``. Mirrors
-    ``gl_invariants._table_exists``; the ``?`` placeholder is dialect-translated by the
-    connection wrapper."""
-    from erpclaw_lib.db import get_dialect
-    if get_dialect() == "postgresql":
-        row = conn.execute(
-            "SELECT 1 FROM information_schema.tables "
-            "WHERE table_schema NOT IN ('pg_catalog', 'information_schema') "
-            "AND table_name=?",
-            (table_name,),
-        ).fetchone()
-    else:
-        row = conn.execute(
-            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
-            (table_name,),
-        ).fetchone()
+    """Check if a table exists in the database, via information_schema.tables.
+    Mirrors ``gl_invariants._table_exists``; the ``?`` placeholder is
+    translated to ``%s`` by the connection wrapper."""
+    row = conn.execute(
+        "SELECT 1 FROM information_schema.tables "
+        "WHERE table_schema NOT IN ('pg_catalog', 'information_schema') "
+        "AND table_name=?",
+        (table_name,),
+    ).fetchone()
     return row is not None
 
 
-def check_required_tables(conn: sqlite3.Connection, tables: list) -> Optional[dict]:
+def check_required_tables(conn, tables: list) -> Optional[dict]:
     """Check that all required tables exist.
 
     Returns None if all present, or a JSON-ready error dict if any are missing.
@@ -204,7 +194,7 @@ def check_required_tables(conn: sqlite3.Connection, tables: list) -> Optional[di
         }
 
 
-def check_optional_tables(conn: sqlite3.Connection, tables: list) -> dict:
+def check_optional_tables(conn, tables: list) -> dict:
     """Check which optional tables are available.
 
     Returns a dict mapping table name -> availability boolean.
@@ -212,7 +202,7 @@ def check_optional_tables(conn: sqlite3.Connection, tables: list) -> dict:
     return {t: table_exists(conn, t) for t in tables}
 
 
-def skill_installed(conn: sqlite3.Connection, skill_name: str) -> bool:
+def skill_installed(conn, skill_name: str) -> bool:
     """Check if a skill's tables are available by probing its first table."""
     for tbl, owner in TABLE_TO_SKILL.items():
         if owner == skill_name:
@@ -254,7 +244,7 @@ def resolve_skill_script(skill_name: str) -> Optional[str]:
 
 
 def check_subprocess_target(
-    conn: sqlite3.Connection,
+    conn,
     skill_name: str,
     representative_table: str,
 ) -> Optional[dict]:

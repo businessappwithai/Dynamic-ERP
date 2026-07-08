@@ -11,7 +11,6 @@ Key constraint: AI can CREATE tables, never ALTER/DROP tables owned by other mod
 """
 import json
 import os
-import sqlite3
 import sys
 import time
 import uuid
@@ -38,13 +37,19 @@ DEFAULT_DB_PATH = os.path.join(os.path.expanduser(os.environ.get("ERPCLAW_HOME",
 # ---------------------------------------------------------------------------
 
 def ensure_migration_table(db_path=None):
-    """Create erpclaw_schema_migration table if it doesn't exist."""
-    db_path = db_path or DEFAULT_DB_PATH
-    conn = sqlite3.connect(db_path)
-    from erpclaw_lib.db import setup_pragmas
-    setup_pragmas(conn)
+    """Create erpclaw_schema_migration table if it doesn't exist.
+
+    Note: no ``db_path or DEFAULT_DB_PATH`` fallback here — DEFAULT_DB_PATH
+    is a truthy SQLite-shaped path, and get_connection()'s URL resolution
+    (via _resolve_pg_url) prefers an explicit db_path over ERPCLAW_DB_URL /
+    ERPCLAW_DB_PATH. Falling back to that constant would silently clobber
+    the env-var chain (the same bug class fixed across the domain
+    db_query.py main() functions elsewhere in this conversion).
+    """
+    from erpclaw_lib.db import get_connection
+    conn = get_connection(db_path)
     from erpclaw_lib.query import ddl_now
-    conn.executescript(f"""
+    conn.execute(f"""
         CREATE TABLE IF NOT EXISTS erpclaw_schema_migration (
             id              TEXT PRIMARY KEY,
             module_name     TEXT NOT NULL,
@@ -56,7 +61,7 @@ def ensure_migration_table(db_path=None):
             applied_at      TEXT,
             rolled_back_at  TEXT,
             applied_by      TEXT
-        );
+        )
     """)
     conn.commit()
     conn.close()
@@ -80,7 +85,9 @@ def plan_migration(module_path, db_path=None, src_root=None):
     Returns:
         dict with migration_id, ddl_statements, validation, table_count, etc.
     """
-    db_path = db_path or DEFAULT_DB_PATH
+    # No DEFAULT_DB_PATH fallback here — see ensure_migration_table's
+    # docstring for why. db_path stays None if not explicitly given, and
+    # get_connection() resolves it via ERPCLAW_DB_URL/ERPCLAW_DB_PATH.
     init_db_path = os.path.join(module_path, "init_db.py")
 
     if not os.path.isfile(init_db_path):
@@ -143,9 +150,8 @@ def plan_migration(module_path, db_path=None, src_root=None):
     module_name = os.path.basename(module_path)
 
     ensure_migration_table(db_path)
-    conn = sqlite3.connect(db_path)
-    from erpclaw_lib.db import setup_pragmas
-    setup_pragmas(conn)
+    from erpclaw_lib.db import get_connection
+    conn = get_connection(db_path)
     conn.execute("""
         INSERT INTO erpclaw_schema_migration
             (id, module_name, migration_type, ddl_statements, status, previous_schema, planned_at)
@@ -188,12 +194,12 @@ def apply_migration(migration_id, db_path=None, applied_by=None):
     Returns:
         dict with result, tables_created, etc.
     """
-    db_path = db_path or DEFAULT_DB_PATH
+    # No DEFAULT_DB_PATH fallback here — see ensure_migration_table's docstring.
     ensure_migration_table(db_path)
 
-    conn = sqlite3.connect(db_path)
-    from erpclaw_lib.db import setup_pragmas
-    setup_pragmas(conn)
+    from erpclaw_lib.db import get_connection, db_error_types
+    conn = get_connection(db_path)
+    _, _DbError = db_error_types()
 
     # 1. Load migration record
     row = conn.execute(
@@ -237,7 +243,11 @@ def apply_migration(migration_id, db_path=None, applied_by=None):
 
         conn.commit()
 
-    except sqlite3.Error as e:
+    except _DbError as e:
+        # A failed statement leaves the Postgres transaction aborted — any
+        # further conn.execute() would itself fail with "current transaction
+        # is aborted" until rolled back (SQLite has no equivalent gotcha).
+        conn.rollback()
         conn.execute("""
             UPDATE erpclaw_schema_migration
             SET status = 'failed'
@@ -279,12 +289,12 @@ def rollback_migration(migration_id, db_path=None):
     Returns:
         dict with result, tables_dropped, backups_created, etc.
     """
-    db_path = db_path or DEFAULT_DB_PATH
+    # No DEFAULT_DB_PATH fallback here — see ensure_migration_table's docstring.
     ensure_migration_table(db_path)
 
-    conn = sqlite3.connect(db_path)
-    from erpclaw_lib.db import setup_pragmas
-    setup_pragmas(conn)
+    from erpclaw_lib.db import get_connection, db_error_types
+    conn = get_connection(db_path)
+    _, _DbError = db_error_types()
 
     # 1. Load migration record
     row = conn.execute(
@@ -318,15 +328,19 @@ def rollback_migration(migration_id, db_path=None):
                 if m:
                     table_name = m.group(1)
 
-                    # Backup data if table has rows
+                    # Backup data if table has rows. Postgres uses
+                    # double-quoted identifiers, not SQLite's [bracket]
+                    # quoting; table_name/backup_name are regex-\w+-matched
+                    # from DDL text, so direct interpolation carries the
+                    # same safety profile as the original bracket form.
                     row_count = conn.execute(
-                        f"SELECT COUNT(*) FROM [{table_name}]"
+                        f'SELECT COUNT(*) FROM "{table_name}"'
                     ).fetchone()[0]
 
                     if row_count > 0:
                         backup_name = f"{table_name}_backup_{migration_id[:8]}"
                         conn.execute(
-                            f"CREATE TABLE [{backup_name}] AS SELECT * FROM [{table_name}]"
+                            f'CREATE TABLE "{backup_name}" AS SELECT * FROM "{table_name}"'
                         )
                         backups_created.append({
                             "original": table_name,
@@ -335,7 +349,7 @@ def rollback_migration(migration_id, db_path=None):
                         })
 
                     # Drop the table
-                    conn.execute(f"DROP TABLE IF EXISTS [{table_name}]")
+                    conn.execute(f'DROP TABLE IF EXISTS "{table_name}"')
                     tables_dropped.append(table_name)
 
         # Update migration record
@@ -347,7 +361,8 @@ def rollback_migration(migration_id, db_path=None):
 
         conn.commit()
 
-    except sqlite3.Error as e:
+    except _DbError as e:
+        conn.rollback()
         conn.close()
         return {
             "result": "error",
@@ -421,7 +436,7 @@ def handle_schema_drift(args):
     if not module_path:
         return {"error": "--module-path is required for schema-drift"}
 
-    db_path = db_path or DEFAULT_DB_PATH
+    # No DEFAULT_DB_PATH fallback here — see ensure_migration_table's docstring.
 
     start_time = time.time()
     findings = _detect_drift(db_path, module_path)

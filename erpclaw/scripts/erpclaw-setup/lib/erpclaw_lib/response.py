@@ -24,10 +24,10 @@ def err(message: str, suggestion: str = None) -> None:
 
 
 def row_to_dict(row) -> dict:
-    """Convert sqlite3.Row to plain dict."""
+    """Convert a DictCursor row to a plain dict."""
     return dict(row) if row else {}
 
 
 def rows_to_list(rows) -> list[dict]:
-    """Convert list of sqlite3.Row to list of dicts."""
+    """Convert a list of DictCursor rows to a list of dicts."""
     return [dict(r) for r in rows] if rows else []

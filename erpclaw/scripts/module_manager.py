@@ -16,7 +16,6 @@ import json
 import os
 import re
 import shutil
-import sqlite3
 import subprocess
 import sys
 import time
@@ -984,21 +983,22 @@ def _install_module_inner(args, conn, modules_by_name, depth=0):
         # report tables_created=0 even when 59 tables were just created.
         # Commit any pending registry writes first so the fresh connection
         # below sees a consistent DB snapshot.
+        from erpclaw_lib.db import db_error_types
+        _, _DbError = db_error_types()
         try:
             conn.commit()
-        except sqlite3.Error:
+        except _DbError:
             pass
         try:
-            data_db = db_default()
-            if os.path.isfile(data_db):
-                dconn = sqlite3.connect(data_db)
-                prefix = module_name.replace("-", "_") + "_"
-                cursor = dconn.execute(
-                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name LIKE ?",
-                    (prefix + "%",))
-                tables_created = cursor.fetchone()[0]
-                dconn.close()
-        except sqlite3.Error as e:
+            dconn = get_connection()
+            prefix = module_name.replace("-", "_") + "_"
+            cursor = dconn.execute(
+                "SELECT COUNT(*) FROM information_schema.tables "
+                "WHERE table_schema = 'public' AND table_name LIKE ?",
+                (prefix + "%",))
+            tables_created = cursor.fetchone()[0]
+            dconn.close()
+        except _DbError as e:
             # Surface the failure instead of burying it (this was a silent
             # swallow in the prior implementation; install would report 0 with
             # no indication anything went wrong).
@@ -1218,25 +1218,18 @@ def _bump_foundation_version_row(version):
     early-return path also HEALS rows left stale by pre-rider upgrades (files
     already in sync, row never bumped) on the next reconcile.
 
-    DB-less / uninitialized installs skip cleanly and visibly (§6): the SQLite
-    file short-circuit avoids opening a connection (never creates a stray empty
-    DB, mirroring ``_foundation_db_initialized``), and the target-table probe
-    catches an initialized-but-tableless DB / an uninitialized Postgres.
+    DB-less / uninitialized installs skip cleanly and visibly (§6): the
+    target-table probe below catches an initialized-but-tableless DB or an
+    uninitialized/unreachable Postgres (no separate local-file short-circuit
+    is needed or possible now that the engine is Postgres-only — there is no
+    local DB file to probe with os.path.isfile()).
 
-    Uses ``get_connection`` (no arg) — the exact dialect-aware resolution
-    ``list_modules`` reads with — so the healed row is the one the reader
-    observes. Returns a JSON-safe dict for the caller to surface.
+    Uses ``get_connection`` (no arg) — the exact resolution ``list_modules``
+    reads with — so the healed row is the one the reader observes. Returns a
+    JSON-safe dict for the caller to surface.
     """
     if not version:
         return {"bumped": False, "reason": "registry has no foundation version"}
-
-    # DB-less / uninitialized SQLite install: short-circuit before opening a
-    # connection so we never create a stray empty DB. Postgres resolves via URL,
-    # so skip the file probe there and let the table probe below decide.
-    if os.environ.get("ERPCLAW_DB_DIALECT", "sqlite") != "postgresql":
-        db_path = os.environ.get("ERPCLAW_DB_PATH") or db_default()
-        if not os.path.isfile(db_path):
-            return {"bumped": False, "reason": "foundation DB not initialized"}
 
     conn = get_connection()
     try:

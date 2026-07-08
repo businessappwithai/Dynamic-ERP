@@ -11,7 +11,6 @@ Output: JSON to stdout, exit 0 on success, exit 1 on error.
 import argparse
 import json
 import os
-import sqlite3
 import sys
 import uuid
 from datetime import datetime, date, timedelta, timezone
@@ -1564,7 +1563,7 @@ def _calculate_progressive_tax(taxable_income: Decimal,
     return total_tax
 
 
-def _get_ytd_values(conn: sqlite3.Connection, employee_id: str,
+def _get_ytd_values(conn, employee_id: str,
                     period_end: str, company_id: str) -> dict:
     """Get year-to-date payroll values from previously submitted salary slips.
 
@@ -1657,7 +1656,7 @@ def _get_ytd_values(conn: sqlite3.Connection, employee_id: str,
     }
 
 
-def _get_ytd_supplemental(conn: sqlite3.Connection, employee_id: str,
+def _get_ytd_supplemental(conn, employee_id: str,
                           period_end: str, company_id: str) -> Decimal:
     """Get YTD supplemental wage earnings for >$1M threshold check.
 
@@ -1685,7 +1684,7 @@ def _get_ytd_supplemental(conn: sqlite3.Connection, employee_id: str,
     return sum((to_decimal(r["amount"]) for r in rows), Decimal("0"))
 
 
-def _find_payroll_accounts(conn: sqlite3.Connection,
+def _find_payroll_accounts(conn,
                            company_id: str) -> dict:
     """Look up the GL accounts needed for payroll posting.
 
@@ -1831,7 +1830,7 @@ def _find_payroll_accounts(conn: sqlite3.Connection,
     return accounts
 
 
-def _get_or_create_statutory_component(conn: sqlite3.Connection,
+def _get_or_create_statutory_component(conn,
                                         name: str,
                                         component_type: str = "deduction",
                                         is_statutory: int = 1,
@@ -1873,7 +1872,7 @@ def _get_or_create_statutory_component(conn: sqlite3.Connection,
     return comp_id
 
 
-def _calculate_working_and_payment_days(conn: sqlite3.Connection,
+def _calculate_working_and_payment_days(conn,
                                          employee_id: str,
                                          period_start: str,
                                          period_end: str) -> tuple:
@@ -1962,7 +1961,7 @@ def _calculate_working_and_payment_days(conn: sqlite3.Connection,
 # ACTION 8: create_payroll_run
 # ============================================================================
 
-def create_payroll_run(conn: sqlite3.Connection, args) -> None:
+def create_payroll_run(conn, args) -> None:
     """Create a draft payroll run for a pay period.
 
     Required args:
@@ -2064,7 +2063,7 @@ def create_payroll_run(conn: sqlite3.Connection, args) -> None:
 # ACTION 9: generate_salary_slips  -- THE MAIN CALCULATION ENGINE
 # ============================================================================
 
-def generate_salary_slips(conn: sqlite3.Connection, args) -> None:
+def generate_salary_slips(conn, args) -> None:
     """Calculate and generate salary slips for all eligible employees.
 
     Required args:
@@ -2716,7 +2715,7 @@ def generate_salary_slips(conn: sqlite3.Connection, args) -> None:
 # ACTION 10: get_salary_slip
 # ============================================================================
 
-def get_salary_slip(conn: sqlite3.Connection, args) -> None:
+def get_salary_slip(conn, args) -> None:
     """Retrieve a salary slip with nested earnings and deduction details.
 
     Required args:
@@ -2785,7 +2784,7 @@ def get_salary_slip(conn: sqlite3.Connection, args) -> None:
 # ACTION 11: list_salary_slips
 # ============================================================================
 
-def list_salary_slips(conn: sqlite3.Connection, args) -> None:
+def list_salary_slips(conn, args) -> None:
     """List salary slips with optional filters.
 
     Optional args:
@@ -2841,7 +2840,7 @@ def list_salary_slips(conn: sqlite3.Connection, args) -> None:
 # ACTION 12: submit_payroll_run -- ATOMIC GL POSTING
 # ============================================================================
 
-def submit_payroll_run(conn: sqlite3.Connection, args) -> None:
+def submit_payroll_run(conn, args) -> None:
     """Submit a payroll run: mark slips as submitted and post GL entries.
 
     Required args:
@@ -3315,7 +3314,7 @@ def submit_payroll_run(conn: sqlite3.Connection, args) -> None:
 # ACTION 13: cancel_payroll_run
 # ============================================================================
 
-def cancel_payroll_run(conn: sqlite3.Connection, args) -> None:
+def cancel_payroll_run(conn, args) -> None:
     """Cancel a submitted payroll run and reverse all GL entries.
 
     Required args:
@@ -3399,7 +3398,7 @@ def cancel_payroll_run(conn: sqlite3.Connection, args) -> None:
 # ACTION 17: generate_w2_data
 # ============================================================================
 
-def generate_w2_data(conn: sqlite3.Connection, args) -> None:
+def generate_w2_data(conn, args) -> None:
     """Generate year-end W-2 data for all employees.
 
     Required args:

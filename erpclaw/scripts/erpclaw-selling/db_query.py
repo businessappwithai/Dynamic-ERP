@@ -11,7 +11,7 @@ Output: JSON to stdout, exit 0 on success, exit 1 on error.
 import argparse
 import json
 import os
-import sqlite3
+import psycopg2
 import subprocess
 import sys
 import uuid
@@ -417,7 +417,7 @@ def add_customer(conn, args):
              getattr(args, "email", None), getattr(args, "phone", None),
              args.company_id),
         )
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         sys.stderr.write(f"[erpclaw-selling] {e}\n")
         err("Customer creation failed — check for duplicates or invalid data")
 
@@ -2754,7 +2754,7 @@ def add_dunning_level(conn, args):
             (dl_id, args.company_id, level, days, args.dunning_action,
              args.template_id, args.description),
         )
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         err(f"Dunning level {level} already exists for this company (or constraint failed): {e}")
     conn.commit()
     audit(conn, "erpclaw-selling", "add-dunning-level", "dunning_level", dl_id,
@@ -3375,7 +3375,7 @@ def add_sales_partner(conn, args):
                   .columns("id", "name", "commission_rate")
                   .insert(P(), P(), P()))
         conn.execute(sp_ins.get_sql(), (sp_id, args.name, str(rate)))
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         sys.stderr.write(f"[erpclaw-selling] {e}\n")
         err("Sales partner creation failed — check for duplicates or invalid data")
 

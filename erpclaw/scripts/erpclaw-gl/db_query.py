@@ -10,7 +10,7 @@ Output: JSON to stdout, exit 0 on success, exit 1 on error.
 import argparse
 import json
 import os
-import sqlite3
+import psycopg2
 import sys
 import uuid
 from datetime import datetime, timezone, timedelta
@@ -211,7 +211,7 @@ def add_account(conn, args):
         audit(conn, "erpclaw-gl", "create", "account", acct_id,
                new_values={"name": name, "root_type": root_type, "account_type": account_type})
         conn.commit()
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         sys.stderr.write(f"[erpclaw-gl] {e}\n")
         err("Account creation failed — check for duplicates or invalid data")
 
@@ -570,7 +570,7 @@ def add_fiscal_year(conn, args):
         audit(conn, "erpclaw-gl", "create", "fiscal_year", fy_id,
                new_values={"name": name, "start_date": start_date, "end_date": end_date})
         conn.commit()
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         sys.stderr.write(f"[erpclaw-gl] {e}\n")
         err("Fiscal year creation failed — check for duplicates or invalid data")
 
@@ -976,7 +976,7 @@ def add_cost_center(conn, args):
         conn.execute(q.get_sql(), (cc_id, name, parent_id, company_id, is_group))
         audit(conn, "erpclaw-gl", "create", "cost_center", cc_id, new_values={"name": name})
         conn.commit()
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         sys.stderr.write(f"[erpclaw-gl] {e}\n")
         err("Cost center creation failed — check for duplicates or invalid data")
 
@@ -1053,7 +1053,7 @@ def add_budget(conn, args):
         audit(conn, "erpclaw-gl", "create", "budget", budget_id,
                new_values={"budget_amount": budget_amount, "action_if_exceeded": action_if_exceeded})
         conn.commit()
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         sys.stderr.write(f"[erpclaw-gl] {e}\n")
         err("Budget creation failed — check for duplicates or invalid data")
 
@@ -1753,7 +1753,7 @@ def add_dimension(conn, args):
         audit(conn, "erpclaw-gl", "create", "dimension_registry", dim_id,
               new_values={"key": key, "data_type": data_type})
         conn.commit()
-    except sqlite3.IntegrityError as e:
+    except psycopg2.IntegrityError as e:
         sys.stderr.write(f"[erpclaw-gl] {e}\n")
         err(f"Dimension '{key}' already exists")
 
