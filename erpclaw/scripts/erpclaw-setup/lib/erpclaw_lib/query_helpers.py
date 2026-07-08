@@ -166,7 +166,7 @@ def get_fiscal_year(conn, posting_date: str) -> str | None:
     Looks for an open fiscal year whose date range covers *posting_date*.
 
     Args:
-        conn: SQLite connection with row_factory = sqlite3.Row.
+        conn: Database connection (PgConnectionWrapper; dict-like row access).
         posting_date: ISO 8601 date string (YYYY-MM-DD).
 
     Returns:
@@ -184,7 +184,7 @@ def get_default_cost_center(conn, company_id: str) -> str | None:
     """Return the first non-group cost center ID for a company, or None.
 
     Args:
-        conn: SQLite connection with row_factory = sqlite3.Row.
+        conn: Database connection (PgConnectionWrapper; dict-like row access).
         company_id: UUID of the company.
 
     Returns:

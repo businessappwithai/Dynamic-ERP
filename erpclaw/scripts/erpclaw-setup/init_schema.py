@@ -4428,10 +4428,8 @@ DEFAULT_ROLES = [
 def _seed_defaults(conn) -> None:
     """Seed default roles + M0 type/status registries (idempotent).
 
-    Shared by the SQLite and PostgreSQL provisioning paths. All statements use
-    ``?`` placeholders and timestamp-free INSERTs, so they run unchanged on a
-    raw ``sqlite3.Connection`` (``?`` native) and on the add-on A
-    ``PgConnectionWrapper`` (which translates ``?`` → ``%s``). Both expose
+    All statements use ``?`` placeholders and timestamp-free INSERTs; the
+    ``PgConnectionWrapper`` translates ``?`` → ``%s`` and exposes
     ``conn.execute(sql, params)`` returning a cursor with ``fetchone()``.
     """
     import uuid

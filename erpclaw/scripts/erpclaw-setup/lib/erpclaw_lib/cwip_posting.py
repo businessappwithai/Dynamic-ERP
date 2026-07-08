@@ -134,7 +134,7 @@ def record_cwip_accumulation(conn, asset: dict, amount,
     new_book = round_currency(to_decimal(asset["current_book_value"]) + amount)
     conn.execute(
         "UPDATE asset SET gross_value = ?, current_book_value = ?, "
-        "updated_at = datetime('now') WHERE id = ?",
+        "updated_at = NOW()::text WHERE id = ?",
         (str(new_gross), str(new_book), asset["id"]))
     asset["gross_value"] = str(new_gross)
     asset["current_book_value"] = str(new_book)
@@ -169,6 +169,6 @@ def reverse_cwip_accumulations(conn, source_voucher_type: str,
             new_book = round_currency(to_decimal(asset["current_book_value"]) - amount)
             conn.execute(
                 "UPDATE asset SET gross_value = ?, current_book_value = ?, "
-                "updated_at = datetime('now') WHERE id = ?",
+                "updated_at = NOW()::text WHERE id = ?",
                 (str(new_gross), str(new_book), r["asset_id"]))
     return len(rows)

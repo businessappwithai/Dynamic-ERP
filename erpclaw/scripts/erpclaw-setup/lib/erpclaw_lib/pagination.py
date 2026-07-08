@@ -29,7 +29,7 @@ def paginate(
     """Execute a paginated query.
 
     Args:
-        conn: SQLite connection with row_factory=sqlite3.Row.
+        conn: Database connection (PgConnectionWrapper; dict-like row access).
         query: Base SELECT query (without LIMIT/OFFSET).
         params: Query parameters tuple.
         page: Page number (1-indexed). Defaults to 1.

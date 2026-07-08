@@ -57,17 +57,17 @@ NULL = NullValue()
 # ── Custom aggregate functions (registered in erpclaw_lib/db.py) ──
 
 class DecimalSum(Function):
-    """Wrapper for ERPClaw's custom decimal_sum() SQLite aggregate.
+    """Wrapper for ERPClaw's custom decimal_sum() Postgres aggregate.
 
-    Uses Python Decimal internally for exact financial arithmetic.
-    Registered via db.get_connection() → conn.create_aggregate('decimal_sum', ...).
+    Uses exact ``numeric`` arithmetic for financial sums (never float).
+    Registered via db.get_connection() → erpclaw_lib.db._ensure_pg_decimal_sum().
     """
     def __init__(self, term, alias=None):
         super().__init__("decimal_sum", term, alias=alias)
 
 
 class DecimalAbs(Function):
-    """Wrapper for ERPClaw's custom decimal_abs() SQLite function."""
+    """Wrapper for ERPClaw's custom decimal_abs() function."""
     def __init__(self, term, alias=None):
         super().__init__("decimal_abs", term, alias=alias)
 

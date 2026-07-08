@@ -140,7 +140,8 @@ def main():
 
     # Check required tables exist
     tables = [r[0] for r in conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table'"
+        "SELECT table_name FROM information_schema.tables "
+        "WHERE table_schema = 'public' AND table_type = 'BASE TABLE'"
     ).fetchall()]
     missing = [t for t in REQUIRED_TABLES if t not in tables]
     if missing:

@@ -34,7 +34,7 @@ def resolve_tax_template(conn, party_type, party_id, company_id,
       3. Fall back to the company's default tax template.
 
     Args:
-        conn: SQLite connection (row_factory = sqlite3.Row expected).
+        conn: Database connection (PgConnectionWrapper; dict-like row access).
         party_type: "customer" or "supplier".
         party_id: UUID of the customer/supplier.
         company_id: UUID of the company.
@@ -175,7 +175,7 @@ def calculate_tax(conn, tax_template_id, subtotal):
     (on_previous_row_total, on_previous_row_amount).
 
     Args:
-        conn: SQLite connection (row_factory = sqlite3.Row expected).
+        conn: Database connection (PgConnectionWrapper; dict-like row access).
         tax_template_id: UUID of the tax_template. If falsy, returns zero.
         subtotal: Decimal (or str/int) net total before tax.
 
@@ -397,7 +397,7 @@ def calculate_tax_detailed(conn, tax_template_id, items,
 def _fetch_template_lines(conn, template_id):
     """Fetch tax_template_line rows with account names, ordered by row_order.
 
-    Returns a list of dicts (not sqlite3.Row) so callers can use .get().
+    Returns a list of plain dicts so callers can use .get().
     """
     rows = conn.execute(
         """SELECT tl.*, a.name AS account_name

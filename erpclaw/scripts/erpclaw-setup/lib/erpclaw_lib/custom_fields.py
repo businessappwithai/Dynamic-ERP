@@ -20,7 +20,7 @@ def get_custom_fields(conn, table_name):
     """Return custom field definitions for a table/doctype.
 
     Args:
-        conn: sqlite3 connection (row_factory = sqlite3.Row expected)
+        conn: Database connection (PgConnectionWrapper; dict-like row access)
         table_name: the doctype/table to query
 
     Returns:

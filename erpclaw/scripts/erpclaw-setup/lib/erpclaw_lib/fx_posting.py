@@ -62,8 +62,9 @@ def get_exchange_rate(conn, from_currency, to_currency, date, max_days=7):
     row = conn.execute(
         """SELECT rate, effective_date FROM exchange_rate
            WHERE from_currency = ? AND to_currency = ?
-             AND effective_date BETWEEN date(?, '-' || ? || ' days') AND date(?, '+' || ? || ' days')
-           ORDER BY ABS(julianday(effective_date) - julianday(?)) ASC
+             AND effective_date BETWEEN (?::date - (?::text || ' days')::interval)::date::text
+                                     AND (?::date + (?::text || ' days')::interval)::date::text
+           ORDER BY ABS(effective_date::date - ?::date) ASC
            LIMIT 1""",
         (from_currency, to_currency, date, max_days, date, max_days, date),
     ).fetchone()
@@ -74,8 +75,9 @@ def get_exchange_rate(conn, from_currency, to_currency, date, max_days=7):
     row = conn.execute(
         """SELECT rate, effective_date FROM exchange_rate
            WHERE from_currency = ? AND to_currency = ?
-             AND effective_date BETWEEN date(?, '-' || ? || ' days') AND date(?, '+' || ? || ' days')
-           ORDER BY ABS(julianday(effective_date) - julianday(?)) ASC
+             AND effective_date BETWEEN (?::date - (?::text || ' days')::interval)::date::text
+                                     AND (?::date + (?::text || ' days')::interval)::date::text
+           ORDER BY ABS(effective_date::date - ?::date) ASC
            LIMIT 1""",
         (to_currency, from_currency, date, max_days, date, max_days, date),
     ).fetchone()

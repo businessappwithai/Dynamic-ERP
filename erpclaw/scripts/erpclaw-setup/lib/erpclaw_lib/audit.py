@@ -25,7 +25,7 @@ def audit(conn, skill: str, action: str, entity_type: str, entity_id: str,
     """Write an audit log entry.
 
     Args:
-        conn: Active sqlite3 connection (caller manages the transaction).
+        conn: Active database connection (caller manages the transaction).
         skill: Skill name, e.g. 'erpclaw-selling'.
         action: Action that triggered the audit, e.g. 'add-customer'.
         entity_type: Type of entity affected, e.g. 'customer'.
