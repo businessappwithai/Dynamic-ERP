@@ -29,6 +29,9 @@ export interface OrchestratorOptions {
   aiNlAddon?: "none" | "basic" | "advanced";
   aiNlProvider?: "anthropic" | "openai";
   aiNlModel?: string;
+  // erpclaw-tanstack specific — passed through to FullStackGeneratorOptions
+  // unchanged; every other stack ignores this field.
+  erpclawTanstack?: FullStackGeneratorOptions["erpclawTanstack"];
 }
 
 export interface GenerationResult {
@@ -94,6 +97,7 @@ export class GeneratorOrchestrator {
       aiNlAddon: this.options.aiNlAddon,
       aiNlProvider: this.options.aiNlProvider,
       aiNlModel: this.options.aiNlModel,
+      erpclawTanstack: this.options.erpclawTanstack,
     };
 
     const fullStackGenerator = new FullStackGenerator(fullStackOptions);
@@ -139,6 +143,11 @@ export class GeneratorOrchestrator {
         label: "Enterprise SAP-Style Stack",
         description: "OpenUI5 FCL | OData V4 Server (jaystack)",
       },
+      {
+        value: "erpclaw-tanstack",
+        label: "erpclaw Stack",
+        description: "TanStack Start frontend only | data layer is @erdwithai/erpclaw-client over a live erpclaw-gateway (no generated backend/database)",
+      },
     ];
   }
 
@@ -148,6 +157,8 @@ export class GeneratorOrchestrator {
         return "Modern Web Stack (TanStack Start + NestJS)";
       case "openui5-odatav4":
         return "Enterprise SAP-Style Stack (OpenUI5 + OData V4)";
+      case "erpclaw-tanstack":
+        return "erpclaw Stack (TanStack Start frontend over a live erpclaw-gateway, no generated backend)";
       default:
         return this.options.stackOption;
     }

@@ -19,6 +19,7 @@ import { Command } from "commander";
 import { promises as fs } from "fs";
 import * as path from "path";
 import * as readline from "readline";
+import { ErpClawTanstackFrontendGenerator } from "../generators/erpclaw-tanstack/erpclaw-tanstack-frontend.generator";
 import { FullStackGenerator, type StackOption } from "../generators/full-stack.generator";
 import { ODataBackendGenerator } from "../generators/openui5-odatav4/odata-backend.generator";
 import { OpenUI5FrontendGenerator } from "../generators/openui5-odatav4/openui5-frontend.generator";
@@ -55,11 +56,16 @@ program
   .option("-d, --description <desc>", "Project description", "Generated application")
   .option(
     "-s, --stack <stack>",
-    "Stack option: tanstackjs-nestjs (TanStack Start+NestJS) or openui5-odatav4 (OData+OpenUI5)",
+    "Stack option: tanstackjs-nestjs (TanStack Start+NestJS), openui5-odatav4 (OData+OpenUI5), or erpclaw-tanstack (TanStack Start frontend only, over a live erpclaw-gateway)",
     "tanstackjs-nestjs"
   )
-  .option("--db <type>", "Database type: postgresql or sqlite", "postgresql")
-  .option("--port <port>", "Backend port", "3000")
+  .option("--db <type>", "Database type: postgresql or sqlite (ignored by erpclaw-tanstack, which has no generated database)", "postgresql")
+  .option("--port <port>", "Backend port (erpclaw-tanstack: this app's own dev server port instead, since there's no generated backend)", "3000")
+  .option(
+    "--gateway-url <url>",
+    "erpclaw-gateway base URL (erpclaw-tanstack stack only)",
+    "http://localhost:8000"
+  )
   .option("--no-interactive", "Skip interactive prompts")
   .action(async (options) => {
     console.log("\n🚀 ERDwithAI Code Generator");
@@ -155,8 +161,10 @@ program
 
       // Validate stack option
       const stackOption = options.stack as StackOption;
-      if (!["tanstackjs-nestjs", "openui5-odatav4"].includes(stackOption)) {
-        throw new Error('Invalid stack option. Use "tanstackjs-nestjs" or "openui5-odatav4"');
+      if (!["tanstackjs-nestjs", "openui5-odatav4", "erpclaw-tanstack"].includes(stackOption)) {
+        throw new Error(
+          'Invalid stack option. Use "tanstackjs-nestjs", "openui5-odatav4", or "erpclaw-tanstack"'
+        );
       }
 
       // Create output directory
@@ -209,6 +217,15 @@ program
                 },
               }
             : undefined,
+        erpclawTanstack:
+          stackOption === "erpclaw-tanstack"
+            ? {
+                frontend: {
+                  gatewayUrl: options.gatewayUrl,
+                  port: parseInt(options.port, 10),
+                },
+              }
+            : undefined,
       });
 
       await generator.generate(allEntities, allRelationships);
@@ -217,12 +234,21 @@ program
       console.log("\n═══════════════════════════════════════════");
       console.log("✅ Generation complete!\n");
       console.log("Next steps:");
-      console.log(`   1. cd ${outputDir}`);
-      console.log("   2. npm install");
-      console.log("   3. cp backend/.env.example backend/.env");
-      console.log("   4. npm run db:migrate");
-      console.log("   5. npm run db:seed");
-      console.log("   6. npm run dev\n");
+      if (stackOption === "erpclaw-tanstack") {
+        console.log(`   1. cd ${outputDir}`);
+        console.log("   2. bun install");
+        console.log("   3. cp .env.example .env.local");
+        console.log("      # set VITE_ERP_GATEWAY_URL / VITE_ERP_GATEWAY_TOKEN, or paste a token in-app");
+        console.log("   4. (optional) ERP_GATEWAY_TOKEN=<jwt> bun run codegen:erp");
+        console.log("   5. bun run dev\n");
+      } else {
+        console.log(`   1. cd ${outputDir}`);
+        console.log("   2. npm install");
+        console.log("   3. cp backend/.env.example backend/.env");
+        console.log("   4. npm run db:migrate");
+        console.log("   5. npm run db:seed");
+        console.log("   6. npm run dev\n");
+      }
     } catch (error: unknown) {
       console.error("\n❌ Error:", error instanceof Error ? error.message : String(error));
       process.exit(1);
@@ -295,8 +321,12 @@ program
   .requiredOption("-i, --input <file>", "Input Mermaid ERD file")
   .requiredOption("-o, --output <dir>", "Output directory")
   .option("-n, --name <name>", "Project name", "my-frontend")
-  .option("-s, --stack <stack>", "Frontend stack: tanstack or openui5", "tanstack")
-  .option("--api-url <url>", "Backend API URL", "http://localhost:3000")
+  .option("-s, --stack <stack>", "Frontend stack: tanstack, openui5, or erpclaw", "tanstack")
+  .option(
+    "--api-url <url>",
+    "Backend API URL (tanstack/openui5) or erpclaw-gateway base URL (erpclaw)",
+    "http://localhost:3000"
+  )
   .action(async (options) => {
     console.log("\n🚀 Generating Frontend...\n");
 
@@ -328,8 +358,16 @@ program
           ui5Theme: "sap_horizon",
         });
         await generator.generate(entities, relationships, outputDir);
+      } else if (options.stack === "erpclaw") {
+        const generator = new ErpClawTanstackFrontendGenerator({
+          projectName: options.name,
+          projectVersion: "1.0.0",
+          projectDescription: "Generated erpclaw-tanstack frontend",
+          gatewayUrl: options.apiUrl,
+        });
+        await generator.generate(entities, relationships, outputDir);
       } else {
-        throw new Error('Invalid frontend stack. Use "tanstack" or "openui5"');
+        throw new Error('Invalid frontend stack. Use "tanstack", "openui5", or "erpclaw"');
       }
 
       console.log(`\n✅ Frontend generated at: ${outputDir}`);
@@ -432,7 +470,12 @@ program
     console.log("   Frontend: OpenUI5 Flexible Column Layout");
     console.log("   Best for: Enterprise apps, SAP integration\n");
 
-    console.log("📊 Common Features:");
+    console.log("🟢 erpclaw-tanstack: erpclaw Stack (frontend only)");
+    console.log("   Backend:  none generated — talks to a live erpclaw-gateway instead");
+    console.log("   Frontend: TanStack Start + TanStack Query + @erdwithai/erpclaw-client");
+    console.log("   Best for: apps built directly on top of erpclaw's real ERP engine\n");
+
+    console.log("📊 Common Features (tanstackjs-nestjs / openui5-odatav4):");
     console.log("   • Compiere-style Application Dictionary");
     console.log("   • sys_ prefixed system tables");
     console.log("   • bus_ prefixed business entities");
@@ -445,9 +488,14 @@ program
  * Get human-readable stack description
  */
 function getStackDescription(stack: StackOption): string {
-  return stack === "tanstackjs-nestjs"
-    ? "tanstackjs-nestjs - Modern Web (TanStack Start + NestJS)"
-    : "openui5-odatav4 - Enterprise SAP (OData + OpenUI5)";
+  switch (stack) {
+    case "tanstackjs-nestjs":
+      return "tanstackjs-nestjs - Modern Web (TanStack Start + NestJS)";
+    case "erpclaw-tanstack":
+      return "erpclaw-tanstack - TanStack Start frontend over a live erpclaw-gateway (no generated backend)";
+    default:
+      return "openui5-odatav4 - Enterprise SAP (OData + OpenUI5)";
+  }
 }
 
 // Parse CLI arguments

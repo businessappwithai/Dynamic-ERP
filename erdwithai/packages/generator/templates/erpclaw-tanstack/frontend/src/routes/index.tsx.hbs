@@ -1,0 +1,25 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { EntityNav } from "@/components/EntityNav";
+
+// Generated: {{now}}
+export const Route = createFileRoute("/")({
+  component: HomePage,
+});
+
+function HomePage() {
+  return (
+    <div className="space-y-4">
+      <h1 className="text-xl font-semibold">{{project.name}}</h1>
+      <p className="text-sm text-gray-500">{{project.description}}</p>
+      <p className="max-w-2xl text-sm text-gray-500">
+        Pick an entity from the sidebar, or jump straight to any erpclaw table by URL — every entity is
+        served generically via <code>/$entity</code> and <code>/$entity/$id</code>, driven entirely by the
+        live gateway's schema (fetched at runtime, not baked in here). New entities provisioned in erpclaw
+        show up as usable pages the moment they're queryable — no rebuild of this app required.
+      </p>
+      <div className="md:hidden">
+        <EntityNav />
+      </div>
+    </div>
+  );
+}

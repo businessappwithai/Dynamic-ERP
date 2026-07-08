@@ -50,6 +50,41 @@ await db.insertInto("erd_versions").values({
 other project — feed it directly into template generation without going
 through `erd_versions` at all if you don't need the version history.
 
+## The other call site: sync straight into a generated app
+
+`DictionarySyncService` doesn't persist `sys_table`/`sys_column` rows itself
+— Studio's own DB has no table to put them in. The rows are meant to be
+materialized by a **generated app's own migrations**, exactly the way any
+other stack's `DictionaryGenerator` output already works. `syncAndGenerate()`
+closes that loop directly, without an `erd_versions` round-trip at all:
+
+```ts
+import { ErpClawClient } from "@erdwithai/erpclaw-client";
+import { DictionarySyncService } from "@erdwithai/erpclaw-bridge";
+
+const gatewayUrl = "http://localhost:8000";
+const client = new ErpClawClient({ baseUrl: gatewayUrl, getToken: () => jwt });
+const sync = new DictionarySyncService(client);
+
+const { generation } = await sync.syncAndGenerate({
+  gatewayUrl,               // the generated app's data layer points back at this same gateway
+  projectName: "acme-erp-ui",
+  outputDir: "./generated-projects/acme-erp-ui",
+});
+
+console.log(generation.dictionaryContext.sysTables.length); // sys_table entries computed here
+```
+
+This runs `GeneratorOrchestrator` with `stackOption: "erpclaw-tanstack"` — a
+TanStack Start frontend with no generated backend/database (erpclaw already
+is the backend). `GeneratorOrchestrator.generate()` computes the
+`DictionaryContext` internally (its own console output shows
+`sys_table entries: N`, `sys_column entries: N`, ...) and hands it to the
+stack's generator — the same path a hand-designed ERD already takes. Use
+`syncAll()` + manual `erd_versions` persistence (above) instead if you want
+version history in Studio without generating an app yet; use
+`syncAndGenerate()` when you just want a working UI now.
+
 ## Type mapping heuristics (best-effort, not authoritative)
 
 erpclaw's schema endpoint returns raw Postgres `information_schema` data —

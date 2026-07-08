@@ -1,0 +1,22 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import tailwindcss from "@tailwindcss/vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import viteReact from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
+
+// Generated: {{now}}
+// Mirrors packages/web's own vite.config.ts (the actual working TanStack
+// Start + Vite setup in this monorepo) rather than the older Vinxi-based
+// app.config.ts convention used by the tanstack-start-nestjs template pack.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+export default defineConfig({
+  resolve: {
+    alias: [{ find: "@", replacement: path.resolve(__dirname, "src") }],
+  },
+  plugins: [tailwindcss(), tanstackStart(), viteReact()],
+  server: {
+    port: {{config.port}},
+  },
+});

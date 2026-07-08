@@ -13,6 +13,10 @@ import type { Entity, Relationship } from "@erdwithai/core/types";
 import * as fs from "fs/promises";
 import * as path from "path";
 import {
+  ErpClawTanstackFrontendGenerator,
+  type ErpClawTanstackFrontendOptions,
+} from "./erpclaw-tanstack/erpclaw-tanstack-frontend.generator";
+import {
   ODataBackendGenerator,
   type ODataBackendOptions,
 } from "./openui5-odatav4/odata-backend.generator";
@@ -29,7 +33,16 @@ import {
   type TanStackStartFrontendOptions,
 } from "./tanstack-start-nestjs/tanstack-start-frontend.generator";
 
-export type StackOption = "tanstackjs-nestjs" | "tanstack-start-nestjs" | "openui5-odatav4";
+// "erpclaw-tanstack" is the one canonical name for this stack everywhere:
+// this type union, the CLI --stack value, the template directory
+// (templates/erpclaw-tanstack/frontend/), and the root package.json script
+// (generate:erpclaw). Deliberately not repeating the tanstackjs-nestjs vs.
+// tanstack-start-nestjs naming confusion called out elsewhere in this file.
+export type StackOption =
+  | "tanstackjs-nestjs"
+  | "tanstack-start-nestjs"
+  | "openui5-odatav4"
+  | "erpclaw-tanstack";
 export type AIAddonOption = "none" | "basic" | "advanced";
 
 export interface FullStackGeneratorOptions {
@@ -56,6 +69,11 @@ export interface FullStackGeneratorOptions {
     backend: Partial<ODataBackendOptions>;
     frontend: Partial<OpenUI5FrontendOptions>;
   };
+
+  // erpclaw-tanstack specific — frontend only, no backend leg (see class docstring)
+  erpclawTanstack?: {
+    frontend: Partial<ErpClawTanstackFrontendOptions>;
+  };
 }
 
 export class FullStackGenerator {
@@ -75,7 +93,13 @@ export class FullStackGenerator {
     await fs.mkdir(outputDir, { recursive: true });
 
     // Generate based on stack option
-    if (this.options.stackOption === "tanstackjs-nestjs") {
+    if (this.options.stackOption === "erpclaw-tanstack") {
+      // Frontend-only stack: no backend leg to compose, so this skips
+      // straight to a single frontend generator writing directly into
+      // outputDir (no nested backend/frontend split — there's nothing to
+      // disambiguate against). See generateErpClawTanstack's docstring.
+      await this.generateErpClawTanstack(entities, relationships, outputDir);
+    } else if (this.options.stackOption === "tanstackjs-nestjs") {
       await this.generateTanStackStartNestjs(entities, relationships, outputDir);
     } else {
       await this.generateOpenui5Odatav4(entities, relationships, outputDir);
@@ -156,6 +180,33 @@ export class FullStackGenerator {
   }
 
   /**
+   * Generate erpclaw-tanstack: TanStack Start frontend ONLY.
+   *
+   * No backend generator to compose, no database, no migrations — erpclaw
+   * (via a live erpclaw-gateway) already IS the backend. Writes directly
+   * into `outputDir` rather than an `outputDir/frontend` subdirectory: the
+   * backend/frontend split the other two stacks use exists to disambiguate
+   * two generated halves, which doesn't apply here since there's only one.
+   */
+  private async generateErpClawTanstack(
+    entities: Entity[],
+    relationships: Relationship[],
+    outputDir: string
+  ): Promise<void> {
+    const frontendOptions: ErpClawTanstackFrontendOptions = {
+      projectName: this.options.projectName,
+      projectVersion: this.options.projectVersion,
+      projectDescription: this.options.projectDescription,
+      gatewayUrl: "http://localhost:8000",
+      ...this.options.erpclawTanstack?.frontend,
+    };
+
+    console.log("📦 Generating erpclaw-tanstack frontend (no backend, no database)...");
+    const frontendGenerator = new ErpClawTanstackFrontendGenerator(frontendOptions);
+    await frontendGenerator.generate(entities, relationships, outputDir);
+  }
+
+  /**
    * Generate openui5-odatav4: OData + OpenUI5
    */
   private async generateOpenui5Odatav4(
@@ -209,6 +260,19 @@ export class FullStackGenerator {
    * Generate shared configuration files
    */
   private async generateSharedFiles(outputDir: string): Promise<void> {
+    // erpclaw-tanstack is a single-project stack (no backend/frontend split):
+    // ErpClawTanstackFrontendGenerator already wrote outputDir/package.json
+    // as the one real package.json for the app. Writing the
+    // workspaces:["backend","frontend"] root package.json below would
+    // clobber it with a config that assumes two subdirectories neither of
+    // which exist for this stack.
+    if (this.options.stackOption === "erpclaw-tanstack") {
+      const readme = this.generateReadme();
+      await fs.writeFile(path.join(outputDir, "README.md"), readme);
+      await fs.writeFile(path.join(outputDir, ".gitignore"), this.generateGitignore());
+      return;
+    }
+
     // Root package.json for monorepo
     const rootPackageJson = {
       name: this.options.projectName,
@@ -255,7 +319,14 @@ export class FullStackGenerator {
     await fs.writeFile(path.join(outputDir, "README.md"), readme);
 
     // .gitignore
-    const gitignore = `# Dependencies
+    await fs.writeFile(path.join(outputDir, ".gitignore"), this.generateGitignore());
+
+    // Copy GitHub Actions workflows
+    await this.copyGitHubWorkflows(outputDir);
+  }
+
+  private generateGitignore(): string {
+    return `# Dependencies
 node_modules/
 
 # Build output
@@ -286,10 +357,6 @@ npm-debug.log*
 *.db
 *.sqlite
 `;
-    await fs.writeFile(path.join(outputDir, ".gitignore"), gitignore);
-
-    // Copy GitHub Actions workflows
-    await this.copyGitHubWorkflows(outputDir);
   }
 
   /**
@@ -401,10 +468,71 @@ npm-debug.log*
       .replace(/\{\{project\.description\}\}/g, this.options.projectDescription);
   }
 
+  private generateErpClawTanstackReadme(): string {
+    const gatewayUrl = this.options.erpclawTanstack?.frontend?.gatewayUrl ?? "http://localhost:8000";
+    return `# ${this.options.projectName}
+
+${this.options.projectDescription}
+
+## Tech Stack
+
+- **Frontend**: TanStack Start + TanStack Query
+- **Data layer**: @erdwithai/erpclaw-client talking directly to a live erpclaw-gateway — **no generated backend, no generated database, no migrations**. erpclaw already IS the backend.
+
+## Runtime mode
+
+Entity schemas (\`GET /api/v1/schema/{entity}\`) and available actions (\`GET /api/v1/catalog\`) are fetched live, in the browser, at request time — not baked in at generation time. A newly-provisioned erpclaw entity is usable in this app within seconds of being queryable, with no rebuild. See \`src/routes/$entity/index.tsx\` and \`src/routes/$entity/$id.tsx\`.
+
+## Getting Started
+
+### Prerequisites
+
+- **Bun.js 1.1.0+** (REQUIRED runtime)
+- A reachable erpclaw-gateway instance (default: \`${gatewayUrl}\`)
+
+### Installation
+
+\`\`\`bash
+bun install
+cp .env.example .env.local
+# Edit .env.local: VITE_ERP_GATEWAY_URL, VITE_ERP_GATEWAY_TOKEN (or paste a
+# token into the app's Connect screen at runtime instead)
+
+# Optional: regenerate a fully typed action SDK (src/generated/) from the
+# gateway's live catalog. Without this, erp.<domain>.<action>(...) calls
+# still compile (src/generated/ ships with a stub) but resolve to undefined.
+ERP_GATEWAY_TOKEN=<jwt> bun run codegen:erp
+
+bun run dev
+\`\`\`
+
+## Project Structure
+
+\`\`\`
+${this.options.projectName}/
+├── src/
+│   ├── lib/erp.ts          # ErpClawClient singleton + bound action SDK
+│   ├── lib/catalog-actions.ts  # best-effort catalog action lookups (list/save/row actions)
+│   ├── components/DynamicForm.tsx   # schema-driven form (client.schema(entity))
+│   ├── components/DynamicTable.tsx  # schema-driven table + row actions
+│   └── routes/$entity/         # generic list/detail routes for ANY erpclaw table
+└── package.json
+\`\`\`
+
+## License
+
+MIT
+`;
+  }
+
   /**
    * Generate README content
    */
   private generateReadme(): string {
+    if (this.options.stackOption === "erpclaw-tanstack") {
+      return this.generateErpClawTanstackReadme();
+    }
+
     const stackInfo =
       this.options.stackOption === "tanstackjs-nestjs"
         ? "- **Backend**: NestJS + Fastify + Knex.js\n- **Frontend**: TanStack Start + Shadcn UI + TanStack Query/Table/Form"
@@ -521,6 +649,14 @@ MIT
       }
     };
 
+    if (this.options.stackOption === "erpclaw-tanstack") {
+      // Single-project stack with no lint script generated by default (see
+      // package.json.hbs) — nothing to run here, unlike the two-tier
+      // backend/frontend stacks below.
+      console.log("\n✨ Skipping linting checks (erpclaw-tanstack has no generated lint script).");
+      return;
+    }
+
     try {
       if (this.options.stackOption === "tanstackjs-nestjs") {
         // tanstackjs-nestjs: TanStack Start + NestJS
@@ -582,9 +718,14 @@ MIT
    * Get human-readable stack description
    */
   private getStackDescription(): string {
-    return this.options.stackOption === "tanstackjs-nestjs"
-      ? "tanstackjs-nestjs - Modern Web (TanStack Start + NestJS)"
-      : "openui5-odatav4 - Enterprise SAP (OData + OpenUI5)";
+    switch (this.options.stackOption) {
+      case "tanstackjs-nestjs":
+        return "tanstackjs-nestjs - Modern Web (TanStack Start + NestJS)";
+      case "erpclaw-tanstack":
+        return "erpclaw-tanstack - TanStack Start frontend over a live erpclaw-gateway (no generated backend)";
+      default:
+        return "openui5-odatav4 - Enterprise SAP (OData + OpenUI5)";
+    }
   }
 }
 

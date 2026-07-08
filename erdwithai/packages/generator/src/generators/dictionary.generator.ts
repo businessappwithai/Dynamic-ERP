@@ -9,19 +9,10 @@
  */
 
 import {
-  attributeToBusAttribute,
   type BusEntity,
   type BusEntityAttribute,
   type DictionaryGenerationConfig,
-  defaultDictionaryConfig,
   type Entity,
-  entityToBusEntity,
-  generateSysFieldGroups,
-  generateSysFields,
-  generateSysTab,
-  generateSysTable,
-  generateSysWindow,
-  ReferenceType,
   type Relationship,
   type SysColumn,
   type SysField,
@@ -30,6 +21,24 @@ import {
   type SysTable,
   type SysWindow,
 } from "@erdwithai/core/types";
+// Value (function/const) imports are pulled from their specific source
+// files, not the @erdwithai/core/types barrel: `export *` re-exports of
+// functions through that barrel resolve to `undefined` at call time under
+// this monorepo's Vite/Vitest transform (verified — type-only imports
+// through the same barrel are unaffected, since types are erased and never
+// hit the runtime binding). Same root cause and fix as the
+// tableNameToEntityName issue documented in @erdwithai/erpclaw-bridge.
+import {
+  attributeToBusAttribute,
+  defaultDictionaryConfig,
+  entityToBusEntity,
+  generateSysFieldGroups,
+  generateSysFields,
+  generateSysTab,
+  generateSysTable,
+  generateSysWindow,
+} from "@erdwithai/core/types/bus-entity.types";
+import { ReferenceType } from "@erdwithai/core/types/sys-dictionary.types";
 
 export interface DictionaryGeneratorOptions {
   databaseType: "postgresql" | "mysql" | "sqlite";

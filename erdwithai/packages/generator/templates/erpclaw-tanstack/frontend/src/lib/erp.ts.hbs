@@ -1,0 +1,39 @@
+/**
+ * erpclaw-gateway client singleton + bound action SDK.
+ * Generated: {{now}}
+ *
+ * `erp` is built from `../generated` (one module per erpclaw domain, e.g.
+ * `erp.selling.createSalesInvoice(args)`), produced by
+ * @erdwithai/erpclaw-client's own codegen CLI (`erpclaw-codegen`) — never
+ * hand-written here, so action-name camelCasing/binding logic lives in
+ * exactly one place (erpclaw-client/src/codegen.ts).
+ *
+ * `src/generated/` ships with a placeholder `buildSdk()` that returns `{}`
+ * so this file (and anything importing `erp`) still compiles and runs
+ * before you've ever pointed the codegen CLI at a live gateway. Run:
+ *
+ *   bun run codegen:erp
+ *
+ * (wired to `erpclaw-codegen --base-url $VITE_ERP_GATEWAY_URL --token-env
+ * ERP_GATEWAY_TOKEN`, see package.json and .env.example) against a running
+ * erpclaw-gateway to regenerate real, catalog-derived domain modules and
+ * get a fully typed `erp`.
+ */
+import { ErpClawClient } from "@erdwithai/erpclaw-client";
+import { buildSdk } from "../generated";
+import { getErpToken } from "./auth-token";
+
+const GATEWAY_URL = (import.meta.env.VITE_ERP_GATEWAY_URL as string | undefined) || "{{config.gatewayUrl}}";
+
+if (!import.meta.env.VITE_ERP_GATEWAY_URL && import.meta.env.MODE === "production") {
+  console.warn("[erp] VITE_ERP_GATEWAY_URL is not set in production. Gateway calls may fail.");
+}
+
+/** Singleton client for `GET /api/v1/*` and `POST /api/v1/actions/*` against erpclaw-gateway. */
+export const erpClient = new ErpClawClient({
+  baseUrl: GATEWAY_URL,
+  getToken: getErpToken,
+});
+
+/** Typed, camelCased action SDK bound to `erpClient` — e.g. `erp.selling.createSalesInvoice(args)`. */
+export const erp = buildSdk(erpClient);

@@ -28,6 +28,8 @@ export default defineConfig({
       "@erdwithai/core/services": path.resolve(__dirname, "../core/src/services"),
       "@erdwithai/core/utils": path.resolve(__dirname, "../core/src/utils"),
       "@erdwithai/core/utils/table-naming": path.resolve(__dirname, "../core/src/utils/table-naming"),
+      "@erdwithai/core/types/bus-entity.types": path.resolve(__dirname, "../core/src/types/bus-entity.types"),
+      "@erdwithai/core/types/sys-dictionary.types": path.resolve(__dirname, "../core/src/types/sys-dictionary.types"),
       "@erdwithai/generator": path.resolve(__dirname, "../generator/src"),
       "@erdwithai/erpclaw-client": path.resolve(__dirname, "../erpclaw-client/src"),
     },

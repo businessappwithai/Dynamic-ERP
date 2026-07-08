@@ -15,7 +15,12 @@
  * into `erd_versions.parsed_schema`, exactly as if a user had hand-drawn
  * this ERD (see the README for the intended call site).
  */
-import { DictionaryGenerator, type DictionaryContext } from "@erdwithai/generator";
+import {
+  DictionaryGenerator,
+  GeneratorOrchestrator,
+  type DictionaryContext,
+  type GenerationResult,
+} from "@erdwithai/generator";
 import type { Entity, Relationship } from "@erdwithai/core/types";
 import type { ErpClawClient } from "@erdwithai/erpclaw-client";
 
@@ -28,6 +33,18 @@ export interface SyncResult {
   relationships: Relationship[];
   dictionaryContext: DictionaryContext;
   mermaid: string;
+}
+
+export interface SyncAndGenerateOptions {
+  /** Where erpclaw-tanstack's generated app should point for its data layer.
+   * Typically the same URL the ErpClawClient passed to DictionarySyncService
+   * itself talks to — the caller already has it, pass it through. */
+  gatewayUrl: string;
+  projectName: string;
+  outputDir: string;
+  projectVersion?: string;
+  projectDescription?: string;
+  port?: number;
 }
 
 export class DictionarySyncService {
@@ -56,6 +73,37 @@ export class DictionarySyncService {
       dictionaryContext,
       mermaid,
     };
+  }
+
+  /**
+   * The full loop: sync erpclaw's live schema, then actually generate an
+   * app from it (erpclaw-tanstack by default — no generated backend/DB,
+   * since erpclaw already is the backend). The generated app's own
+   * migration templates are what materialize `sys_table`/`sys_column` as
+   * real rows — DictionarySyncService itself never writes to any database;
+   * GeneratorOrchestrator computes the same DictionaryContext internally
+   * (visible in its own console output as "sys_table entries: N" etc.)
+   * before handing it to the stack's generator.
+   */
+  async syncAndGenerate(options: SyncAndGenerateOptions): Promise<{ sync: SyncResult; generation: GenerationResult }> {
+    const sync = await this.syncAll();
+
+    const orchestrator = new GeneratorOrchestrator({
+      stackOption: "erpclaw-tanstack",
+      projectName: options.projectName,
+      projectVersion: options.projectVersion ?? "0.1.0",
+      projectDescription:
+        options.projectDescription ?? `Generated from erpclaw ${sync.erpclawVersion} (${sync.entities.length} entities).`,
+      outputDir: options.outputDir,
+      port: options.port ?? 3000,
+      databaseType: "postgresql",
+      includeRbac: true,
+      randomizeFieldOrder: false,
+      erpclawTanstack: { frontend: { gatewayUrl: options.gatewayUrl } },
+    });
+
+    const generation = await orchestrator.generate(sync.entities, sync.relationships);
+    return { sync, generation };
   }
 
   /** Sync a specific subset of tables (e.g. just the ones a project cares about). */
