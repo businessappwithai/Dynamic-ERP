@@ -77,6 +77,7 @@ export const Route = createFileRoute("/api/auth/register")({
               emailVerified: false,
               status: "pending",
               role: "user",
+              passwordHash,
               createdAt: now,
               updatedAt: now,
             } as any)
