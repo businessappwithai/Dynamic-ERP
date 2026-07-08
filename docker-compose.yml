@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: erpclaw
+      POSTGRES_USER: erpclaw
+      POSTGRES_PASSWORD: erpclaw_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - erpclaw_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U erpclaw"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  gateway:
+    build:
+      context: .
+      dockerfile: erpclaw-gateway/Dockerfile
+    environment:
+      ERPCLAW_DB_URL: postgresql://erpclaw:erpclaw_dev_password@postgres:5432/erpclaw
+      JWT_SECRET: ${JWT_SECRET:-dev-only-change-me}
+      ERPCLAW_REPO_ROOT: /app/erpclaw
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./erpclaw:/app/erpclaw:ro
+
+volumes:
+  erpclaw_pg_data:

@@ -1,0 +1,13 @@
+# ERPClaw runtime dependencies (Postgres-only engine).
+#
+# psycopg2-binary bundles its own libpq, so it installs without requiring
+# libpq-dev or a C toolchain on the host — the right choice for the MVP /
+# quick-start path. For production hardening, switch to the source
+# distribution instead:
+#
+#   psycopg2>=2.9  (requires libpq-dev + a C compiler at install time, but
+#                   avoids shipping a statically-linked libpq that can drift
+#                   from the system's OpenSSL/security patches)
+#
+# See: https://www.psycopg.org/docs/install.html#psycopg-vs-psycopg-binary
+psycopg2-binary>=2.9

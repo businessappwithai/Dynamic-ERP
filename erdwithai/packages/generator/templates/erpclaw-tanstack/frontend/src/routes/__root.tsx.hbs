@@ -1,0 +1,55 @@
+import { createRootRoute, HeadContent, Link, Outlet, Scripts } from "@tanstack/react-router";
+import { QueryProvider } from "@/providers/query-provider";
+import { TokenGate } from "@/components/TokenGate";
+import { EntityNav } from "@/components/EntityNav";
+import "@/styles/globals.css";
+
+// Generated: {{now}}
+export const Route = createRootRoute({
+  component: RootLayout,
+  notFoundComponent: NotFoundPage,
+});
+
+function RootLayout() {
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>{{project.name}}</title>
+        <meta name="description" content="{{project.description}}" />
+        <HeadContent />
+      </head>
+      <body className="font-sans antialiased" suppressHydrationWarning>
+        <QueryProvider>
+          <TokenGate>
+            <div className="flex min-h-screen">
+              <aside className="w-60 shrink-0 border-r border-gray-200 p-4 dark:border-gray-800">
+                <Link to="/" className="mb-4 block text-lg font-semibold">
+                  {{project.name}}
+                </Link>
+                <EntityNav />
+              </aside>
+              <main className="flex-1 p-6">
+                <Outlet />
+              </main>
+            </div>
+          </TokenGate>
+        </QueryProvider>
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
+function NotFoundPage() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4">
+      <div className="text-6xl font-bold text-gray-300">404</div>
+      <h1 className="text-2xl font-semibold">Page not found</h1>
+      <Link to="/" className="text-blue-600 hover:underline">
+        Back home
+      </Link>
+    </div>
+  );
+}

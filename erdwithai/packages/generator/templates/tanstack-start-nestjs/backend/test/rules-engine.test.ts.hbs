@@ -1,0 +1,73 @@
+/**
+ * Business Rules Engine Tests
+ *
+ * Verifies that the generated GoRules JDM decision models are valid and that
+ * the RulesEngine enforces them: required-field violations are reported for
+ * empty payloads and clean payloads pass without violations.
+ *
+ * Generated: {{now}}
+ */
+
+import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { RulesEngine } from '../src/modules/rules/rules-engine.service';
+import { TestDataFactory } from './setup';
+
+const JDM_DIR = join(__dirname, '..', 'src', 'modules', 'rules', 'jdm');
+
+describe('Rules Engine (GoRules JDM)', () => {
+  let engine: RulesEngine;
+
+  beforeAll(() => {
+    engine = new RulesEngine();
+  });
+
+  afterAll(() => {
+    engine.onModuleDestroy();
+  });
+
+  it('returns no violations for entities without configured rules', async () => {
+    const results = await engine.evaluateRules('bus_unknown_entity', {}, 'create');
+    expect(results).toEqual([]);
+  });
+
+  {{#each entities}}
+  describe('{{displayName}} ({{tableName}})', () => {
+    const jdmContent = readFileSync(join(JDM_DIR, '{{tableName}}.jdm.json'), 'utf-8');
+
+    it('has a valid JDM decision model', () => {
+      const parsed = JSON.parse(jdmContent);
+      expect(Array.isArray(parsed.nodes)).toBe(true);
+      expect(Array.isArray(parsed.edges)).toBe(true);
+    });
+
+    it('reports required-field violations for an empty payload', async () => {
+      const results = await engine.evaluateRulesWithJDM('{{tableName}}', jdmContent, {}, 'create');
+
+      expect(results.length).toBeGreaterThan(0);
+      for (const result of results) {
+        expect(result.matched).toBe(true);
+        expect(result.errors).toBeUndefined();
+        expect(result.actions[0].type).toBe('prevent');
+        expect(typeof result.actions[0].config.message).toBe('string');
+        expect((result.actions[0].config.message as string).length).toBeGreaterThan(0);
+      }
+    });
+
+    it('passes a fully populated payload without violations', async () => {
+      const data = TestDataFactory.create{{pascalCase name}}();
+      const results = await engine.evaluateRulesWithJDM('{{tableName}}', jdmContent, data, 'create');
+
+      const violations = results.filter((r) => r.matched);
+      expect(violations).toEqual([]);
+    });
+
+    it('evaluates rules loaded from the JDM file on disk', async () => {
+      const results = await engine.evaluateRules('{{tableName}}', {}, 'create');
+      expect(results.length).toBeGreaterThan(0);
+    });
+  });
+
+  {{/each}}
+});

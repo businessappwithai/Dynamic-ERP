@@ -1,0 +1,28 @@
+{
+  "name": "@erdwithai/ai",
+  "version": "5.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "erdwithai-convert": "./dist/cli/convert.js"
+  },
+  "scripts": {
+    "build": "bun build src/index.ts src/cli/convert.ts src/mastra.ts --outdir dist --target node --format esm --external @erdwithai/core --external @mastra/core --external @anthropic-ai/sdk --external @ag-ui/mastra --external @mastra/loggers --external @mastra/libsql --external @mastra/memory --external @mastra/fastembed --external @e2b/code-interpreter --external @ai-sdk/openai --external openai --external zod --external commander",
+    "dev": "bun run src/mastra.ts",
+    "start": "node dist/mastra.js",
+    "start:mastra": "node dist/mastra.js"
+  },
+  "dependencies": {
+    "@erdwithai/core": "workspace:*",
+    "@mastra/core": "^1.0.0-beta.19",
+    "@mastra/loggers": "^1.0.0-beta.3",
+    "@mastra/libsql": "^1.0.0-beta.8",
+    "@mastra/memory": "^1.0.0-beta.5",
+    "@ag-ui/mastra": "^0.2.0",
+    "@anthropic-ai/sdk": "^0.32.0",
+    "openai": "^4.0.0",
+    "zod": "^3.22.4",
+    "commander": "^11.1.0"
+  }
+}

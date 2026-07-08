@@ -1,0 +1,36 @@
+import { Link } from "@tanstack/react-router";
+
+// Generated: {{now}}
+// Seeded from the entities known at generation time (the Mermaid-parsed
+// ERD). This is navigation sugar only — the routes it links to
+// (/$entity, /$entity/$id) are fully generic and work for ANY erpclaw
+// table name, including ones created after this app was generated; they
+// just won't have a nav entry here until you regenerate or add one by hand.
+const ENTITIES: Array<{ name: string; tableName: string }> = [
+{{#each entities}}
+  { name: {{json this.name}}, tableName: {{json this.tableName}} },
+{{/each}}
+];
+
+export function EntityNav() {
+  if (ENTITIES.length === 0) {
+    return <p className="text-sm text-gray-500">No entities in this project yet.</p>;
+  }
+  return (
+    <nav className="space-y-1">
+      {ENTITIES.map((entity) => {
+        const navParams = { entity: entity.tableName };
+        return (
+          <Link
+            key={entity.tableName}
+            to="/$entity"
+            params={navParams}
+            className="block rounded-md px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-900"
+          >
+            {entity.name}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
