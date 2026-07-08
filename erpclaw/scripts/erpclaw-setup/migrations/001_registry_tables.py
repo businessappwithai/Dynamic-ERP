@@ -15,65 +15,80 @@ Usage:
     python3 001_registry_tables.py [--db-path PATH]
 """
 import argparse
-import json
 import os
-import sqlite3
 import sys
 
 DEFAULT_DB_PATH = os.path.join(os.path.expanduser(os.environ.get("ERPCLAW_HOME", "~/.openclaw/erpclaw")), "data.sqlite")
 
+_VOUCHER_TYPE_REGISTRY_DDL = """
+CREATE TABLE IF NOT EXISTS voucher_type_registry (
+    voucher_type TEXT NOT NULL,
+    skill_name   TEXT NOT NULL,
+    label        TEXT NOT NULL,
+    target_table TEXT NOT NULL CHECK(target_table IN ('gl_entry','stock_ledger_entry','payment_allocation')),
+    PRIMARY KEY (voucher_type, target_table)
+)
+"""
+
+_PARTY_TYPE_REGISTRY_DDL = """
+CREATE TABLE IF NOT EXISTS party_type_registry (
+    party_type  TEXT PRIMARY KEY,
+    skill_name  TEXT NOT NULL,
+    label       TEXT NOT NULL
+)
+"""
+
+_ACCOUNT_TYPE_REGISTRY_DDL = """
+CREATE TABLE IF NOT EXISTS account_type_registry (
+    account_type TEXT PRIMARY KEY,
+    skill_name   TEXT NOT NULL,
+    label        TEXT NOT NULL
+)
+"""
+
 
 def _table_exists(conn, table_name):
     row = conn.execute(
-        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+        "SELECT 1 FROM information_schema.tables "
+        "WHERE table_schema = 'public' AND table_name = ?",
         (table_name,),
     ).fetchone()
     return row is not None
 
 
 def _column_exists(conn, table_name, column_name):
-    cursor = conn.execute(f"PRAGMA table_info({table_name})")
-    for row in cursor:
-        if row[1] == column_name:
-            return True
-    return False
+    row = conn.execute(
+        "SELECT 1 FROM information_schema.columns "
+        "WHERE table_schema = 'public' AND table_name = ? AND column_name = ?",
+        (table_name, column_name),
+    ).fetchone()
+    return row is not None
 
 
 def run_migration(db_path=None):
-    path = db_path or os.environ.get("ERPCLAW_DB_PATH", DEFAULT_DB_PATH)
-    if not os.path.exists(path):
-        print(f"Database not found at {path}. Nothing to migrate.")
+    """Postgres-only. NOTE: despite the module docstring's point 2 ("Recreates
+    gl_entry, stock_ledger_entry, payment_entry, payment_allocation,
+    payment_ledger_entry, and account tables WITHOUT hardcoded CHECK
+    constraints"), the actual migration body never did any such table
+    rebuild — that overstates what this migration does. It only creates the
+    three registry tables, adds two columns + one index if missing, and
+    seeds the registries. This Postgres port preserves that real behavior,
+    not the docstring's.
+    """
+    from erpclaw_lib.db import get_connection
+
+    url = os.environ.get("ERPCLAW_DB_URL") or db_path
+    if not url:
+        print("No Postgres connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
         return
 
-    conn = sqlite3.connect(path)
-    conn.row_factory = sqlite3.Row
-    from erpclaw_lib.db import setup_pragmas
-    setup_pragmas(conn)
-    conn.execute("PRAGMA foreign_keys=OFF")  # Must be OFF during table rebuild
-
+    conn = get_connection(url)
     try:
-        # Step 1: Create registry tables if they don't exist
-        conn.executescript("""
-            CREATE TABLE IF NOT EXISTS voucher_type_registry (
-                voucher_type TEXT NOT NULL,
-                skill_name   TEXT NOT NULL,
-                label        TEXT NOT NULL,
-                target_table TEXT NOT NULL CHECK(target_table IN ('gl_entry','stock_ledger_entry','payment_allocation')),
-                PRIMARY KEY (voucher_type, target_table)
-            );
-
-            CREATE TABLE IF NOT EXISTS party_type_registry (
-                party_type  TEXT PRIMARY KEY,
-                skill_name  TEXT NOT NULL,
-                label       TEXT NOT NULL
-            );
-
-            CREATE TABLE IF NOT EXISTS account_type_registry (
-                account_type TEXT PRIMARY KEY,
-                skill_name   TEXT NOT NULL,
-                label        TEXT NOT NULL
-            );
-        """)
+        # Step 1: Create registry tables if they don't exist (one statement
+        # per execute() call — no multi-statement executescript on Postgres).
+        conn.execute(_VOUCHER_TYPE_REGISTRY_DDL)
+        conn.execute(_PARTY_TYPE_REGISTRY_DDL)
+        conn.execute(_ACCOUNT_TYPE_REGISTRY_DDL)
 
         # Step 2: Add dimensions_json to gl_entry if missing
         if _table_exists(conn, "gl_entry") and not _column_exists(conn, "gl_entry", "dimensions_json"):
@@ -86,12 +101,9 @@ def run_migration(db_path=None):
             print("  Added payment_method column to payment_entry")
 
         # Step 4: Add project_id index if missing
-        idx = conn.execute(
-            "SELECT 1 FROM sqlite_master WHERE type='index' AND name='idx_gl_entry_project'"
-        ).fetchone()
-        if not idx and _table_exists(conn, "gl_entry"):
+        if _table_exists(conn, "gl_entry"):
             conn.execute("CREATE INDEX IF NOT EXISTS idx_gl_entry_project ON gl_entry(project_id)")
-            print("  Added idx_gl_entry_project index")
+            print("  Ensured idx_gl_entry_project index")
 
         # Step 5: Seed registry tables
         _seed_registries(conn)
@@ -104,7 +116,6 @@ def run_migration(db_path=None):
         print(f"Migration 001 FAILED: {e}", file=sys.stderr)
         sys.exit(1)
     finally:
-        conn.execute("PRAGMA foreign_keys=ON")
         conn.close()
 
 

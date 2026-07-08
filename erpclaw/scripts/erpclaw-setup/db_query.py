@@ -781,13 +781,34 @@ def update_regional_settings(conn, args):
     ok({"updated": list(settings.keys())})
 
 
+def _pg_dump_to_file(db_url, dest_path):
+    """Run pg_dump in custom format (-Fc), writing the dump to dest_path.
+
+    Custom format is restorable via pg_restore (both a full restore and
+    the structural --list sanity check verify_backup uses) and supports
+    compression, unlike plain-SQL dumps.
+    """
+    import subprocess
+    try:
+        subprocess.run(
+            ["pg_dump", "-Fc", "-f", dest_path, db_url],
+            check=True, capture_output=True, text=True,
+        )
+    except FileNotFoundError:
+        err("pg_dump not found on PATH — install the PostgreSQL client tools "
+            "(e.g. postgresql-client) on this host.")
+    except subprocess.CalledProcessError as e:
+        err(f"pg_dump failed: {(e.stderr or '').strip() or e}")
+
+
 def backup_database(conn, args):
-    """Create a backup of the database.
+    """Create a backup of the database via pg_dump (custom format).
 
     Supports optional encryption with --encrypt --passphrase flags.
     Encrypted backups use AES-256 + HMAC-SHA256 authentication.
     """
-    db_path = args.db_path
+    from erpclaw_lib.db import _resolve_pg_url
+    db_url = _resolve_pg_url(args.db_path)
     backup_path = args.backup_path
     encrypt = getattr(args, "encrypt", False)
     passphrase = getattr(args, "passphrase", None)
@@ -798,22 +819,18 @@ def backup_database(conn, args):
     if not backup_path:
         os.makedirs(BACKUP_DIR, exist_ok=True)
         ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-        ext = ".sqlite.enc" if encrypt else ".sqlite"
+        ext = ".pgdump.enc" if encrypt else ".pgdump"
         backup_path = os.path.join(BACKUP_DIR, f"erpclaw_backup_{ts}{ext}")
 
     os.makedirs(os.path.dirname(backup_path), exist_ok=True)
 
     if encrypt:
-        # First create unencrypted backup to temp file, then encrypt
+        # First create the unencrypted pg_dump to a temp file, then encrypt
         import tempfile
-        with tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(suffix=".pgdump", delete=False) as tmp:
             tmp_path = tmp.name
         try:
-            src = sqlite3.connect(db_path)
-            dst = sqlite3.connect(tmp_path)
-            src.backup(dst)
-            dst.close()
-            src.close()
+            _pg_dump_to_file(db_url, tmp_path)
 
             from erpclaw_lib.crypto import encrypt_file, wrap_master_key
             from erpclaw_lib.master_key import master_key_exists, get_or_create_master_key
@@ -842,11 +859,7 @@ def backup_database(conn, args):
              "timestamp": datetime.now(timezone.utc).isoformat()})
     else:
         # Standard unencrypted backup
-        src = sqlite3.connect(db_path)
-        dst = sqlite3.connect(backup_path)
-        src.backup(dst)
-        dst.close()
-        src.close()
+        _pg_dump_to_file(db_url, backup_path)
 
         _chmod_600(backup_path)
         size = os.path.getsize(backup_path)
@@ -861,10 +874,10 @@ def list_backups(conn, args):
     if not os.path.exists(backup_dir):
         ok({"backups": [], "count": 0, "total_size_bytes": 0})
 
-    # Match both plain (.sqlite) and encrypted (.enc) backups
-    sqlite_files = glob_mod.glob(os.path.join(backup_dir, "erpclaw_*.sqlite"))
+    # Match both plain (.pgdump) and encrypted (.pgdump.enc) backups
+    pgdump_files = glob_mod.glob(os.path.join(backup_dir, "erpclaw_*.pgdump"))
     enc_files = glob_mod.glob(os.path.join(backup_dir, "erpclaw_*.enc"))
-    files = sorted(sqlite_files + enc_files, reverse=True)
+    files = sorted(pgdump_files + enc_files, reverse=True)
 
     backups = []
     total_size = 0
@@ -878,7 +891,7 @@ def list_backups(conn, args):
         try:
             parts = basename.split("_", 2)
             if len(parts) >= 3:
-                ts_str = parts[2].replace(".sqlite", "").replace(".enc", "")
+                ts_str = parts[2].replace(".pgdump", "").replace(".enc", "")
                 timestamp = datetime.strptime(ts_str, "%Y%m%d_%H%M%S").isoformat()
         except (ValueError, IndexError):
             pass
@@ -895,16 +908,60 @@ def list_backups(conn, args):
          "total_size_bytes": total_size})
 
 
+# Matches a `pg_restore --list` TOC line for a table object, e.g.:
+#   186; 1259 16390 TABLE public account postgres
+#   3439; 0 16400 TABLE DATA public account postgres
+# Captures (schema, name).
+_PG_TOC_TABLE_RE = re.compile(r"^\d+;\s+\d+\s+\d+\s+TABLE(?:\s+DATA)?\s+(\S+)\s+(\S+)\s+")
+
+
+def _pg_restore_list_tables(path):
+    """Run `pg_restore --list <path>`, returning (list_ok, stderr, table_names).
+
+    Parses a pg_dump custom-format archive's table of contents locally — no
+    live server connection needed. ``table_names`` is a set of (schema, name)
+    tuples for every TABLE/TABLE DATA TOC entry. Shared by verify_backup and
+    restore_database so both use the identical structural-validity check.
+    """
+    import subprocess
+    try:
+        result = subprocess.run(
+            ["pg_restore", "--list", path],
+            capture_output=True, text=True,
+        )
+    except FileNotFoundError:
+        err("pg_restore not found on PATH — install the PostgreSQL client "
+            "tools (e.g. postgresql-client) on this host.")
+
+    table_names = set()
+    for line in result.stdout.splitlines():
+        m = _PG_TOC_TABLE_RE.match(line)
+        if m:
+            table_names.add((m.group(1), m.group(2)))
+    return result.returncode == 0, (result.stderr or "").strip(), table_names
+
+
 def verify_backup(conn, args):
-    """Verify a backup file is a valid ERPClaw database without restoring.
+    """Verify a backup file is a structurally valid pg_dump archive, without
+    restoring it or requiring a live Postgres server.
 
     Auto-detects encrypted backups. Requires --passphrase for encrypted files.
 
-    Checks:
-    1. File exists and is valid SQLite (or encrypted backup)
-    2. Contains schema_version table (ERPClaw signature)
-    3. Passes PRAGMA integrity_check
-    4. Reports table count and schema version
+    Checks (via ``pg_restore --list``, which parses the archive's table of
+    contents locally):
+    1. File exists and is a valid pg_dump custom-format archive
+    2. Contains a schema_version table (ERPClaw signature)
+    3. ``pg_restore --list`` exits cleanly (structural integrity check — the
+       archive isn't truncated/corrupt)
+    4. Reports the distinct table count from the table of contents
+
+    Note: this is a structural check only. Unlike the old SQLite version
+    (which opened the file directly and read schema_version's row data), a
+    pg_dump archive's row *contents* can't be read without an actual
+    restore, so schema_module/schema_version values are no longer reported
+    — only "does a schema_version table exist in the archive". No new
+    "deep verify via a scratch-DB restore" flag is added here: the original
+    CLI never had an equivalent flag for this to mirror.
     """
     backup_path = args.backup_path
     passphrase = getattr(args, "passphrase", None)
@@ -923,7 +980,7 @@ def verify_backup(conn, args):
             ok({"encrypted": True, "valid": None,
                  "message": "Encrypted backup — provide --passphrase to verify contents"})
         import tempfile
-        decrypted_tmp = tempfile.mktemp(suffix=".sqlite")
+        decrypted_tmp = tempfile.mktemp(suffix=".pgdump")
         try:
             crypto_decrypt(backup_path, decrypted_tmp, passphrase)
         except ValueError as e:
@@ -933,59 +990,45 @@ def verify_backup(conn, args):
         verify_path = decrypted_tmp
 
     try:
-        test_conn = sqlite3.connect(verify_path)
-        test_conn.row_factory = sqlite3.Row
+        list_ok, list_stderr, table_names = _pg_restore_list_tables(verify_path)
+        if not list_ok:
+            err(f"Not a valid pg_dump archive: {list_stderr}")
 
-        tables = test_conn.execute(
-            "SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table'"
-        ).fetchone()["cnt"]
-
-        has_schema = test_conn.execute(
-            "SELECT COUNT(*) as cnt FROM sqlite_master "
-            "WHERE type='table' AND name='schema_version'"
-        ).fetchone()["cnt"]
-        if has_schema == 0:
-            test_conn.close()
-            err("Not a valid ERPClaw database (missing schema_version table)")
-
-        sv = test_conn.execute(
-            "SELECT module, version FROM schema_version ORDER BY updated_at DESC LIMIT 1"
-        ).fetchone()
-
-        integrity = test_conn.execute("PRAGMA integrity_check").fetchone()[0]
+        has_schema_version = any(name == "schema_version" for _, name in table_names)
+        if not has_schema_version:
+            err("Not a valid ERPClaw backup (missing schema_version table)")
 
         size = os.path.getsize(backup_path)
-        test_conn.close()
 
         ok({
-            "valid": integrity == "ok",
-            "integrity": integrity,
-            "tables": tables,
-            "schema_module": sv["module"] if sv else None,
-            "schema_version": sv["version"] if sv else None,
+            "valid": True,
+            "integrity": "ok",
+            "tables": len(table_names),
             "size_bytes": size,
             "encrypted": encrypted,
         })
-
-    except sqlite3.DatabaseError as e:
-        err(f"Not a valid SQLite file: {e}")
     finally:
         if decrypted_tmp and os.path.exists(decrypted_tmp):
             os.unlink(decrypted_tmp)
 
 
 def restore_database(conn, args):
-    """Restore the database from a backup file.
+    """Restore the database from a backup file via pg_restore.
 
     Auto-detects encrypted backups. Requires --passphrase for encrypted files.
 
     Steps:
     1. Detect encrypted backup, decrypt if needed
-    2. Validate backup is valid SQLite + ERPClaw schema
-    3. Create safety backup of current DB
-    4. Copy backup over current DB
-    5. Verify integrity
-    If any step fails, rollback to safety backup.
+    2. Validate backup is a valid pg_dump archive + ERPClaw schema (the same
+       `pg_restore --list` structural check verify_backup uses)
+    3. Create a safety backup of the current DB (pg_dump to a local file —
+       the Postgres equivalent of the old "copy the live file aside")
+    4. pg_restore --clean --if-exists the backup into the target DB (drops
+       existing objects first, so the target ends up containing exactly
+       what the backup had — the Postgres equivalent of the old file swap)
+    5. Verify integrity (reconnect + count schema_version rows)
+    If step 4 or 5 fails, rollback by pg_restore'ing the safety backup back
+    into the target DB.
     """
     backup_path = args.backup_path
     passphrase = getattr(args, "passphrase", None)
@@ -1004,7 +1047,7 @@ def restore_database(conn, args):
             err("Backup is encrypted — --passphrase is required",
                  suggestion="Use --passphrase to provide the encryption passphrase")
         import tempfile
-        decrypted_tmp = tempfile.mktemp(suffix=".sqlite")
+        decrypted_tmp = tempfile.mktemp(suffix=".pgdump")
         try:
             crypto_decrypt(backup_path, decrypted_tmp, passphrase)
         except ValueError as e:
@@ -1015,58 +1058,57 @@ def restore_database(conn, args):
     else:
         restore_source = backup_path
 
-    # Step 1: Validate backup is a valid SQLite database
-    try:
-        test_conn = sqlite3.connect(restore_source)
-        test_conn.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='table'")
-        sv = test_conn.execute(
-            "SELECT COUNT(*) as cnt FROM sqlite_master WHERE type='table' AND name='schema_version'"
-        ).fetchone()[0]
-        if sv == 0:
-            test_conn.close()
-            err("Backup is not a valid ERPClaw database (missing schema_version table)")
-        test_conn.close()
-    except sqlite3.DatabaseError as e:
+    # Step 1: Validate backup is a valid pg_dump archive with our schema
+    list_ok, list_stderr, table_names = _pg_restore_list_tables(restore_source)
+    if not list_ok:
         if decrypted_tmp and os.path.exists(decrypted_tmp):
             os.unlink(decrypted_tmp)
-        err(f"Backup is not a valid SQLite file: {e}")
+        err(f"Backup is not a valid pg_dump archive: {list_stderr}")
+    if not any(name == "schema_version" for _, name in table_names):
+        if decrypted_tmp and os.path.exists(decrypted_tmp):
+            os.unlink(decrypted_tmp)
+        err("Backup is not a valid ERPClaw database (missing schema_version table)")
 
-    # Determine target DB path
-    db_path = args.db_path
+    # Determine target DB
+    import psycopg2
+    from erpclaw_lib.db import _resolve_pg_url, get_connection
+    db_url = _resolve_pg_url(args.db_path)
 
-    # Step 2: Create safety backup of current DB
+    # Step 2: Create safety backup of current DB (pg_dump to a local file)
     os.makedirs(BACKUP_DIR, exist_ok=True)
     ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    safety_path = os.path.join(BACKUP_DIR, f"erpclaw_pre_restore_{ts}.sqlite")
+    safety_path = os.path.join(BACKUP_DIR, f"erpclaw_pre_restore_{ts}.pgdump")
 
     try:
-        # Close the passed-in connection so we can safely copy the file
+        # Close the passed-in connection first — pg_restore --clean needs an
+        # unobstructed shot at dropping/recreating objects, not a stale
+        # connection potentially holding locks on them.
         conn.close()
 
-        if os.path.exists(db_path):
-            shutil.copy2(db_path, safety_path)
+        _pg_dump_to_file(db_url, safety_path)
 
-        # Step 3: Copy backup over current DB
-        shutil.copy2(restore_source, db_path)
-        chmod_db_files(db_path)
+        # Step 3: pg_restore the backup into the target DB, dropping existing
+        # objects first (--clean --if-exists mirrors the old file-swap: the
+        # target ends up containing exactly what the backup had).
+        import subprocess
+        restore_result = subprocess.run(
+            ["pg_restore", "--clean", "--if-exists", "-d", db_url, restore_source],
+            capture_output=True, text=True,
+        )
+        if restore_result.returncode != 0:
+            raise ValueError(f"pg_restore failed: {(restore_result.stderr or '').strip()}")
 
         # Step 4 & 5: Verify restored DB
-        verify_conn = sqlite3.connect(db_path)
-        verify_conn.row_factory = sqlite3.Row
-
-        # Integrity check
-        result = verify_conn.execute("PRAGMA integrity_check").fetchone()
-        if result[0] != "ok":
+        verify_conn = get_connection(db_url)
+        try:
+            sv_count = verify_conn.execute(
+                "SELECT COUNT(*) FROM schema_version"
+            ).fetchone()[0]
+            size = verify_conn.execute(
+                "SELECT pg_database_size(current_database())"
+            ).fetchone()[0]
+        finally:
             verify_conn.close()
-            raise ValueError(f"Integrity check failed: {result[0]}")
-
-        # Verify schema_version exists
-        sv_count = verify_conn.execute(
-            "SELECT COUNT(*) as cnt FROM schema_version"
-        ).fetchone()["cnt"]
-
-        size = os.path.getsize(db_path)
-        verify_conn.close()
 
         # Clean up decrypted temp file
         if decrypted_tmp and os.path.exists(decrypted_tmp):
@@ -1081,13 +1123,17 @@ def restore_database(conn, args):
             "was_encrypted": encrypted,
         })
 
-    except (ValueError, sqlite3.Error, OSError) as e:
+    except (ValueError, OSError, psycopg2.Error) as e:
         # Clean up decrypted temp file
         if decrypted_tmp and os.path.exists(decrypted_tmp):
             os.unlink(decrypted_tmp)
-        # Rollback: restore safety backup
+        # Rollback: pg_restore the safety backup taken before we touched the target
         if os.path.exists(safety_path):
-            shutil.copy2(safety_path, db_path)
+            import subprocess
+            subprocess.run(
+                ["pg_restore", "--clean", "--if-exists", "-d", db_url, safety_path],
+                capture_output=True, text=True,
+            )
         err(f"Restore failed (rolled back to previous state): {e}")
 
 
@@ -1138,18 +1184,6 @@ def _chmod_600(path: str) -> None:
         pass
 
 
-def chmod_db_files(db_path: str) -> None:
-    """Set mode 600 on the SQLite DB file and its WAL/SHM siblings.
-
-    Called from initialize_database, restore_database, and the every-action
-    bootstrap to keep credentials + payroll data unreadable to other users
-    on shared machines.
-    """
-    _chmod_600(db_path)
-    _chmod_600(db_path + "-wal")
-    _chmod_600(db_path + "-shm")
-
-
 def _link_shared_library() -> None:
     """Symlink ``$ERPCLAW_HOME/lib`` -> bundled lib at the skill location.
 
@@ -1186,7 +1220,10 @@ def initialize_database(conn, args):
 
     Creates all tables, indexes, and constraints. Safe to run on an existing
     database — uses CREATE TABLE IF NOT EXISTS throughout. If --force is
-    passed, drops and recreates the database from scratch.
+    passed, drops and recreates the ``public`` schema before provisioning —
+    the Postgres equivalent of the old SQLite behavior (delete data.sqlite
+    and start over): DROP SCHEMA public CASCADE removes every table, index,
+    and constraint in one shot, exactly like deleting the whole file did.
     """
     _link_shared_library()
     db_path = args.db_path
@@ -1195,29 +1232,35 @@ def initialize_database(conn, args):
     scripts_dir = os.path.dirname(os.path.abspath(__file__))
     sys.path.insert(0, scripts_dir)
     from init_schema import init_db, ALL_DDL_BLOCKS
+    from erpclaw_lib.db import get_connection
 
     force = getattr(args, "force", False) or getattr(args, "force_reinit", False)
 
-    if force and os.path.exists(db_path):
-        # Close existing connection before deleting
+    if force:
+        # Close the passed-in connection first — DROP SCHEMA would otherwise
+        # race with any open transaction on it.
         if conn:
             conn.close()
-        os.remove(db_path)
+        drop_conn = get_connection(db_path)
+        try:
+            drop_conn.execute("DROP SCHEMA public CASCADE")
+            drop_conn.execute("CREATE SCHEMA public")
+            drop_conn.commit()
+        finally:
+            drop_conn.close()
 
     # Run full schema initialization
     init_db(db_path)
 
-    # Lock down DB file perms (covers data.sqlite, -wal, -shm)
-    chmod_db_files(db_path)
-
     # Verify by reconnecting and counting
-    verify_conn = sqlite3.connect(db_path)
+    verify_conn = get_connection(db_path)
     try:
         table_count = verify_conn.execute(
-            "SELECT COUNT(*) FROM sqlite_master WHERE type='table'"
+            "SELECT COUNT(*) FROM information_schema.tables "
+            "WHERE table_schema = 'public' AND table_type = 'BASE TABLE'"
         ).fetchone()[0]
         index_count = verify_conn.execute(
-            "SELECT COUNT(*) FROM sqlite_master WHERE type='index'"
+            "SELECT COUNT(*) FROM pg_indexes WHERE schemaname = 'public'"
         ).fetchone()[0]
         skill_count = verify_conn.execute(
             "SELECT COUNT(*) FROM schema_version"
@@ -1231,7 +1274,7 @@ def initialize_database(conn, args):
         "tables": table_count,
         "indexes": index_count,
         "skills_registered": skill_count,
-        "journal_mode": "WAL",
+        "journal_mode": "n/a (PostgreSQL WAL is server-managed, not per-connection)",
         "foreign_keys": "ON",
         "reinitialized": force,
     })
@@ -1399,7 +1442,7 @@ def cleanup_backups(conn, args):
       - Delete everything else
     """
     backup_dir = BACKUP_DIR
-    pattern = os.path.join(backup_dir, "erpclaw_backup_*.sqlite")
+    pattern = os.path.join(backup_dir, "erpclaw_backup_*.pgdump")
     files = sorted(glob_mod.glob(pattern), reverse=True)  # newest first
 
     if not files:
@@ -1409,9 +1452,9 @@ def cleanup_backups(conn, args):
     backups = []
     for f in files:
         basename = os.path.basename(f)
-        # erpclaw_backup_YYYYMMDD_HHMMSS.sqlite
+        # erpclaw_backup_YYYYMMDD_HHMMSS.pgdump
         try:
-            parts = basename.replace("erpclaw_backup_", "").replace(".sqlite", "")
+            parts = basename.replace("erpclaw_backup_", "").replace(".pgdump", "")
             dt = datetime.strptime(parts, "%Y%m%d_%H%M%S")
             backups.append({"path": f, "dt": dt, "date": dt.date(),
                             "size": os.path.getsize(f)})

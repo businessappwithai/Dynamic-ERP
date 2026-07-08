@@ -13,7 +13,6 @@ import json
 import os
 import re
 import shutil
-import sqlite3
 import subprocess
 import sys
 from pathlib import Path
@@ -33,7 +32,6 @@ except ImportError:
 # Constants
 # ---------------------------------------------------------------------------
 
-DEFAULT_DB_PATH = os.path.join(os.path.expanduser(os.environ.get("ERPCLAW_HOME", "~/.openclaw/erpclaw")), "data.sqlite")
 SKILLS_DIR = os.path.expanduser("~/clawd/skills")
 SHARED_LIB_PATH = os.path.join(
     os.path.expanduser(os.environ.get("ERPCLAW_HOME", "~/.openclaw/erpclaw")),
@@ -194,6 +192,16 @@ def get_db_info(db_path):
     """Gather database information: existence, table list, company count.
 
     Returns a dict with database_exists, tables (set), table_count, company_count.
+
+    Postgres note: "database_exists" no longer means "a .sqlite file is
+    present on disk" — there is no local file to stat. It now means "we
+    could connect to the configured Postgres database and it has our
+    schema provisioned" (at least one table in the public schema). A failed
+    connection (bad/missing URL, server unreachable, auth failure, driver
+    not installed, etc.) is treated the same as "not set up yet" — this is
+    a best-effort onboarding diagnostic (check-installation/install-guide),
+    not core business logic, so a broad catch here mirrors the original
+    file-missing / DB-locked tolerance.
     """
     info = {
         "database_exists": False,
@@ -201,20 +209,21 @@ def get_db_info(db_path):
         "table_count": 0,
         "company_count": 0,
     }
-    if not os.path.isfile(db_path):
+    from erpclaw_lib.db import get_connection
+
+    try:
+        conn = get_connection(db_path)
+    except Exception:
         return info
 
-    info["database_exists"] = True
     try:
-        conn = sqlite3.connect(db_path, timeout=5)
-        from erpclaw_lib.db import setup_pragmas
-        setup_pragmas(conn)
-
         rows = conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+            "SELECT table_name FROM information_schema.tables "
+            "WHERE table_schema = 'public' AND table_type = 'BASE TABLE'"
         ).fetchall()
         info["tables"] = {row[0] for row in rows}
         info["table_count"] = len(info["tables"])
+        info["database_exists"] = info["table_count"] > 0
 
         if "company" in info["tables"]:
             if _HAS_PYPIKA:
@@ -224,11 +233,12 @@ def get_db_info(db_path):
             else:
                 count = conn.execute("SELECT COUNT(*) FROM company").fetchone()[0]
             info["company_count"] = count
-
-        conn.close()
-    except sqlite3.Error:
-        # Database exists but may be corrupt or locked — report what we can
+    except Exception:
+        # Connected but the query failed (corrupt/partial schema) — report
+        # what we can, matching the original's tolerance.
         pass
+    finally:
+        conn.close()
 
     return info
 
@@ -401,10 +411,8 @@ def seed_demo_data(args):
     # Idempotency check — company exists AND demo data is populated
     # ------------------------------------------------------------------
     try:
-        conn = sqlite3.connect(db_path, timeout=5)
-        conn.row_factory = sqlite3.Row
-        from erpclaw_lib.db import setup_pragmas
-        setup_pragmas(conn)
+        from erpclaw_lib.db import get_connection
+        conn = get_connection(db_path)
 
         target_company_id = None
         if use_existing_company:
@@ -453,7 +461,7 @@ def seed_demo_data(args):
                     "error": f"Company {use_existing_company} not found",
                 })
                 return
-    except sqlite3.Error:
+    except Exception:
         pass  # DB may not exist yet — that is fine, setup-company will create it
 
     # ------------------------------------------------------------------
@@ -498,7 +506,17 @@ def seed_demo_data(args):
                 f"Skill {skill_name} not found in {SKILLS_DIR}. Install it first: clawhub install {skill_name}"
             )
 
-        cmd = [sys.executable, script, "--action", action_name, "--db-path", db_path]
+        cmd = [sys.executable, script, "--action", action_name]
+        if db_path:
+            # Only pass --db-path when the caller explicitly set one; an
+            # explicit-but-empty value here would otherwise clobber the
+            # child's own ERPCLAW_DB_URL/ERPCLAW_DB_PATH env-var resolution
+            # (see erpclaw_lib.db._resolve_pg_url, which prefers db_path
+            # over those env vars). Omitting the flag lets the child fall
+            # through to its inherited environment (subprocess.run here
+            # passes no env=, so the full parent environment — including
+            # ERPCLAW_DB_URL — is inherited).
+            cmd.extend(["--db-path", db_path])
 
         for key, val in kwargs.items():
             if val is None:
@@ -621,8 +639,8 @@ def seed_demo_data(args):
             errors.append(f"Phase 1 (setup-company): {e}")
             # Fall back: look for any existing company to use
             try:
-                conn = sqlite3.connect(db_path, timeout=5)
-                conn.row_factory = sqlite3.Row
+                from erpclaw_lib.db import get_connection
+                conn = get_connection(db_path)
                 if _HAS_PYPIKA:
                     co = Table("company")
                     q = (Q.from_(co).select(co.id, co.name)
@@ -638,7 +656,7 @@ def seed_demo_data(args):
                     company_id = row[0]
                     _progress(f"  Using existing company: {row[1]} ({company_id})")
                     errors.pop()  # Remove the setup-company error since we recovered
-            except sqlite3.Error:
+            except Exception:
                 pass
         if not company_id:
             output_json({
@@ -684,10 +702,8 @@ def seed_demo_data(args):
     _progress("Phase 2: Looking up account IDs...")
     accounts = {}
     try:
-        conn = sqlite3.connect(db_path, timeout=5)
-        conn.row_factory = sqlite3.Row
-        from erpclaw_lib.db import setup_pragmas
-        setup_pragmas(conn)
+        from erpclaw_lib.db import get_connection
+        conn = get_connection(db_path)
 
         account_map = {
             "cash":                  "1111",  # Petty Cash
@@ -735,7 +751,8 @@ def seed_demo_data(args):
                     _progress(f"  Cost center '{cc_name}' already exists, skipping")
                     # Look up existing
                     try:
-                        conn_tmp = sqlite3.connect(db_path, timeout=5)
+                        from erpclaw_lib.db import get_connection
+                        conn_tmp = get_connection(db_path)
                         if _HAS_PYPIKA:
                             cc = Table("cost_center")
                             q = (Q.from_(cc).select(cc.id)
@@ -795,8 +812,8 @@ def seed_demo_data(args):
                 _progress(f"  Item group '{group_name}' already exists")
                 # Try to retrieve existing
                 try:
-                    conn = sqlite3.connect(db_path, timeout=5)
-                    conn.row_factory = sqlite3.Row
+                    from erpclaw_lib.db import get_connection
+                    conn = get_connection(db_path)
                     if _HAS_PYPIKA:
                         ig = Table("item_group")
                         q = Q.from_(ig).select(ig.id).where(ig.name == P())
@@ -1275,10 +1292,8 @@ def seed_demo_data(args):
 
     # Build item_code -> item_id map from DB (items were created in Phase 5)
     try:
-        conn = sqlite3.connect(db_path, timeout=5)
-        conn.row_factory = sqlite3.Row
-        from erpclaw_lib.db import setup_pragmas
-        setup_pragmas(conn)
+        from erpclaw_lib.db import get_connection
+        conn = get_connection(db_path)
         if _HAS_PYPIKA:
             it = Table("item")
             q = Q.from_(it).select(it.id, it.item_code)
@@ -1333,8 +1348,8 @@ def seed_demo_data(args):
             # We need the rate for BOM items; fetch from the item table
             rate = "0"
             try:
-                conn_tmp = sqlite3.connect(db_path, timeout=5)
-                conn_tmp.row_factory = sqlite3.Row
+                from erpclaw_lib.db import get_connection
+                conn_tmp = get_connection(db_path)
                 if _HAS_PYPIKA:
                     it = Table("item")
                     q = Q.from_(it).select(it.standard_rate).where(it.id == P())
@@ -1854,8 +1869,15 @@ def main():
     )
     parser.add_argument(
         "--db-path",
-        default=DEFAULT_DB_PATH,
-        help=f"Path to the ERPClaw database (default: {DEFAULT_DB_PATH})",
+        default=None,
+        # NOTE: intentionally no truthy default here (same bug class fixed
+        # elsewhere in the Postgres-only conversion — see erpclaw_lib.db's
+        # _resolve_pg_url, which prefers an explicit db_path over
+        # ERPCLAW_DB_URL/ERPCLAW_DB_PATH). A truthy sqlite-shaped default
+        # would always win that "db_path or ENV_VAR" chain and silently
+        # break Postgres mode. Leaving this None lets ERPCLAW_DB_URL /
+        # ERPCLAW_DB_PATH resolve normally when --db-path isn't passed.
+        help="Postgres connection URL (default: ERPCLAW_DB_URL / ERPCLAW_DB_PATH env var)",
     )
     parser.add_argument(
         "--company-id",

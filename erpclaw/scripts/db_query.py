@@ -13,7 +13,6 @@ Output: JSON to stdout (passed through from domain script)
 """
 import json
 import os
-import sqlite3
 import sys
 import time
 from uuid import uuid4
@@ -27,27 +26,22 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # With ERPCLAW_HOME unset they equal today's ~/.openclaw/erpclaw literals exactly.
 _ERPCLAW_HOME = os.path.expanduser(os.environ.get("ERPCLAW_HOME", "~/.openclaw/erpclaw"))
 MODULES_DIR = os.path.join(_ERPCLAW_HOME, "modules")
-DB_PATH = os.path.join(_ERPCLAW_HOME, "data.sqlite")
 BUNDLED_LIB = os.path.join(BASE_DIR, "erpclaw-setup", "lib")
 if os.path.isdir(os.path.join(BUNDLED_LIB, "erpclaw_lib")):
     sys.path.insert(0, BUNDLED_LIB)
 
 
-def _chmod_db_files_action() -> None:
-    """Lock down DB file perms to 600 on every action invocation.
+def _pg_db_url():
+    """Resolve the Postgres connection URL from the environment.
 
-    Idempotent. Covers data.sqlite + WAL + SHM. Cheap (~30µs).
+    Mirrors erpclaw_lib.db._resolve_pg_url's env-var fallback chain
+    (ERPCLAW_DB_URL, then ERPCLAW_DB_PATH) without importing erpclaw_lib —
+    this router deliberately avoids that import on its common path for
+    startup-speed reasons (see module docstring / BUNDLED_LIB comment
+    above). Returns None if neither is set.
     """
-    for suffix in ("", "-wal", "-shm"):
-        path = DB_PATH + suffix
-        try:
-            if os.path.exists(path):
-                os.chmod(path, 0o600)
-        except OSError:
-            pass
+    return os.environ.get("ERPCLAW_DB_URL") or os.environ.get("ERPCLAW_DB_PATH")
 
-
-_chmod_db_files_action()
 
 # Session ID for grouping action calls within one test scenario (set via env var)
 _SESSION_ID = os.environ.get("ERPCLAW_TEST_SESSION")
@@ -57,20 +51,30 @@ def _log_action_call(action_name, routed_to, route_tier):
     """Log an action call to action_call_log for L2 test verification.
 
     Only logs when ERPCLAW_TEST_SESSION env var is set (test mode).
-    Silently ignores errors to never break normal operation.
+    Silently ignores errors to never break normal operation. Uses a
+    minimal inline psycopg2 connection (not erpclaw_lib) to keep this
+    router's fast-import property for the common path that never hits
+    test-session logging.
     """
     if not _SESSION_ID:
         return
+    url = _pg_db_url()
+    if not url:
+        return
     try:
-        conn = sqlite3.connect(DB_PATH)
-        conn.execute(
+        import psycopg2
+    except ImportError:
+        return
+    try:
+        conn = psycopg2.connect(url)
+        conn.cursor().execute(
             "INSERT INTO action_call_log (id, action_name, routed_to, route_tier, session_id) "
-            "VALUES (?, ?, ?, ?, ?)",
+            "VALUES (%s, %s, %s, %s, %s)",
             (str(uuid4()), action_name, routed_to, route_tier, _SESSION_ID),
         )
         conn.commit()
         conn.close()
-    except Exception:
+    except psycopg2.Error:
         pass  # Never break normal operation
 
 # Action → domain mapping (365 core entries + aliases + 10 module mgmt)
@@ -1008,28 +1012,41 @@ def lookup_module_for_action(action):
     """Query erpclaw_module_action table to find which module owns this action.
 
     Returns the module_name if found, None otherwise.
-    Uses a direct sqlite3 connection (not shared lib) to avoid import overhead.
+    Uses a minimal inline psycopg2 connection (not the shared lib) to avoid
+    import overhead — this router deliberately avoids importing erpclaw_lib
+    on its common path for startup-speed reasons. Best-effort: any failure
+    here (no ERPCLAW_DB_URL configured, driver not installed, table missing
+    on a minimal install, server unreachable, ...) degrades to "action not
+    found" rather than crashing the router for callers that never hit this
+    Tier-3 dynamic-module lookup.
     """
-    if not os.path.isfile(DB_PATH):
+    url = _pg_db_url()
+    if not url:
         return None
 
     try:
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
-        row = conn.execute(
+        import psycopg2
+    except ImportError:
+        return None
+
+    try:
+        conn = psycopg2.connect(url)
+        cur = conn.cursor()
+        cur.execute(
             """SELECT ma.module_name
                FROM erpclaw_module_action ma
                JOIN erpclaw_module m ON m.name = ma.module_name
-               WHERE ma.action_name = ?
+               WHERE ma.action_name = %s
                  AND m.install_status = 'installed'
                  AND m.is_active = 1
                LIMIT 1""",
             (action,)
-        ).fetchone()
+        )
+        row = cur.fetchone()
         conn.close()
         if row:
-            return row["module_name"]
-    except (sqlite3.OperationalError, sqlite3.DatabaseError):
+            return row[0]
+    except psycopg2.Error:
         # Table doesn't exist yet or DB issue — fall through
         pass
     return None
