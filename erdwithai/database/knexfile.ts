@@ -1,6 +1,6 @@
 /**
  * Knex.js configuration for ERDwithAI generator migrations
- * Uses MariaDB/MySQL via mysql2 driver.
+ * Uses PostgreSQL via the pg driver.
  * Connection reads the same env vars as the core db.config.ts.
  */
 
@@ -8,21 +8,21 @@ import type { Knex } from "knex";
 
 function buildConnection() {
   const url = process.env.DATABASE_URL;
-  if (url && (url.startsWith("mysql://") || url.startsWith("mariadb://"))) {
-    return url.replace(/^mariadb:\/\//, "mysql://");
+  if (url && (url.startsWith("postgres://") || url.startsWith("postgresql://"))) {
+    return url;
   }
   return {
-    host: process.env.MARIADB_HOST ?? "127.0.0.1",
-    port: Number(process.env.MARIADB_PORT ?? 3306),
-    user: process.env.MARIADB_USER ?? "erdwithai",
-    password: process.env.MARIADB_PASSWORD ?? "",
-    database: process.env.MARIADB_DATABASE ?? "erdwithai",
+    host: process.env.POSTGRES_HOST ?? "127.0.0.1",
+    port: Number(process.env.POSTGRES_PORT ?? 5432),
+    user: process.env.POSTGRES_USER ?? "erdwithai",
+    password: process.env.POSTGRES_PASSWORD ?? "",
+    database: process.env.POSTGRES_DATABASE ?? "erdwithai",
   };
 }
 
 const config: { [key: string]: Knex.Config } = {
   development: {
-    client: "mysql2",
+    client: "pg",
     connection: buildConnection(),
     migrations: {
       directory: "./database/migrations",
@@ -34,7 +34,7 @@ const config: { [key: string]: Knex.Config } = {
   },
 
   production: {
-    client: "mysql2",
+    client: "pg",
     connection: buildConnection(),
     migrations: {
       directory: "./database/migrations",

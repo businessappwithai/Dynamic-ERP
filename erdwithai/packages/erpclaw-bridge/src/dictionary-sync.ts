@@ -7,13 +7,12 @@
  * downstream consumer (templates, RBAC, admin UI).
  *
  * Deliberately does NOT persist anything itself — erdwithai's own DB layer
- * (packages/core, Kysely + mysql2 today) is a separate, not-yet-migrated
- * concern (studio's Postgres migration is a documented follow-up, out of
- * scope for this package). Callers persist the result however their storage
- * layer works — e.g. writing `result.mermaid` into a project's
- * `erd_versions.mermaid_code` and `JSON.stringify({entities, relationships})`
- * into `erd_versions.parsed_schema`, exactly as if a user had hand-drawn
- * this ERD (see the README for the intended call site).
+ * (packages/core, Kysely + pg/Postgres) is a separate concern. Callers persist
+ * the result however their storage layer works — e.g. writing
+ * `result.mermaid` into a project's `erd_versions.mermaid_code` and
+ * `JSON.stringify({entities, relationships})` into
+ * `erd_versions.parsed_schema`, exactly as if a user had hand-drawn this ERD
+ * (see the README for the intended call site).
  */
 import {
   DictionaryGenerator,

@@ -17,10 +17,8 @@ the same shape a hand-drawn ERD would produce, ready to be persisted into a
 project's `erd_versions` row by whatever calls this package.
 
 This package deliberately does **not** persist anything itself — studio's own
-DB layer (`packages/core`, currently Kysely + mysql2) is a separate,
-not-yet-migrated concern (studio's own move to Postgres is a documented
-follow-up). A typical call site (a future Studio API route, once that
-migration lands) looks like:
+DB layer (`packages/core`, Kysely + pg/Postgres) is a separate concern. A
+typical call site (a Studio API route) looks like:
 
 ```ts
 import { ErpClawClient } from "@erdwithai/erpclaw-client";

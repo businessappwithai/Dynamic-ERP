@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
- * Database service for ERDwithAI — MariaDB via Kysely + mysql2
+ * Database service for ERDwithAI — PostgreSQL via Kysely + pg
  *
  * Connection config lives in ONE place: packages/core/src/config/db.config.ts
  * Change driver / connection string there only.
@@ -12,7 +12,8 @@ import { getDb, destroyDb, type Database } from "../config/db.config.js";
 // Re-export types consumed by other packages
 export type { Database };
 
-// ─── Helpers (MySQL has no RETURNING — use insert/update then select) ──────────
+// ─── Helpers (insert/update then select by id, rather than RETURNING, so the
+// shape stays identical to what a plain selectAll() returns elsewhere) ─────────
 
 async function insertAndReturn<T>(
   db: Kysely<Database>,
@@ -76,7 +77,7 @@ async function _runMigrationsImpl(db: Kysely<Database>): Promise<void> {
       .addColumn("port", "integer", (col) => col.defaultTo(4001))
       .addColumn("base_url", "varchar(512)")
       .addColumn("database_url", "text")
-      .addColumn("database_type", "varchar(32)", (col) => col.defaultTo("mariadb"))
+      .addColumn("database_type", "varchar(32)", (col) => col.defaultTo("postgres"))
       .addColumn("database_schema", "text")
       .addColumn("environment_variables", "text")
       .addColumn("secrets", "text")
@@ -133,7 +134,7 @@ async function _runMigrationsImpl(db: Kysely<Database>): Promise<void> {
       .addColumn("config", "text")
       .addColumn("triggers", "text")
       .addColumn("conditions", "text")
-      .addColumn("generated_code", sql`LONGTEXT` as any)
+      .addColumn("generated_code", "text")
       .addColumn("code_language", "varchar(32)", (col) => col.defaultTo("typescript"))
       .addColumn("status", "varchar(32)", (col) => col.defaultTo("draft"))
       .addColumn("is_enabled", "boolean", (col) => col.defaultTo(true))
@@ -142,7 +143,7 @@ async function _runMigrationsImpl(db: Kysely<Database>): Promise<void> {
       .addColumn("last_executed_at", "varchar(64)")
       .addColumn("hook_definitions", "text")
       .addColumn("flowchart_code", "text")
-      .addColumn("generated_hook_code", sql`LONGTEXT` as any)
+      .addColumn("generated_hook_code", "text")
       .addColumn("is_draft", "boolean", (col) => col.defaultTo(false))
       .execute();
   } catch { /* already exists */ }
@@ -171,7 +172,7 @@ async function _runMigrationsImpl(db: Kysely<Database>): Promise<void> {
       .addColumn("dev_dependencies", "text")
       .addColumn("environment_config", "text")
       .addColumn("docker_config", "text")
-      .addColumn("logs", sql`LONGTEXT` as any)
+      .addColumn("logs", "text")
       .addColumn("error_message", "text")
       .addColumn("warnings", "text")
       .addColumn("files_generated", "integer", (col) => col.defaultTo(0))
@@ -203,8 +204,8 @@ async function _runMigrationsImpl(db: Kysely<Database>): Promise<void> {
       .addColumn("deployment_config", "text")
       .addColumn("auto_restart", "boolean", (col) => col.defaultTo(false))
       .addColumn("restart_count", "integer", (col) => col.defaultTo(0))
-      .addColumn("stdout_log", sql`LONGTEXT` as any)
-      .addColumn("stderr_log", sql`LONGTEXT` as any)
+      .addColumn("stdout_log", "text")
+      .addColumn("stderr_log", "text")
       .addColumn("started_at", "varchar(64)")
       .addColumn("stopped_at", "varchar(64)")
       .addColumn("created_at", "varchar(64)", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`))
@@ -499,7 +500,7 @@ export const projectDb = {
       port: data.port || 4001,
       base_url: data.base_url || `http://localhost:${data.port || 4001}`,
       database_url: data.database_url || null,
-      database_type: data.database_type || "mariadb",
+      database_type: data.database_type || "postgres",
       environment_variables: JSON.stringify(data.environment_variables || {}),
       secrets: JSON.stringify(data.secrets || {}),
       generated_path: data.generated_path || null,
