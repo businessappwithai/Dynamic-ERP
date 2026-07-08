@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { rulesDb, runMigrations } from "@erdwithai/core/services";
+import { rulesEngineService } from "@/lib/rules-engine";
 
 let _dbReady = false;
 async function ensureDb() {
@@ -35,7 +36,7 @@ export const Route = createFileRoute("/api/rules/")({ server: { handlers: {
     await ensureDb();
     try {
       const body = await request.json();
-      const { entityName, ruleName, operation, jdmContent } = body;
+      const { entityName, ruleName, operation, jdmContent, isActive, priority } = body;
 
       if (!entityName || !ruleName || !operation || !jdmContent) {
         return new Response(JSON.stringify({ error: "Missing required fields: entityName, ruleName, operation, jdmContent" }), {
@@ -44,19 +45,16 @@ export const Route = createFileRoute("/api/rules/")({ server: { handlers: {
         });
       }
 
-      const errors: string[] = [];
-      if (!jdmContent.name) errors.push("Rule name is required in jdmContent");
-      if (!jdmContent.nodes || jdmContent.nodes.length === 0) errors.push("At least one node is required in jdmContent");
-
-      if (errors.length > 0) {
-        return new Response(JSON.stringify({ error: "Invalid JDM content", errors }), {
+      const validation = await rulesEngineService.validateRule(jdmContent);
+      if (!validation.valid) {
+        return new Response(JSON.stringify({ error: "Invalid JDM content", errors: validation.errors }), {
           status: 400,
           headers: { "Content-Type": "application/json" },
         });
       }
 
       const id = `rule_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      const rule = await rulesDb.create({ id, entityName, ruleName, operation, jdmContent });
+      const rule = await rulesDb.create({ id, entityName, ruleName, operation, jdmContent, isActive, priority });
 
       return new Response(JSON.stringify({ success: true, id, rule }), {
         status: 201,

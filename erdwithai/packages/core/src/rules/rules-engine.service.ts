@@ -2,12 +2,12 @@
  * Rules Engine Service
  *
  * Main service for business rule evaluation using GoRules zen-engine.
- * Integrates rule caching, validation, and evaluation.
- *
- * Created by: CORE-004 ticket
- * Week: 1
+ * Rule storage/versioning is delegated to `rulesDb` (services/database.service.ts,
+ * the `rules` + `rule_versions` tables) rather than duplicated here — this
+ * service owns evaluation/validation/dry-run only.
  */
 
+import { rulesDb } from "../services/database.service.js";
 import { validateJDM } from "./jdm.schema";
 import { ruleCache } from "./rule-cache.service";
 import type {
@@ -20,23 +20,20 @@ import type {
 } from "./rules.types";
 import { zenEngine } from "./zen-engine.singleton";
 
-/**
- * Database row structure for sys_rule_definitions table
- */
-interface RuleDefinitionRow {
-  id: string;
-  entity_name: string;
-  name: string;
-  trigger: string;
-  execution_mode: string;
-  decision_model: JDMContent;
-  generated_code: string | null;
-  active: boolean;
-  priority: number;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-  version: number;
+type StoredRule = Awaited<ReturnType<typeof rulesDb.findById>>;
+
+function toRuleDefinition(row: NonNullable<StoredRule>): RuleDefinition {
+  return {
+    id: row.id,
+    entityName: row.entityName,
+    ruleName: row.ruleName,
+    operation: row.operation as RuleDefinition["operation"],
+    jdmContent: row.jdmContent,
+    version: row.version,
+    isActive: row.isActive,
+    createdAt: new Date(row.createdAt),
+    updatedAt: new Date(row.updatedAt),
+  };
 }
 
 /**
@@ -44,12 +41,14 @@ interface RuleDefinitionRow {
  */
 export class RulesEngineService implements IRulesEngineService {
   /**
-   * @param db - Database instance
-   */
-  constructor(private db: any) {}
-
-  /**
-   * Evaluate a rule against evaluation context
+   * Evaluate a rule against evaluation context.
+   *
+   * Only executes real GoRules JDM (inputNode/decisionTableNode/outputNode +
+   * edges) — see validateRule()'s doc comment. The simplified dialect
+   * components/rules/JDMEditor.tsx's visual editor produces today passes
+   * validateRule() but has no zen-engine equivalent, so this returns a
+   * structured `{success: false, error}` for it rather than a real decision;
+   * it does not throw.
    *
    * @param jdmContent - JDM content to evaluate
    * @param context - Evaluation context with entity data and metadata
@@ -114,33 +113,46 @@ export class RulesEngineService implements IRulesEngineService {
   }
 
   /**
-   * Validate JDM content using Zod schema
+   * Validate JDM content against either of the two dialects this codebase
+   * actually produces:
+   *   1. Real GoRules JDM (inputNode/decisionTableNode/outputNode + edges) —
+   *      checked by compiling it in the real zen-engine, the only
+   *      authoritative source for "will this decision graph actually
+   *      evaluate". This is what admin/rules' JSON tab lets a user paste
+   *      directly, and the only shape `evaluate()`/`dryRun()` can execute.
+   *   2. The simplified {name, nodes: [{type: "decisionTable"|..., content}]}
+   *      shape components/rules/JDMEditor.tsx's visual editor actually
+   *      produces today. It has no zen-engine equivalent yet (no
+   *      inputNode/outputNode/edges, condition/output cells shaped
+   *      differently) — accepted here so saving a rule from that editor
+   *      doesn't get rejected, but note `evaluate()` cannot run this shape
+   *      until a translation layer exists between the two dialects.
    *
    * @param jdmContent - JDM content to validate
    * @returns Validation result with success flag and errors
    */
   async validateRule(jdmContent: JDMContent): Promise<RuleValidationResult> {
-    const result = validateJDM(jdmContent);
-
-    if (result.success) {
+    const engineResult = await zenEngine.validate(jdmContent);
+    if (engineResult.valid) {
       return { valid: true };
     }
 
-    const errors = result.error.errors.map((e) => {
-      const path = e.path.join(".");
-      return path + ": " + e.message;
-    });
+    const schemaResult = validateJDM(jdmContent);
+    if (schemaResult.success) {
+      return { valid: true };
+    }
 
+    const schemaErrors = schemaResult.error.errors.map((e) => `${e.path.join(".")}: ${e.message}`);
     return {
       valid: false,
-      errors,
+      errors: [engineResult.error || "Not valid GoRules JDM", ...schemaErrors],
     };
   }
 
   /**
    * Get active rule for entity and operation
    *
-   * Checks cache first, then database.
+   * Checks cache first, then database (highest-priority active rule).
    *
    * @param entityName - Entity name (e.g., "Patient")
    * @param operation - Operation type (CREATE, READ, UPDATE, DELETE)
@@ -150,157 +162,95 @@ export class RulesEngineService implements IRulesEngineService {
     entityName: string,
     operation: "CREATE" | "READ" | "UPDATE" | "DELETE"
   ): Promise<RuleDefinition | null> {
-    // Check cache first
     const cached = ruleCache.get(entityName, operation);
     if (cached) {
-      // Convert cached JDM to RuleDefinition format
       return {
-        id: "cached",
+        id: cached.id,
         entityName,
-        ruleName: cached.name,
+        ruleName: cached.ruleName,
         operation,
-        jdmContent: cached,
-        version: 1,
+        jdmContent: cached.jdm,
+        version: cached.version,
         isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date(cached.timestamp),
+        updatedAt: new Date(cached.timestamp),
       };
     }
 
-    // Query database for active rule
-    const row = await this.db
-      .selectFrom("sys_rule_definitions" as any)
-      .selectAll()
-      .where("entity_name" as any, "=", entityName)
-      .where("trigger" as any, "=", operation)
-      .where("active" as any, "=", true)
-      .orderBy("priority" as any, "asc")
-      .executeTakeFirst();
+    const row = await rulesDb.findActive(entityName, operation);
+    if (!row) return null;
 
-    if (!row) {
-      return null;
-    }
-
-    // Cache the rule for future access
-    ruleCache.set(entityName, operation, row.decision_model);
-
-    return this.mapRowToDefinition(row);
+    ruleCache.set(entityName, operation, row.id, row.ruleName, row.version, row.jdmContent);
+    return toRuleDefinition(row);
   }
 
   /**
    * Create a new rule definition
-   *
-   * @param entityName - Entity name
-   * @param ruleName - Human-readable rule name
-   * @param operation - Operation type
-   * @param jdmContent - JDM content
-   * @param userId - Optional user ID for created_by field
-   * @returns Created rule definition
    */
   async createRule(
     entityName: string,
     ruleName: string,
     operation: "CREATE" | "READ" | "UPDATE" | "DELETE" | "ALL",
     jdmContent: JDMContent,
-    userId?: string
+    _userId?: string
   ): Promise<RuleDefinition> {
-    const now = new Date();
-
-    const row = await this.db
-      .insertInto("sys_rule_definitions" as any)
-      .values({
-        id: this.generateId(),
-        entity_name: entityName,
-        name: ruleName,
-        trigger: operation,
-        execution_mode: "runtime",
-        decision_model: jdmContent,
-        generated_code: null,
-        active: true,
-        priority: 0,
-        created_by: userId || null,
-        created_at: now.toISOString(),
-        updated_at: now.toISOString(),
-        version: 1,
-      } as any)
-      .returningAll()
-      .executeTakeFirst();
-
+    const id = this.generateId();
+    const row = await rulesDb.create({ id, entityName, ruleName, operation, jdmContent });
     if (!row) {
       throw new Error("Failed to create rule: no row returned");
     }
 
-    // Invalidate cache for this entity/operation
-    ruleCache.set(entityName, operation, jdmContent);
-
-    return this.mapRowToDefinition(row);
+    ruleCache.set(entityName, operation, row.id, row.ruleName, row.version, jdmContent);
+    return toRuleDefinition(row);
   }
 
   /**
-   * Update an existing rule definition
-   *
-   * @param ruleId - Rule ID to update
-   * @param jdmContent - New JDM content
-   * @returns Updated rule definition
+   * Update an existing rule definition. Prior content is snapshotted into
+   * rule_versions (see rulesDb.update) so getRuleHistory/rollback can recover it.
    */
   async updateRule(ruleId: string, jdmContent: JDMContent): Promise<RuleDefinition> {
-    // Get current rule to find version
-    const current = await this.db
-      .selectFrom("sys_rule_definitions" as any)
-      .selectAll()
-      .where("id" as any, "=", ruleId)
-      .executeTakeFirst();
-
-    if (!current) {
-      throw new Error("Rule not found: " + ruleId);
-    }
-
-    const row = await this.db
-      .updateTable("sys_rule_definitions" as any)
-      .set({
-        decision_model: jdmContent,
-        updated_at: new Date().toISOString(),
-        version: ((current as any).version || 0) + 1,
-      } as any)
-      .where("id" as any, "=", ruleId)
-      .returningAll()
-      .executeTakeFirst();
-
+    const row = await rulesDb.update(ruleId, { jdmContent });
     if (!row) {
       throw new Error("Rule not found: " + ruleId);
     }
 
-    // Invalidate cache for this entity/operation
-    ruleCache.invalidate((row as any).entity_name, (row as any).trigger);
-
-    return this.mapRowToDefinition(row as any);
+    ruleCache.invalidate(row.entityName, row.operation);
+    return toRuleDefinition(row);
   }
 
   /**
-   * Get rule version history
-   *
-   * @param ruleId - Rule ID
-   * @returns Array of rule definitions from version history
+   * Get rule version history (most recent first)
    */
   async getRuleHistory(ruleId: string): Promise<RuleDefinition[]> {
-    const rows = (await this.db("sys_rule_versions")
-      .where({ rule_id: ruleId })
-      .orderBy("version", "desc")) as RuleDefinitionRow[] | any[];
+    const versions = await rulesDb.getHistory(ruleId);
+    return versions.map((v) => ({
+      id: v.id,
+      entityName: v.entityName,
+      ruleName: v.ruleName,
+      operation: v.operation as RuleDefinition["operation"],
+      jdmContent: v.jdmContent,
+      version: v.version,
+      isActive: false, // historical snapshots are never the active version
+      createdAt: new Date(v.createdAt),
+      updatedAt: new Date(v.createdAt),
+    }));
+  }
 
-    return (rows as RuleDefinitionRow[]).map((row: RuleDefinitionRow) =>
-      this.mapVersionRowToDefinition(row)
-    );
+  /**
+   * Roll a rule back to a prior version's JDM content (snapshotting the
+   * current content first, same as any other update).
+   */
+  async rollbackRule(ruleId: string, version: number): Promise<RuleDefinition> {
+    const row = await rulesDb.rollback(ruleId, version);
+    if (!row) {
+      throw new Error(`Version ${version} not found for rule ${ruleId}`);
+    }
+    ruleCache.invalidate(row.entityName, row.operation);
+    return toRuleDefinition(row);
   }
 
   /**
    * Get all rules with pagination
-   *
-   * Created by: CORE-008 ticket
-   *
-   * @param page - Page number (1-indexed)
-   * @param limit - Items per page
-   * @param entityName - Optional entity name filter
-   * @returns Paginated list of rules with metadata
    */
   async getAllRules(
     page: number = 1,
@@ -313,30 +263,13 @@ export class RulesEngineService implements IRulesEngineService {
     limit: number;
     totalPages: number;
   }> {
+    const all = await rulesDb.findAll(entityName ? { entityName } : undefined);
+    const total = all.length;
     const offset = (page - 1) * limit;
-
-    // Build base query
-    let countQuery = this.db.selectFrom("sys_rule_definitions" as any).selectAll();
-    let selectQuery = this.db.selectFrom("sys_rule_definitions" as any).selectAll();
-
-    if (entityName) {
-      countQuery = countQuery.where("entity_name" as any, "=", entityName);
-      selectQuery = selectQuery.where("entity_name" as any, "=", entityName);
-    }
-
-    // Get total count
-    const countResult = await countQuery.execute();
-    const total = countResult.length;
-
-    // Get paginated results
-    const rows = await selectQuery
-      .orderBy("created_at" as any, "desc")
-      .limit(limit)
-      .offset(offset)
-      .execute();
+    const rules = all.slice(offset, offset + limit).map(toRuleDefinition);
 
     return {
-      rules: rows.map((row: any) => this.mapRowToDefinition(row)),
+      rules,
       total,
       page,
       limit,
@@ -364,43 +297,7 @@ export class RulesEngineService implements IRulesEngineService {
    * Generate a unique ID for new rules
    */
   private generateId(): string {
-    return "rule_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
-  }
-
-  /**
-   * Map database row to RuleDefinition
-   */
-  private mapRowToDefinition(row: RuleDefinitionRow): RuleDefinition {
-    return {
-      id: row.id,
-      entityName: row.entity_name,
-      ruleName: row.name,
-      operation: row.trigger as "CREATE" | "READ" | "UPDATE" | "DELETE" | "ALL",
-      jdmContent: row.decision_model,
-      version: row.version,
-      isActive: row.active,
-      createdBy: row.created_by || undefined,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at),
-    };
-  }
-
-  /**
-   * Map version row to RuleDefinition
-   */
-  private mapVersionRowToDefinition(row: RuleDefinitionRow): RuleDefinition {
-    return {
-      id: row.id,
-      entityName: row.entity_name,
-      ruleName: row.name,
-      operation: row.trigger as "CREATE" | "READ" | "UPDATE" | "DELETE" | "ALL",
-      jdmContent: row.decision_model,
-      version: row.version,
-      isActive: row.active,
-      createdBy: row.created_by || undefined,
-      createdAt: new Date(row.created_at),
-      updatedAt: new Date(row.updated_at),
-    };
+    return "rule_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
   }
 }
 

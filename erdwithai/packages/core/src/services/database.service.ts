@@ -256,8 +256,47 @@ async function _runMigrationsImpl(db: Kysely<Database>): Promise<void> {
       .addColumn("rule_name", "varchar(255)", (col) => col.notNull())
       .addColumn("operation", "varchar(64)", (col) => col.notNull())
       .addColumn("jdm_content", "text", (col) => col.notNull())
+      .addColumn("is_active", "boolean", (col) => col.defaultTo(true))
+      .addColumn("priority", "integer", (col) => col.defaultTo(0))
+      .addColumn("version", "integer", (col) => col.defaultTo(1))
       .addColumn("created_at", "varchar(64)", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`))
       .addColumn("updated_at", "varchar(64)", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`))
+      .execute();
+  } catch { /* already exists */ }
+
+  try {
+    await db.schema
+      .alterTable("rules")
+      .addColumn("is_active", "boolean", (col) => col.defaultTo(true))
+      .execute();
+  } catch { /* column already exists */ }
+
+  try {
+    await db.schema
+      .alterTable("rules")
+      .addColumn("priority", "integer", (col) => col.defaultTo(0))
+      .execute();
+  } catch { /* column already exists */ }
+
+  try {
+    await db.schema
+      .alterTable("rules")
+      .addColumn("version", "integer", (col) => col.defaultTo(1))
+      .execute();
+  } catch { /* column already exists */ }
+
+  try {
+    await db.schema
+      .createTable("rule_versions")
+      .ifNotExists()
+      .addColumn("id", "varchar(128)", (col) => col.primaryKey())
+      .addColumn("rule_id", "varchar(128)", (col) => col.notNull())
+      .addColumn("version", "integer", (col) => col.notNull())
+      .addColumn("entity_name", "varchar(255)", (col) => col.notNull())
+      .addColumn("rule_name", "varchar(255)", (col) => col.notNull())
+      .addColumn("operation", "varchar(64)", (col) => col.notNull())
+      .addColumn("jdm_content", "text", (col) => col.notNull())
+      .addColumn("created_at", "varchar(64)", (col) => col.defaultTo(sql`CURRENT_TIMESTAMP`))
       .execute();
   } catch { /* already exists */ }
 
@@ -1062,6 +1101,21 @@ export const settingsDb = {
 
 // ─── rulesDb ──────────────────────────────────────────────────────────────────
 
+function transformRule(r: any) {
+  return {
+    id: r.id,
+    entityName: r.entity_name,
+    ruleName: r.rule_name,
+    operation: r.operation,
+    jdmContent: JSON.parse(r.jdm_content),
+    isActive: Boolean(r.is_active),
+    priority: r.priority ?? 0,
+    version: r.version ?? 1,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+  };
+}
+
 export const rulesDb = {
   async findAll(options?: { entityName?: string; operation?: string }) {
     const db = getDb();
@@ -1069,33 +1123,39 @@ export const rulesDb = {
     if (options?.entityName) query = query.where("entity_name", "=", options.entityName);
     if (options?.operation) query = query.where("operation", "=", options.operation);
     const rows = await query.orderBy("created_at", "desc").execute();
-    return (rows as any[]).map((r) => ({
-      id: r.id,
-      entityName: r.entity_name,
-      ruleName: r.rule_name,
-      operation: r.operation,
-      jdmContent: JSON.parse(r.jdm_content),
-      createdAt: r.created_at,
-      updatedAt: r.updated_at,
-    }));
+    return (rows as any[]).map(transformRule);
   },
 
   async findById(id: string) {
     const db = getDb();
     const row = await db.selectFrom("rules").selectAll().where("id", "=", id).executeTakeFirst();
     if (!row) return null;
-    return {
-      id: (row as any).id,
-      entityName: (row as any).entity_name,
-      ruleName: (row as any).rule_name,
-      operation: (row as any).operation,
-      jdmContent: JSON.parse((row as any).jdm_content),
-      createdAt: (row as any).created_at,
-      updatedAt: (row as any).updated_at,
-    };
+    return transformRule(row);
   },
 
-  async create(data: { id: string; entityName: string; ruleName: string; operation: string; jdmContent: object }) {
+  /** Highest-priority active rule for an entity/operation — the lookup evaluation needs. */
+  async findActive(entityName: string, operation: string) {
+    const db = getDb();
+    const row = await db
+      .selectFrom("rules")
+      .selectAll()
+      .where("entity_name", "=", entityName)
+      .where("operation", "=", operation)
+      .where("is_active", "=", true as any)
+      .orderBy("priority", "asc")
+      .executeTakeFirst();
+    return row ? transformRule(row) : null;
+  },
+
+  async create(data: {
+    id: string;
+    entityName: string;
+    ruleName: string;
+    operation: string;
+    jdmContent: object;
+    isActive?: boolean;
+    priority?: number;
+  }) {
     const db = getDb();
     const now = new Date().toISOString();
     await db.insertInto("rules").values({
@@ -1104,21 +1164,89 @@ export const rulesDb = {
       rule_name: data.ruleName,
       operation: data.operation,
       jdm_content: JSON.stringify(data.jdmContent),
+      is_active: data.isActive ?? true,
+      priority: data.priority ?? 0,
+      version: 1,
       created_at: now,
       updated_at: now,
     } as any).execute();
     return this.findById(data.id);
   },
 
-  async update(id: string, data: { entityName?: string; ruleName?: string; operation?: string; jdmContent?: object }) {
+  async update(id: string, data: {
+    entityName?: string;
+    ruleName?: string;
+    operation?: string;
+    jdmContent?: object;
+    isActive?: boolean;
+    priority?: number;
+  }) {
     const db = getDb();
+    const existing = await db.selectFrom("rules").selectAll().where("id", "=", id).executeTakeFirst();
+    if (!existing) return null;
+
     const updates: Record<string, any> = { updated_at: new Date().toISOString() };
     if (data.entityName !== undefined) updates.entity_name = data.entityName;
     if (data.ruleName !== undefined) updates.rule_name = data.ruleName;
     if (data.operation !== undefined) updates.operation = data.operation;
-    if (data.jdmContent !== undefined) updates.jdm_content = JSON.stringify(data.jdmContent);
+    if (data.isActive !== undefined) updates.is_active = data.isActive;
+    if (data.priority !== undefined) updates.priority = data.priority;
+
+    // Snapshot the current jdm_content into history BEFORE overwriting it, and
+    // only bump the version when the decision model actually changed (not on
+    // a plain rename or active/priority toggle).
+    if (data.jdmContent !== undefined) {
+      const newContent = JSON.stringify(data.jdmContent);
+      if (newContent !== (existing as any).jdm_content) {
+        await db.insertInto("rule_versions").values({
+          id: `rulever_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+          rule_id: id,
+          version: (existing as any).version,
+          entity_name: (existing as any).entity_name,
+          rule_name: (existing as any).rule_name,
+          operation: (existing as any).operation,
+          jdm_content: (existing as any).jdm_content,
+          created_at: (existing as any).updated_at,
+        } as any).execute();
+        updates.jdm_content = newContent;
+        updates.version = ((existing as any).version || 1) + 1;
+      }
+    }
+
     await db.updateTable("rules").set(updates).where("id", "=", id).execute();
     return this.findById(id);
+  },
+
+  async getHistory(id: string) {
+    const rows = await getDb()
+      .selectFrom("rule_versions")
+      .selectAll()
+      .where("rule_id", "=", id)
+      .orderBy("version", "desc")
+      .execute();
+    return (rows as any[]).map((r) => ({
+      id: r.id,
+      ruleId: r.rule_id,
+      version: r.version,
+      entityName: r.entity_name,
+      ruleName: r.rule_name,
+      operation: r.operation,
+      jdmContent: JSON.parse(r.jdm_content),
+      createdAt: r.created_at,
+    }));
+  },
+
+  /** Restores a rule's jdm_content from a past version, snapshotting the current content first. */
+  async rollback(id: string, version: number) {
+    const db = getDb();
+    const snapshot = await db
+      .selectFrom("rule_versions")
+      .selectAll()
+      .where("rule_id", "=", id)
+      .where("version", "=", version)
+      .executeTakeFirst();
+    if (!snapshot) return null;
+    return this.update(id, { jdmContent: JSON.parse((snapshot as any).jdm_content) });
   },
 
   async delete(id: string) {

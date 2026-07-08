@@ -11,7 +11,10 @@
 import { LRUCache } from "lru-cache";
 import type { JDMContent } from "./rules.types";
 
-interface CacheEntry {
+export interface CacheEntry {
+  id: string;
+  ruleName: string;
+  version: number;
   jdm: JDMContent;
   timestamp: number;
 }
@@ -67,15 +70,15 @@ class RuleCacheService {
    *
    * @param entityName - Entity name (e.g., "Patient")
    * @param operation - Operation type (CREATE, READ, UPDATE, DELETE)
-   * @returns Cached JDM content or undefined if not found/expired
+   * @returns Cached rule entry (id, version, jdm) or undefined if not found/expired
    */
-  get(entityName: string, operation: string): JDMContent | undefined {
+  get(entityName: string, operation: string): CacheEntry | undefined {
     const key = this.getKey(entityName, operation);
     const entry = this.cache.get(key);
 
     if (entry) {
       this.hits++;
-      return entry.jdm;
+      return entry;
     }
 
     this.misses++;
@@ -87,11 +90,17 @@ class RuleCacheService {
    *
    * @param entityName - Entity name
    * @param operation - Operation type
+   * @param id - Rule ID (so cache hits don't lose identity — RulesEngineService.getRule() needs it)
+   * @param ruleName - Human-readable rule name
+   * @param version - Rule version at cache time
    * @param jdm - JDM content to cache
    */
-  set(entityName: string, operation: string, jdm: JDMContent): void {
+  set(entityName: string, operation: string, id: string, ruleName: string, version: number, jdm: JDMContent): void {
     const key = this.getKey(entityName, operation);
     const entry: CacheEntry = {
+      id,
+      ruleName,
+      version,
       jdm,
       timestamp: Date.now(),
     };
