@@ -473,21 +473,13 @@ Test files: `tests/e2e/**/*.e2e.spec.ts`
 
 ## Database
 
-**Engine**: Knex.js with PostgreSQL (production) / SQLite (development)
+**Engine**: Kysely (type-safe SQL query builder) with PostgreSQL, via `pg`
 
-**Migrations** (`database/migrations/`):
-- `001_initial_schema.ts` - Core tables
-- `002_add_project_generation_fields.ts` - Generation metadata
-- `003_add_hook_workflow_fields.ts` - Hook and workflow support
+**Migrations**: Handled via Kysely schema builder in `packages/core/src/services/database.service.ts`
+- No separate migration files — schema is defined in TypeScript with `database.schema.createTable()`
+- Runs automatically on first request (see `runMigrations()` call sites in `packages/web/src/routes/api/*`)
 
-**Run migrations**:
-```bash
-bun run migrate
-# or directly:
-bun run packages/generator/migrations/migrate.ts
-```
-
-**Knex config**: `database/knexfile.ts`
+**Connection config**: `packages/core/src/config/db.config.ts` (single place to change driver / connection string)
 
 ---
 

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from app.catalog.cache import build_catalog
-from app.routes import actions, catalog, schema
+from app.routes import actions, catalog, events, modules, schema
 
 
 def create_app() -> FastAPI:
@@ -10,6 +10,8 @@ def create_app() -> FastAPI:
     app.include_router(catalog.router)
     app.include_router(schema.router)
     app.include_router(actions.router)
+    app.include_router(events.router)
+    app.include_router(modules.router)
 
     @app.on_event("startup")
     def _warm_catalog_cache() -> None:

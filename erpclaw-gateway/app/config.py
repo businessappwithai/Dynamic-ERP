@@ -20,6 +20,15 @@ class Settings:
     jwt_algorithm: str = "HS256"
     jwt_required_scope: str = os.environ.get("JWT_REQUIRED_SCOPE", "erpclaw:invoke")
 
+    # Real external IdP support: any standard OIDC provider (Auth0, Okta,
+    # Keycloak, Cognito, ...) that publishes a JWKS document. Unset (the
+    # default) keeps the HS256 pre-shared-secret path above for dev/test —
+    # set JWKS_URL to switch verify_token() over to it. See app/auth/jwks.py.
+    jwks_url: str | None = os.environ.get("JWKS_URL")
+    oidc_issuer: str | None = os.environ.get("OIDC_ISSUER")
+    oidc_audience: str | None = os.environ.get("OIDC_AUDIENCE")
+    jwks_cache_ttl_s: float = float(os.environ.get("JWKS_CACHE_TTL_S", "3600"))
+
     action_subprocess_timeout_s: float = float(os.environ.get("ERPCLAW_ACTION_TIMEOUT_S", "30"))
 
 

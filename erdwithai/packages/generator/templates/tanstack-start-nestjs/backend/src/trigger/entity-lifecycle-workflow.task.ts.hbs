@@ -1,13 +1,17 @@
 /**
- * Entity Lifecycle Workflow - Trigger.dev v3 Task (Placeholder)
+ * Entity Lifecycle Workflow - Trigger.dev v3 Task
  *
- * This is a placeholder for async workflow orchestration.
- * When integrated with Trigger.dev, this task would:
- * 1. Load entity + related entities from database
- * 2. Load JDM rule from sys_rule_definitions table
- * 3. Execute @gorules/zen-engine with JSON context
- * 4. Parse output mutations and apply to database
- * 5. Write sys_workflow_runs record
+ * Fired (non-blocking) after every entity CREATE/UPDATE/DELETE by
+ * WorkflowService.trigger(). Loads the entity, evaluates the active JDM rule
+ * for its entity/operation (if any) via the real GoRules zen-engine, applies
+ * any resulting mutations back to the entity row, and records the outcome on
+ * both sys_workflow_runs and the entity's own workflow_status column.
+ *
+ * Related-entity loading is a known simplification: it currently returns an
+ * empty relations object rather than eagerly loading FK-related rows, since
+ * that needs per-entity FK metadata this generic task doesn't have. A rule
+ * that only inspects `entity` fields works today; one that needs `relations`
+ * does not yet.
  *
  * Generated: {{now}}
  * Project: {{project.name}}
@@ -15,56 +19,139 @@
 
 import { task } from '@trigger.dev/sdk/v3';
 import { ZenEngine } from '@gorules/zen-engine';
+import { Kysely, PostgresDialect } from 'kysely';
+import { Pool } from 'pg';
 
-// Placeholder task that logs workflow execution
+// Standalone connection: this task runs in Trigger.dev's own worker process,
+// outside the NestJS DI graph DatabaseService/DatabaseModule are wired into.
+let _db: Kysely<any> | null = null;
+function getDb(): Kysely<any> {
+  if (!_db) {
+    _db = new Kysely<any>({
+      dialect: new PostgresDialect({ pool: new Pool({ connectionString: process.env.DATABASE_URL }) }),
+    });
+  }
+  return _db;
+}
+
+let _engine: ZenEngine | null = null;
+function getEngine(): ZenEngine {
+  if (!_engine) {
+    _engine = new ZenEngine();
+  }
+  return _engine;
+}
+
+interface WorkflowPayload {
+  workflowRunId: string;
+  entityName: string;
+  entityId: string;
+  operation: 'create' | 'update' | 'delete';
+  userId?: string;
+}
+
 export const entityLifecycleWorkflow = task({
   id: 'entity-lifecycle-workflow',
-  run: async (payload: {
-    workflowRunId: string;
-    entityName: string;
-    entityId: string;
-    operation: 'create' | 'update' | 'delete';
-    userId?: string;
-  }) => {
-    console.log(`[Workflow] Task triggered for ${payload.entityName}:${payload.operation}:${payload.entityId}`);
+  retry: {
+    maxAttempts: 3,
+    minTimeoutInMs: 2_000,
+    maxTimeoutInMs: 8_000,
+    factor: 2,
+  },
+  run: async (payload: WorkflowPayload) => {
+    const db = getDb();
 
-    // In production, this would:
-    // 1. Load entity from database
-    // 2. Execute rules
-    // 3. Apply mutations
-    // 4. Update workflow_runs table
+    try {
+      const { entity, relations } = await loadEntityWithContext(db, payload.entityName, payload.entityId);
 
-    return {
-      success: true,
-      message: 'Workflow task received (placeholder)',
-      workflowRunId: payload.workflowRunId,
-    };
+      const rule = await db
+        .selectFrom('sys_rule_definitions')
+        .selectAll()
+        .where('entity_name', '=', payload.entityName)
+        .where('operation', '=', payload.operation.toUpperCase())
+        .where('is_active', '=', true)
+        .executeTakeFirst();
+
+      const mutations = rule
+        ? await evaluateRules(getEngine(), rule.jdm_content, { ...entity, _relations: relations })
+        : null;
+
+      if (mutations && Object.keys(mutations).length > 0) {
+        await db
+          .updateTable(payload.entityName as any)
+          .set(mutations as any)
+          .where('id' as any, '=', payload.entityId)
+          .execute();
+      }
+
+      await db
+        .updateTable('sys_workflow_runs' as any)
+        .set({
+          status: 'success',
+          result: JSON.stringify(mutations ?? {}),
+          completed_at: new Date(),
+          updated_at: new Date(),
+        } as any)
+        .where('id' as any, '=', payload.workflowRunId)
+        .execute();
+
+      await db
+        .updateTable(payload.entityName as any)
+        .set({ workflow_status: 'success' } as any)
+        .where('id' as any, '=', payload.entityId)
+        .execute();
+
+      return { success: true, workflowRunId: payload.workflowRunId, mutationsApplied: mutations };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+
+      await db
+        .updateTable('sys_workflow_runs' as any)
+        .set({ status: 'error', error_message: message, completed_at: new Date(), updated_at: new Date() } as any)
+        .where('id' as any, '=', payload.workflowRunId)
+        .execute();
+
+      await db
+        .updateTable(payload.entityName as any)
+        .set({ workflow_status: 'error' } as any)
+        .where('id' as any, '=', payload.entityId)
+        .execute();
+
+      // Re-throw so Trigger.dev's own retry policy (above) applies -- this
+      // task's job is to record the failure, not to swallow it.
+      throw error;
+    }
   },
 });
 
-// Helper function to evaluate rules (placeholder)
+/**
+ * Evaluates a JDM rule against an entity, returning the mutation object the
+ * decision produced (empty if the rule produced no output or failed).
+ */
 async function evaluateRules(
   engine: ZenEngine,
   jdmContent: string,
   context: Record<string, unknown>
-): Promise<any[]> {
+): Promise<Record<string, unknown>> {
   try {
-    const result = await engine.evaluate(JSON.parse(jdmContent), context) as any;
-    return (result && typeof result === 'object' && 'violations' in result) ? result.violations : [];
+    const decision = engine.createDecision(JSON.parse(jdmContent));
+    const result = await decision.evaluate(context);
+    return (result?.result && typeof result.result === 'object') ? (result.result as Record<string, unknown>) : {};
   } catch (error) {
-    console.error('Rule evaluation error:', error);
-    return [];
+    console.error('[Workflow] Rule evaluation error:', error);
+    return {};
   }
 }
 
-// Helper function to load entity with relations (placeholder)
+/**
+ * Loads the entity row. See the module doc comment: relation loading is not
+ * yet implemented (always returns `{}`).
+ */
 async function loadEntityWithContext(
+  db: Kysely<any>,
   entityName: string,
   entityId: string
 ): Promise<{ entity: Record<string, unknown>; relations: Record<string, unknown> }> {
-  // In production, this would query the database and load entity with all relations
-  return {
-    entity: { id: entityId },
-    relations: {},
-  };
+  const entity = await db.selectFrom(entityName as any).selectAll().where('id' as any, '=', entityId).executeTakeFirst();
+  return { entity: (entity as Record<string, unknown>) ?? {}, relations: {} };
 }

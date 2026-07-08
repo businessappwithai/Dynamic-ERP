@@ -212,8 +212,22 @@ export interface RulesTable {
   rule_name: string;
   operation: string;
   jdm_content: string;
+  is_active: boolean;
+  priority: number;
+  version: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface RuleVersionsTable {
+  id: string;
+  rule_id: string;
+  version: number;
+  entity_name: string;
+  rule_name: string;
+  operation: string;
+  jdm_content: string;
+  created_at: string;
 }
 
 export interface Database {
@@ -226,6 +240,7 @@ export interface Database {
   entities: EntitiesTable;
   settings: SettingsTable;
   rules: RulesTable;
+  rule_versions: RuleVersionsTable;
   auth_users: AuthUsersTable;
   auth_sessions: AuthSessionsTable;
   auth_accounts: AuthAccountsTable;

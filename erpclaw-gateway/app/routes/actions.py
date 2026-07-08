@@ -4,9 +4,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from app.auth.jwt import Principal, require_invoke_scope
+from app.auth.jwt import Principal, authorize_action, require_invoke_scope
 from app.catalog.cache import find_action
 from app.erpclaw_bridge import loader as bridge_loader
+from app.events.bus import event_bus
 
 router = APIRouter()
 
@@ -27,7 +28,7 @@ def run_action(
     domain: str,
     action: str,
     body: ActionRequest,
-    _: Principal = Depends(require_invoke_scope),
+    principal: Principal = Depends(require_invoke_scope),
 ) -> dict:
     # Checked before the catalog lookup: credential/backup/master-key actions
     # are deliberately excluded from the catalog (erpclaw's own "not even
@@ -46,6 +47,8 @@ def run_action(
             detail=f"Unknown action '{action}' under domain '{domain}'.",
         )
 
+    authorize_action(principal, kind=entry["kind"], destructive=entry["destructive"])
+
     tool_router = bridge_loader.tool_router()
     result = tool_router.dispatch(action, body.args, body.user_confirmed)
 
@@ -56,5 +59,16 @@ def run_action(
         # validation/business-rule failure) -> 422. Anything else (unparseable
         # router output, subprocess spawn failure) -> 500.
         http_status = 422 if "message" in result else 500
+
+    event_bus.publish(
+        "action.dispatched",
+        {
+            "domain": domain,
+            "action": action,
+            "status": status_value,
+            "http_status": http_status,
+            "user": principal.subject,
+        },
+    )
 
     return JSONResponse(status_code=http_status, content=result)

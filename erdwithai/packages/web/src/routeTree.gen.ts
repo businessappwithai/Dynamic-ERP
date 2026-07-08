@@ -34,6 +34,7 @@ import { Route as ProjectsIdGenerateRouteImport } from './routes/projects/$id/ge
 import { Route as ProjectsIdDesignRouteImport } from './routes/projects/$id/design'
 import { Route as ProjectsIdDeployRouteImport } from './routes/projects/$id/deploy'
 import { Route as ApiRulesValidateRouteImport } from './routes/api/rules/validate'
+import { Route as ApiRulesDryRunRouteImport } from './routes/api/rules/dry-run'
 import { Route as ApiMermaidParseRouteImport } from './routes/api/mermaid/parse'
 import { Route as ApiMermaidFilenameRouteImport } from './routes/api/mermaid/$filename'
 import { Route as ApiCopilotkitSplatRouteImport } from './routes/api/copilotkit/$'
@@ -56,11 +57,13 @@ import { Route as ApiAdminUsersIndexRouteImport } from './routes/api/admin/users
 import { Route as ProjectsIdEnhanceServiceNameRouteImport } from './routes/projects/$id/enhance/$serviceName'
 import { Route as ApiWorkflowsWorkflowIdStatusRouteImport } from './routes/api/workflows/$workflowId/status'
 import { Route as ApiWorkflowsWorkflowIdRetryRouteImport } from './routes/api/workflows/$workflowId/retry'
+import { Route as ApiRulesRuleIdHistoryRouteImport } from './routes/api/rules/$ruleId/history'
 import { Route as AdminRulesEntityRuleIdRouteImport } from './routes/admin/rules/$entity/$ruleId'
 import { Route as ApiProjectsIdWorkflowsIndexRouteImport } from './routes/api/projects/$id/workflows/index'
 import { Route as ApiProjectsIdMembersIndexRouteImport } from './routes/api/projects/$id/members/index'
 import { Route as ApiProjectsIdErdVersionsIndexRouteImport } from './routes/api/projects/$id/erd-versions/index'
 import { Route as ApiProjectsIdDeploymentIndexRouteImport } from './routes/api/projects/$id/deployment/index'
+import { Route as ApiRulesRuleIdRollbackVersionRouteImport } from './routes/api/rules/$ruleId/rollback/$version'
 import { Route as ApiAdminUsersIdRejectRouteImport } from './routes/api/admin/users/$id/reject'
 import { Route as ApiAdminUsersIdApproveRouteImport } from './routes/api/admin/users/$id/approve'
 import { Route as ApiProjectsIdWorkflowsServiceNameIndexRouteImport } from './routes/api/projects/$id/workflows/$serviceName/index'
@@ -199,6 +202,11 @@ const ApiRulesValidateRoute = ApiRulesValidateRouteImport.update({
   path: '/api/rules/validate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRulesDryRunRoute = ApiRulesDryRunRouteImport.update({
+  id: '/api/rules/dry-run',
+  path: '/api/rules/dry-run',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMermaidParseRoute = ApiMermaidParseRouteImport.update({
   id: '/api/mermaid/parse',
   path: '/api/mermaid/parse',
@@ -314,6 +322,11 @@ const ApiWorkflowsWorkflowIdRetryRoute =
     path: '/api/workflows/$workflowId/retry',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiRulesRuleIdHistoryRoute = ApiRulesRuleIdHistoryRouteImport.update({
+  id: '/api/rules/$ruleId/history',
+  path: '/api/rules/$ruleId/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRulesEntityRuleIdRoute = AdminRulesEntityRuleIdRouteImport.update({
   id: '/admin/rules/$entity/$ruleId',
   path: '/admin/rules/$entity/$ruleId',
@@ -341,6 +354,12 @@ const ApiProjectsIdDeploymentIndexRoute =
   ApiProjectsIdDeploymentIndexRouteImport.update({
     id: '/api/projects/$id/deployment/',
     path: '/api/projects/$id/deployment/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiRulesRuleIdRollbackVersionRoute =
+  ApiRulesRuleIdRollbackVersionRouteImport.update({
+    id: '/api/rules/$ruleId/rollback/$version',
+    path: '/api/rules/$ruleId/rollback/$version',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiAdminUsersIdRejectRoute = ApiAdminUsersIdRejectRouteImport.update({
@@ -441,6 +460,7 @@ export interface FileRoutesByFullPath {
   '/api/copilotkit/$': typeof ApiCopilotkitSplatRoute
   '/api/mermaid/$filename': typeof ApiMermaidFilenameRoute
   '/api/mermaid/parse': typeof ApiMermaidParseRoute
+  '/api/rules/dry-run': typeof ApiRulesDryRunRoute
   '/api/rules/validate': typeof ApiRulesValidateRoute
   '/projects/$id/deploy': typeof ProjectsIdDeployRoute
   '/projects/$id/design': typeof ProjectsIdDesignRoute
@@ -455,6 +475,7 @@ export interface FileRoutesByFullPath {
   '/api/rules/': typeof ApiRulesIndexRoute
   '/api/workflows/': typeof ApiWorkflowsIndexRoute
   '/admin/rules/$entity/$ruleId': typeof AdminRulesEntityRuleIdRoute
+  '/api/rules/$ruleId/history': typeof ApiRulesRuleIdHistoryRoute
   '/api/workflows/$workflowId/retry': typeof ApiWorkflowsWorkflowIdRetryRoute
   '/api/workflows/$workflowId/status': typeof ApiWorkflowsWorkflowIdStatusRoute
   '/projects/$id/enhance/$serviceName': typeof ProjectsIdEnhanceServiceNameRoute
@@ -465,6 +486,7 @@ export interface FileRoutesByFullPath {
   '/projects/$id/enhance/': typeof ProjectsIdEnhanceIndexRoute
   '/api/admin/users/$id/approve': typeof ApiAdminUsersIdApproveRoute
   '/api/admin/users/$id/reject': typeof ApiAdminUsersIdRejectRoute
+  '/api/rules/$ruleId/rollback/$version': typeof ApiRulesRuleIdRollbackVersionRoute
   '/api/projects/$id/deployment/': typeof ApiProjectsIdDeploymentIndexRoute
   '/api/projects/$id/erd-versions/': typeof ApiProjectsIdErdVersionsIndexRoute
   '/api/projects/$id/members/': typeof ApiProjectsIdMembersIndexRoute
@@ -507,6 +529,7 @@ export interface FileRoutesByTo {
   '/api/copilotkit/$': typeof ApiCopilotkitSplatRoute
   '/api/mermaid/$filename': typeof ApiMermaidFilenameRoute
   '/api/mermaid/parse': typeof ApiMermaidParseRoute
+  '/api/rules/dry-run': typeof ApiRulesDryRunRoute
   '/api/rules/validate': typeof ApiRulesValidateRoute
   '/projects/$id/deploy': typeof ProjectsIdDeployRoute
   '/projects/$id/design': typeof ProjectsIdDesignRoute
@@ -521,6 +544,7 @@ export interface FileRoutesByTo {
   '/api/rules': typeof ApiRulesIndexRoute
   '/api/workflows': typeof ApiWorkflowsIndexRoute
   '/admin/rules/$entity/$ruleId': typeof AdminRulesEntityRuleIdRoute
+  '/api/rules/$ruleId/history': typeof ApiRulesRuleIdHistoryRoute
   '/api/workflows/$workflowId/retry': typeof ApiWorkflowsWorkflowIdRetryRoute
   '/api/workflows/$workflowId/status': typeof ApiWorkflowsWorkflowIdStatusRoute
   '/projects/$id/enhance/$serviceName': typeof ProjectsIdEnhanceServiceNameRoute
@@ -531,6 +555,7 @@ export interface FileRoutesByTo {
   '/projects/$id/enhance': typeof ProjectsIdEnhanceIndexRoute
   '/api/admin/users/$id/approve': typeof ApiAdminUsersIdApproveRoute
   '/api/admin/users/$id/reject': typeof ApiAdminUsersIdRejectRoute
+  '/api/rules/$ruleId/rollback/$version': typeof ApiRulesRuleIdRollbackVersionRoute
   '/api/projects/$id/deployment': typeof ApiProjectsIdDeploymentIndexRoute
   '/api/projects/$id/erd-versions': typeof ApiProjectsIdErdVersionsIndexRoute
   '/api/projects/$id/members': typeof ApiProjectsIdMembersIndexRoute
@@ -574,6 +599,7 @@ export interface FileRoutesById {
   '/api/copilotkit/$': typeof ApiCopilotkitSplatRoute
   '/api/mermaid/$filename': typeof ApiMermaidFilenameRoute
   '/api/mermaid/parse': typeof ApiMermaidParseRoute
+  '/api/rules/dry-run': typeof ApiRulesDryRunRoute
   '/api/rules/validate': typeof ApiRulesValidateRoute
   '/projects/$id/deploy': typeof ProjectsIdDeployRoute
   '/projects/$id/design': typeof ProjectsIdDesignRoute
@@ -588,6 +614,7 @@ export interface FileRoutesById {
   '/api/rules/': typeof ApiRulesIndexRoute
   '/api/workflows/': typeof ApiWorkflowsIndexRoute
   '/admin/rules/$entity/$ruleId': typeof AdminRulesEntityRuleIdRoute
+  '/api/rules/$ruleId/history': typeof ApiRulesRuleIdHistoryRoute
   '/api/workflows/$workflowId/retry': typeof ApiWorkflowsWorkflowIdRetryRoute
   '/api/workflows/$workflowId/status': typeof ApiWorkflowsWorkflowIdStatusRoute
   '/projects/$id/enhance/$serviceName': typeof ProjectsIdEnhanceServiceNameRoute
@@ -598,6 +625,7 @@ export interface FileRoutesById {
   '/projects/$id/enhance/': typeof ProjectsIdEnhanceIndexRoute
   '/api/admin/users/$id/approve': typeof ApiAdminUsersIdApproveRoute
   '/api/admin/users/$id/reject': typeof ApiAdminUsersIdRejectRoute
+  '/api/rules/$ruleId/rollback/$version': typeof ApiRulesRuleIdRollbackVersionRoute
   '/api/projects/$id/deployment/': typeof ApiProjectsIdDeploymentIndexRoute
   '/api/projects/$id/erd-versions/': typeof ApiProjectsIdErdVersionsIndexRoute
   '/api/projects/$id/members/': typeof ApiProjectsIdMembersIndexRoute
@@ -642,6 +670,7 @@ export interface FileRouteTypes {
     | '/api/copilotkit/$'
     | '/api/mermaid/$filename'
     | '/api/mermaid/parse'
+    | '/api/rules/dry-run'
     | '/api/rules/validate'
     | '/projects/$id/deploy'
     | '/projects/$id/design'
@@ -656,6 +685,7 @@ export interface FileRouteTypes {
     | '/api/rules/'
     | '/api/workflows/'
     | '/admin/rules/$entity/$ruleId'
+    | '/api/rules/$ruleId/history'
     | '/api/workflows/$workflowId/retry'
     | '/api/workflows/$workflowId/status'
     | '/projects/$id/enhance/$serviceName'
@@ -666,6 +696,7 @@ export interface FileRouteTypes {
     | '/projects/$id/enhance/'
     | '/api/admin/users/$id/approve'
     | '/api/admin/users/$id/reject'
+    | '/api/rules/$ruleId/rollback/$version'
     | '/api/projects/$id/deployment/'
     | '/api/projects/$id/erd-versions/'
     | '/api/projects/$id/members/'
@@ -708,6 +739,7 @@ export interface FileRouteTypes {
     | '/api/copilotkit/$'
     | '/api/mermaid/$filename'
     | '/api/mermaid/parse'
+    | '/api/rules/dry-run'
     | '/api/rules/validate'
     | '/projects/$id/deploy'
     | '/projects/$id/design'
@@ -722,6 +754,7 @@ export interface FileRouteTypes {
     | '/api/rules'
     | '/api/workflows'
     | '/admin/rules/$entity/$ruleId'
+    | '/api/rules/$ruleId/history'
     | '/api/workflows/$workflowId/retry'
     | '/api/workflows/$workflowId/status'
     | '/projects/$id/enhance/$serviceName'
@@ -732,6 +765,7 @@ export interface FileRouteTypes {
     | '/projects/$id/enhance'
     | '/api/admin/users/$id/approve'
     | '/api/admin/users/$id/reject'
+    | '/api/rules/$ruleId/rollback/$version'
     | '/api/projects/$id/deployment'
     | '/api/projects/$id/erd-versions'
     | '/api/projects/$id/members'
@@ -774,6 +808,7 @@ export interface FileRouteTypes {
     | '/api/copilotkit/$'
     | '/api/mermaid/$filename'
     | '/api/mermaid/parse'
+    | '/api/rules/dry-run'
     | '/api/rules/validate'
     | '/projects/$id/deploy'
     | '/projects/$id/design'
@@ -788,6 +823,7 @@ export interface FileRouteTypes {
     | '/api/rules/'
     | '/api/workflows/'
     | '/admin/rules/$entity/$ruleId'
+    | '/api/rules/$ruleId/history'
     | '/api/workflows/$workflowId/retry'
     | '/api/workflows/$workflowId/status'
     | '/projects/$id/enhance/$serviceName'
@@ -798,6 +834,7 @@ export interface FileRouteTypes {
     | '/projects/$id/enhance/'
     | '/api/admin/users/$id/approve'
     | '/api/admin/users/$id/reject'
+    | '/api/rules/$ruleId/rollback/$version'
     | '/api/projects/$id/deployment/'
     | '/api/projects/$id/erd-versions/'
     | '/api/projects/$id/members/'
@@ -840,6 +877,7 @@ export interface RootRouteChildren {
   ApiAuthRegisterRoute: typeof ApiAuthRegisterRoute
   ApiMermaidFilenameRoute: typeof ApiMermaidFilenameRoute
   ApiMermaidParseRoute: typeof ApiMermaidParseRoute
+  ApiRulesDryRunRoute: typeof ApiRulesDryRunRoute
   ApiRulesValidateRoute: typeof ApiRulesValidateRoute
   ProjectsIdDeployRoute: typeof ProjectsIdDeployRoute
   ProjectsIdDesignRoute: typeof ProjectsIdDesignRoute
@@ -854,6 +892,7 @@ export interface RootRouteChildren {
   ApiRulesIndexRoute: typeof ApiRulesIndexRoute
   ApiWorkflowsIndexRoute: typeof ApiWorkflowsIndexRoute
   AdminRulesEntityRuleIdRoute: typeof AdminRulesEntityRuleIdRoute
+  ApiRulesRuleIdHistoryRoute: typeof ApiRulesRuleIdHistoryRoute
   ApiWorkflowsWorkflowIdRetryRoute: typeof ApiWorkflowsWorkflowIdRetryRoute
   ApiWorkflowsWorkflowIdStatusRoute: typeof ApiWorkflowsWorkflowIdStatusRoute
   ProjectsIdEnhanceServiceNameRoute: typeof ProjectsIdEnhanceServiceNameRoute
@@ -864,6 +903,7 @@ export interface RootRouteChildren {
   ProjectsIdEnhanceIndexRoute: typeof ProjectsIdEnhanceIndexRoute
   ApiAdminUsersIdApproveRoute: typeof ApiAdminUsersIdApproveRoute
   ApiAdminUsersIdRejectRoute: typeof ApiAdminUsersIdRejectRoute
+  ApiRulesRuleIdRollbackVersionRoute: typeof ApiRulesRuleIdRollbackVersionRoute
   ApiProjectsIdDeploymentIndexRoute: typeof ApiProjectsIdDeploymentIndexRoute
   ApiProjectsIdErdVersionsIndexRoute: typeof ApiProjectsIdErdVersionsIndexRoute
   ApiProjectsIdMembersIndexRoute: typeof ApiProjectsIdMembersIndexRoute
@@ -1057,6 +1097,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRulesValidateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/rules/dry-run': {
+      id: '/api/rules/dry-run'
+      path: '/api/rules/dry-run'
+      fullPath: '/api/rules/dry-run'
+      preLoaderRoute: typeof ApiRulesDryRunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/mermaid/parse': {
       id: '/api/mermaid/parse'
       path: '/api/mermaid/parse'
@@ -1211,6 +1258,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWorkflowsWorkflowIdRetryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/rules/$ruleId/history': {
+      id: '/api/rules/$ruleId/history'
+      path: '/api/rules/$ruleId/history'
+      fullPath: '/api/rules/$ruleId/history'
+      preLoaderRoute: typeof ApiRulesRuleIdHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/rules/$entity/$ruleId': {
       id: '/admin/rules/$entity/$ruleId'
       path: '/admin/rules/$entity/$ruleId'
@@ -1244,6 +1298,13 @@ declare module '@tanstack/react-router' {
       path: '/api/projects/$id/deployment'
       fullPath: '/api/projects/$id/deployment/'
       preLoaderRoute: typeof ApiProjectsIdDeploymentIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/rules/$ruleId/rollback/$version': {
+      id: '/api/rules/$ruleId/rollback/$version'
+      path: '/api/rules/$ruleId/rollback/$version'
+      fullPath: '/api/rules/$ruleId/rollback/$version'
+      preLoaderRoute: typeof ApiRulesRuleIdRollbackVersionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/users/$id/reject': {
@@ -1371,6 +1432,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthRegisterRoute: ApiAuthRegisterRoute,
   ApiMermaidFilenameRoute: ApiMermaidFilenameRoute,
   ApiMermaidParseRoute: ApiMermaidParseRoute,
+  ApiRulesDryRunRoute: ApiRulesDryRunRoute,
   ApiRulesValidateRoute: ApiRulesValidateRoute,
   ProjectsIdDeployRoute: ProjectsIdDeployRoute,
   ProjectsIdDesignRoute: ProjectsIdDesignRoute,
@@ -1385,6 +1447,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRulesIndexRoute: ApiRulesIndexRoute,
   ApiWorkflowsIndexRoute: ApiWorkflowsIndexRoute,
   AdminRulesEntityRuleIdRoute: AdminRulesEntityRuleIdRoute,
+  ApiRulesRuleIdHistoryRoute: ApiRulesRuleIdHistoryRoute,
   ApiWorkflowsWorkflowIdRetryRoute: ApiWorkflowsWorkflowIdRetryRoute,
   ApiWorkflowsWorkflowIdStatusRoute: ApiWorkflowsWorkflowIdStatusRoute,
   ProjectsIdEnhanceServiceNameRoute: ProjectsIdEnhanceServiceNameRoute,
@@ -1395,6 +1458,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProjectsIdEnhanceIndexRoute: ProjectsIdEnhanceIndexRoute,
   ApiAdminUsersIdApproveRoute: ApiAdminUsersIdApproveRoute,
   ApiAdminUsersIdRejectRoute: ApiAdminUsersIdRejectRoute,
+  ApiRulesRuleIdRollbackVersionRoute: ApiRulesRuleIdRollbackVersionRoute,
   ApiProjectsIdDeploymentIndexRoute: ApiProjectsIdDeploymentIndexRoute,
   ApiProjectsIdErdVersionsIndexRoute: ApiProjectsIdErdVersionsIndexRoute,
   ApiProjectsIdMembersIndexRoute: ApiProjectsIdMembersIndexRoute,
