@@ -72,6 +72,21 @@ export class ErpClawClient {
     return this.catalogCache;
   }
 
+  /**
+   * `GET /api/v1/entities`. Returns every real (non-bookkeeping) table name
+   * — the entity list a dictionary-sync consumer (e.g. `@erdwithai/erpclaw-bridge`)
+   * needs before calling `schema()` per table, since `schema()` is
+   * per-entity only. Body shape: `{"entities": string[]}`.
+   */
+  async listEntities(): Promise<string[]> {
+    const res = await this.request("GET", "/api/v1/entities");
+    const body = await parseJson(res);
+    if (!res.ok) {
+      throw new ErpActionError("entities", res.status, body);
+    }
+    return (body as { entities: string[] }).entities;
+  }
+
   /** `GET /api/v1/schema/{entity}`. Throws `ErpActionError` (httpStatus 404) if the table doesn't exist. */
   async schema(entity: string): Promise<EntitySchema> {
     const res = await this.request("GET", `/api/v1/schema/${encodeURIComponent(entity)}`);

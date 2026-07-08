@@ -12,6 +12,7 @@ export default defineConfig({
       "src/**/*.{test,spec}.{js,jsx,ts,tsx}",
       "../core/src/**/*.{test,spec}.{js,jsx,ts,tsx}",
       "../generator/src/**/*.{test,spec}.{js,jsx,ts,tsx}",
+      "../erpclaw-bridge/src/**/*.{test,spec}.{js,jsx,ts,tsx}",
     ],
     exclude: ["node_modules", "dist", ".next"],
     testTimeout: 10000,
@@ -25,7 +26,10 @@ export default defineConfig({
       "@erdwithai/core/types": path.resolve(__dirname, "../core/src/types"),
       "@erdwithai/core/hooks": path.resolve(__dirname, "../core/src/hooks"),
       "@erdwithai/core/services": path.resolve(__dirname, "../core/src/services"),
+      "@erdwithai/core/utils": path.resolve(__dirname, "../core/src/utils"),
+      "@erdwithai/core/utils/table-naming": path.resolve(__dirname, "../core/src/utils/table-naming"),
       "@erdwithai/generator": path.resolve(__dirname, "../generator/src"),
+      "@erdwithai/erpclaw-client": path.resolve(__dirname, "../erpclaw-client/src"),
     },
   },
 });

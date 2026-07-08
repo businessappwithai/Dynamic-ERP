@@ -1,5 +1,5 @@
-import { promises as fs } from "fs";
-import * as path from "path";
+import { promises as fs } from "node:fs";
+import * as path from "node:path";
 
 import { ErpClawClient } from "./client";
 import type { Catalog, CatalogAction } from "./contract";
@@ -37,14 +37,14 @@ export function kebabToCamel(kebab: string): string {
   return kebab
     .split("-")
     .filter((part) => part.length > 0)
-    .map((part, i) => (i === 0 ? part : part[0]!.toUpperCase() + part.slice(1)))
+    .map((part, i) => (i === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1)))
     .join("");
 }
 
 /** "create-sales-invoice" -> "CreateSalesInvoice". Used for generated type names. */
 export function kebabToPascal(kebab: string): string {
   const camel = kebabToCamel(kebab);
-  return camel.length > 0 ? camel[0]!.toUpperCase() + camel.slice(1) : camel;
+  return camel.length > 0 ? camel.charAt(0).toUpperCase() + camel.slice(1) : camel;
 }
 
 function sanitizeComment(text: string): string {

@@ -72,6 +72,31 @@
         "typescript": "^5.3.3",
       },
     },
+    "packages/erpclaw-bridge": {
+      "name": "@erdwithai/erpclaw-bridge",
+      "version": "0.1.0",
+      "dependencies": {
+        "@erdwithai/core": "workspace:*",
+        "@erdwithai/erpclaw-client": "workspace:*",
+        "@erdwithai/generator": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "^5.3.3",
+      },
+    },
+    "packages/erpclaw-client": {
+      "name": "@erdwithai/erpclaw-client",
+      "version": "0.1.0",
+      "bin": {
+        "erpclaw-codegen": "./dist/cli/codegen.js",
+      },
+      "dependencies": {
+        "commander": "^11.1.0",
+      },
+      "devDependencies": {
+        "typescript": "^5.3.3",
+      },
+    },
     "packages/generator": {
       "name": "@erdwithai/generator",
       "version": "5.1.0",
@@ -447,6 +472,10 @@
     "@erdwithai/ai": ["@erdwithai/ai@workspace:packages/ai"],
 
     "@erdwithai/core": ["@erdwithai/core@workspace:packages/core"],
+
+    "@erdwithai/erpclaw-bridge": ["@erdwithai/erpclaw-bridge@workspace:packages/erpclaw-bridge"],
+
+    "@erdwithai/erpclaw-client": ["@erdwithai/erpclaw-client@workspace:packages/erpclaw-client"],
 
     "@erdwithai/generator": ["@erdwithai/generator@workspace:packages/generator"],
 

@@ -52,6 +52,10 @@
       "@erdwithai/ai/*": ["./packages/ai/src/*"],
       "@erdwithai/web": ["./packages/web/src"],
       "@erdwithai/web/*": ["./packages/web/src/*"],
+      "@erdwithai/erpclaw-client": ["./packages/erpclaw-client/src"],
+      "@erdwithai/erpclaw-client/*": ["./packages/erpclaw-client/src/*"],
+      "@erdwithai/erpclaw-bridge": ["./packages/erpclaw-bridge/src"],
+      "@erdwithai/erpclaw-bridge/*": ["./packages/erpclaw-bridge/src/*"],
       "@/*": ["./packages/web/src/*"]
     }
   },
@@ -66,6 +70,8 @@
     "packages/web/src/**/*.ts",
     "packages/web/src/**/*.tsx",
     "packages/web/vitest.config.ts",
+    "packages/erpclaw-client/src/**/*.ts",
+    "packages/erpclaw-bridge/src/**/*.ts",
     "tests/**/*.ts",
     "tests/**/*.tsx"
   ],

@@ -12,7 +12,7 @@
  * schemas) — a human reviewing a synced entity in Studio can always correct
  * a field's type.
  */
-import { tableNameToEntityName } from "@erdwithai/core/utils";
+import { tableNameToEntityName } from "@erdwithai/core/utils/table-naming";
 import type { Entity, EntityAttribute, Relationship } from "@erdwithai/core/types";
 import type { EntitySchema as ErpEntitySchema, EntityColumn } from "@erdwithai/erpclaw-client";
 
