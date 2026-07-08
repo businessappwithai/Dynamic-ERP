@@ -26,7 +26,6 @@ invoices/parties, so they are inherently typed — no per-insert re-validation a
 """
 import argparse
 import os
-import sqlite3
 import sys
 
 DEFAULT_DB_PATH = os.path.join(os.path.expanduser(os.environ.get("ERPCLAW_HOME", "~/.openclaw/erpclaw")), "data.sqlite")
@@ -92,92 +91,6 @@ CREATE TABLE payment_ledger_entry (
 ]
 
 
-def _get_dialect():
-    return os.environ.get("ERPCLAW_DB_DIALECT", "sqlite")
-
-
-def _rebuild_sqlite(conn, table, check_marker, new_ddl):
-    """Rebuild `table` without the CHECK matching check_marker (column-aware)."""
-    row = conn.execute(
-        "SELECT sql FROM sqlite_master WHERE type='table' AND name=?", (table,)
-    ).fetchone()
-    if not row or check_marker not in (row[0] or ""):
-        return False  # already displaced
-    old_cols = [r[1] for r in conn.execute(f"PRAGMA table_info({table})")]
-    index_defs = [
-        r[0] for r in conn.execute(
-            "SELECT sql FROM sqlite_master WHERE type='index' AND tbl_name=? AND sql IS NOT NULL",
-            (table,),
-        )
-    ]
-    before = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
-    tmp = f"{table}_m0_old"
-    conn.execute(f"ALTER TABLE {table} RENAME TO {tmp}")
-    conn.execute(new_ddl)
-    new_cols = [r[1] for r in conn.execute(f"PRAGMA table_info({table})")]
-    dropped = [c for c in old_cols if c not in new_cols]
-    if dropped:
-        raise RuntimeError(
-            f"Migration 006 abort: {table} has columns absent from target DDL "
-            f"that would be dropped: {dropped}. Update the DDL."
-        )
-    common = ", ".join(c for c in new_cols if c in old_cols)
-    conn.execute(f"INSERT INTO {table} ({common}) SELECT {common} FROM {tmp}")
-    conn.execute(f"DROP TABLE {tmp}")
-    for ddl in index_defs:
-        conn.execute(ddl)
-    after = conn.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0]
-    if after != before:
-        raise RuntimeError(f"Migration 006 row-count mismatch on {table}: {before} -> {after}")
-    return True
-
-
-def _run_sqlite(path):
-    conn = sqlite3.connect(path)
-    conn.row_factory = sqlite3.Row
-    try:
-        from erpclaw_lib.db import setup_pragmas
-        setup_pragmas(conn)
-    except ImportError:
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA busy_timeout=5000")
-
-    conn.execute("PRAGMA foreign_keys=OFF")
-    # legacy_alter_table=ON so the per-table RENAMEs in _rebuild_sqlite don't rewrite
-    # inbound FK references (e.g. payment_allocation.payment_entry_id REFERENCES
-    # payment_entry) to the dropped *_m0_old name (see migration 003 for the rationale).
-    conn.execute("PRAGMA legacy_alter_table=ON")
-    rebuilt = []
-    try:
-        conn.execute("BEGIN")
-        for table, marker, ddl, _pg in _TABLES:
-            if _rebuild_sqlite(conn, table, marker, ddl):
-                rebuilt.append(table)
-        conn.execute("COMMIT")
-    except Exception:
-        conn.execute("ROLLBACK")
-        raise
-    finally:
-        conn.execute("PRAGMA legacy_alter_table=OFF")
-        conn.execute("PRAGMA foreign_keys=ON")
-
-    violations = conn.execute("PRAGMA foreign_key_check").fetchall()
-    if violations:
-        conn.close()
-        raise RuntimeError(f"Migration 006 left {len(violations)} FK violations: {violations[:5]}")
-    dangling = conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND sql LIKE '%_m0_old%'"
-    ).fetchall()
-    if dangling:
-        conn.close()
-        raise RuntimeError(f"Migration 006 left dangling FK refs to *_m0_old: {[r[0] for r in dangling]}")
-    if rebuilt:
-        print(f"  rebuilt without dropped CHECKs: {', '.join(rebuilt)}; FK check clean.")
-    else:
-        print("  payment-table CHECKs already absent; nothing to do.")
-    conn.close()
-
-
 def _run_postgres(url):
     import psycopg2
     conn = psycopg2.connect(url)
@@ -192,18 +105,11 @@ def _run_postgres(url):
 
 
 def run_migration(db_path=None):
-    if _get_dialect() == "postgresql":
-        url = os.environ.get("ERPCLAW_DB_URL") or db_path
-        if not url:
-            print("Postgres dialect set but no connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
-            return
-        _run_postgres(url)
+    url = os.environ.get("ERPCLAW_DB_URL") or db_path
+    if not url:
+        print("No Postgres connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
         return
-    path = db_path or os.environ.get("ERPCLAW_DB_PATH", DEFAULT_DB_PATH)
-    if not os.path.exists(path):
-        print(f"Database not found at {path}. Nothing to migrate.")
-        return
-    _run_sqlite(path)
+    _run_postgres(url)
 
 
 if __name__ == "__main__":

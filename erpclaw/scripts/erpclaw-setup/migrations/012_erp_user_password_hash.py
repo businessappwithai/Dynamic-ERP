@@ -10,39 +10,8 @@ optional; Telegram-auth users have none). Idempotent. Dialect-aware.
 """
 import argparse
 import os
-import sqlite3
 
 DEFAULT_DB_PATH = os.path.join(os.path.expanduser(os.environ.get("ERPCLAW_HOME", "~/.openclaw/erpclaw")), "data.sqlite")
-
-
-def _get_dialect():
-    return os.environ.get("ERPCLAW_DB_DIALECT", "sqlite")
-
-
-def _sqlite_has_column(conn, table, column):
-    return any(r[1] == column for r in conn.execute(f"PRAGMA table_info({table})"))
-
-
-def _table_exists_sqlite(conn, table):
-    return conn.execute(
-        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)
-    ).fetchone() is not None
-
-
-def _run_sqlite(path):
-    conn = sqlite3.connect(path)
-    try:
-        from erpclaw_lib.db import setup_pragmas
-        setup_pragmas(conn)
-    except ImportError:
-        conn.execute("PRAGMA busy_timeout=5000")
-    if _table_exists_sqlite(conn, "erp_user") and not _sqlite_has_column(conn, "erp_user", "password_hash"):
-        conn.execute("ALTER TABLE erp_user ADD COLUMN password_hash TEXT")
-        conn.commit()
-        print("  erp_user.password_hash: added.")
-    else:
-        print("  erp_user.password_hash: already present (or erp_user absent).")
-    conn.close()
 
 
 def _run_postgres(url):
@@ -58,18 +27,11 @@ def _run_postgres(url):
 
 
 def run_migration(db_path=None):
-    if _get_dialect() == "postgresql":
-        url = os.environ.get("ERPCLAW_DB_URL") or db_path
-        if not url:
-            print("Postgres dialect set but no connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
-            return
-        _run_postgres(url)
+    url = os.environ.get("ERPCLAW_DB_URL") or db_path
+    if not url:
+        print("No Postgres connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
         return
-    path = db_path or os.environ.get("ERPCLAW_DB_PATH", DEFAULT_DB_PATH)
-    if not os.path.exists(path):
-        print(f"Database not found at {path}. Nothing to migrate.")
-        return
-    _run_sqlite(path)
+    _run_postgres(url)
 
 
 if __name__ == "__main__":

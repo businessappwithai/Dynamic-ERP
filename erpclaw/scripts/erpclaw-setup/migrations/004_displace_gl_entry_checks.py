@@ -30,7 +30,6 @@ Usage:
 """
 import argparse
 import os
-import sqlite3
 import sys
 
 DEFAULT_DB_PATH = os.path.join(os.path.expanduser(os.environ.get("ERPCLAW_HOME", "~/.openclaw/erpclaw")), "data.sqlite")
@@ -111,121 +110,6 @@ CREATE TABLE gl_entry (
 """
 
 
-def _get_dialect():
-    return os.environ.get("ERPCLAW_DB_DIALECT", "sqlite")
-
-
-def _sqlite_check_present(conn):
-    row = conn.execute(
-        "SELECT sql FROM sqlite_master WHERE type='table' AND name='gl_entry'"
-    ).fetchone()
-    sql = (row[0] or "") if row else ""
-    return "voucher_type IN" in sql or "party_type IN" in sql
-
-
-def _seed(conn):
-    for vt, skill, label, target in VOUCHER_TYPE_SEED:
-        if not conn.execute(
-            "SELECT 1 FROM voucher_type_registry WHERE voucher_type = ? AND target_table = ?",
-            (vt, target),
-        ).fetchone():
-            conn.execute(
-                "INSERT INTO voucher_type_registry (voucher_type, skill_name, label, target_table) "
-                "VALUES (?, ?, ?, ?)",
-                (vt, skill, label, target),
-            )
-    for pt, skill, label in PARTY_TYPE_SEED:
-        if not conn.execute(
-            "SELECT 1 FROM party_type_registry WHERE party_type = ?", (pt,)
-        ).fetchone():
-            conn.execute(
-                "INSERT INTO party_type_registry (party_type, skill_name, label) VALUES (?, ?, ?)",
-                (pt, skill, label),
-            )
-
-
-def _run_sqlite(path):
-    conn = sqlite3.connect(path)
-    conn.row_factory = sqlite3.Row
-    try:
-        from erpclaw_lib.db import setup_pragmas
-        setup_pragmas(conn)
-    except ImportError:
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA busy_timeout=5000")
-
-    if not _sqlite_check_present(conn):
-        _seed(conn)
-        conn.commit()
-        print("  gl_entry voucher_type/party_type CHECKs already absent; registries re-seeded.")
-        conn.close()
-        return
-
-    old_cols = [r[1] for r in conn.execute("PRAGMA table_info(gl_entry)")]
-    # Capture index defs BEFORE the rename (their stored SQL says "ON gl_entry").
-    index_defs = [
-        r[0] for r in conn.execute(
-            "SELECT sql FROM sqlite_master WHERE type='index' AND tbl_name='gl_entry' "
-            "AND sql IS NOT NULL"
-        )
-    ]
-    row_count_before = conn.execute("SELECT COUNT(*) FROM gl_entry").fetchone()[0]
-
-    conn.execute("PRAGMA foreign_keys=OFF")
-    # legacy_alter_table=ON so the RENAME does not rewrite any inbound FK references in
-    # other tables to the dropped *_m0_old name (see migration 003 for the full rationale).
-    conn.execute("PRAGMA legacy_alter_table=ON")
-    try:
-        conn.execute("BEGIN")
-        conn.execute("ALTER TABLE gl_entry RENAME TO gl_entry_m0_old")
-        conn.execute(_GL_ENTRY_DDL_NO_CHECK)
-        new_cols = [r[1] for r in conn.execute("PRAGMA table_info(gl_entry)")]
-        common = [c for c in new_cols if c in old_cols]
-        dropped = [c for c in old_cols if c not in new_cols]
-        if dropped:
-            # Unexpected extra columns on the old table — refuse to silently lose data.
-            conn.execute("ROLLBACK")
-            conn.execute("PRAGMA foreign_keys=ON")
-            conn.close()
-            raise RuntimeError(
-                f"Migration 004 abort: gl_entry has columns absent from the target DDL "
-                f"that would be dropped: {dropped}. Update _GL_ENTRY_DDL_NO_CHECK first."
-            )
-        collist = ", ".join(common)
-        conn.execute(f"INSERT INTO gl_entry ({collist}) SELECT {collist} FROM gl_entry_m0_old")
-        conn.execute("DROP TABLE gl_entry_m0_old")
-        for ddl in index_defs:
-            conn.execute(ddl)
-        _seed(conn)
-        conn.execute("COMMIT")
-    except Exception:
-        conn.execute("ROLLBACK")
-        raise
-    finally:
-        conn.execute("PRAGMA legacy_alter_table=OFF")
-        conn.execute("PRAGMA foreign_keys=ON")
-
-    row_count_after = conn.execute("SELECT COUNT(*) FROM gl_entry").fetchone()[0]
-    if row_count_after != row_count_before:
-        conn.close()
-        raise RuntimeError(
-            f"Migration 004 row-count mismatch: before={row_count_before} after={row_count_after}"
-        )
-    violations = conn.execute("PRAGMA foreign_key_check").fetchall()
-    if violations:
-        conn.close()
-        raise RuntimeError(f"Migration 004 left {len(violations)} FK violations: {violations[:5]}")
-    dangling = conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND sql LIKE '%_m0_old%'"
-    ).fetchall()
-    if dangling:
-        conn.close()
-        raise RuntimeError(f"Migration 004 left dangling FK refs to *_m0_old: {[r[0] for r in dangling]}")
-    print(f"  gl_entry rebuilt without voucher_type/party_type CHECKs; "
-          f"{row_count_after} rows preserved, FK check clean.")
-    conn.close()
-
-
 def _run_postgres(url):
     import psycopg2
     conn = psycopg2.connect(url)
@@ -252,18 +136,11 @@ def _run_postgres(url):
 
 
 def run_migration(db_path=None):
-    if _get_dialect() == "postgresql":
-        url = os.environ.get("ERPCLAW_DB_URL") or db_path
-        if not url:
-            print("Postgres dialect set but no connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
-            return
-        _run_postgres(url)
+    url = os.environ.get("ERPCLAW_DB_URL") or db_path
+    if not url:
+        print("No Postgres connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
         return
-    path = db_path or os.environ.get("ERPCLAW_DB_PATH", DEFAULT_DB_PATH)
-    if not os.path.exists(path):
-        print(f"Database not found at {path}. Nothing to migrate.")
-        return
-    _run_sqlite(path)
+    _run_postgres(url)
 
 
 if __name__ == "__main__":

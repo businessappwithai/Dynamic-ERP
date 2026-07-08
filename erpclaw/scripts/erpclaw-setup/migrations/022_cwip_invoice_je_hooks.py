@@ -16,7 +16,6 @@ no FK-rewrite trap. Pairs with migration 021 in the S3 sequence.
 """
 import argparse
 import os
-import sqlite3
 
 DEFAULT_DB_PATH = os.path.join(os.path.expanduser(os.environ.get("ERPCLAW_HOME", "~/.openclaw/erpclaw")), "data.sqlite")
 
@@ -41,31 +40,6 @@ _PG_ADD = {
 }
 
 
-def _get_dialect():
-    return os.environ.get("ERPCLAW_DB_DIALECT", "sqlite")
-
-
-def _sqlite_has_column(conn, table, column):
-    return any(r[1] == column for r in conn.execute(f"PRAGMA table_info({table})"))
-
-
-def _run_sqlite(path):
-    conn = sqlite3.connect(path)
-    try:
-        from erpclaw_lib.db import setup_pragmas
-        setup_pragmas(conn)
-    except ImportError:
-        conn.execute("PRAGMA busy_timeout=5000")
-    for table, column in _ADDITIONS:
-        if not _sqlite_has_column(conn, table, column):
-            conn.execute(_SQLITE_ADD[(table, column)])
-            print(f"  {table}.{column}: added.")
-        else:
-            print(f"  {table}.{column}: already present.")
-    conn.commit()
-    conn.close()
-
-
 def _run_postgres(url):
     import psycopg2
     conn = psycopg2.connect(url)
@@ -80,18 +54,11 @@ def _run_postgres(url):
 
 
 def run_migration(db_path=None):
-    if _get_dialect() == "postgresql":
-        url = os.environ.get("ERPCLAW_DB_URL") or db_path
-        if not url:
-            print("Postgres dialect set but no connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
-            return
-        _run_postgres(url)
+    url = os.environ.get("ERPCLAW_DB_URL") or db_path
+    if not url:
+        print("No Postgres connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
         return
-    path = db_path or os.environ.get("ERPCLAW_DB_PATH", DEFAULT_DB_PATH)
-    if not os.path.exists(path):
-        print(f"Database not found at {path}. Nothing to migrate.")
-        return
-    _run_sqlite(path)
+    _run_postgres(url)
 
 
 if __name__ == "__main__":

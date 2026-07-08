@@ -44,7 +44,7 @@ if not _lib_found:
     }))
     sys.exit(1)
 
-from erpclaw_lib.db import get_connection, ensure_db_exists, DEFAULT_DB_PATH
+from erpclaw_lib.db import get_connection, ensure_db_exists
 from erpclaw_lib.decimal_utils import to_decimal
 from erpclaw_lib.validation import check_input_lengths
 from erpclaw_lib.response import ok, err, row_to_dict
@@ -787,7 +787,7 @@ def backup_database(conn, args):
     Supports optional encryption with --encrypt --passphrase flags.
     Encrypted backups use AES-256 + HMAC-SHA256 authentication.
     """
-    db_path = args.db_path or DEFAULT_DB_PATH
+    db_path = args.db_path
     backup_path = args.backup_path
     encrypt = getattr(args, "encrypt", False)
     passphrase = getattr(args, "passphrase", None)
@@ -1032,7 +1032,7 @@ def restore_database(conn, args):
         err(f"Backup is not a valid SQLite file: {e}")
 
     # Determine target DB path
-    db_path = args.db_path or DEFAULT_DB_PATH
+    db_path = args.db_path
 
     # Step 2: Create safety backup of current DB
     os.makedirs(BACKUP_DIR, exist_ok=True)
@@ -1189,7 +1189,7 @@ def initialize_database(conn, args):
     passed, drops and recreates the database from scratch.
     """
     _link_shared_library()
-    db_path = args.db_path or DEFAULT_DB_PATH
+    db_path = args.db_path
 
     # Import the schema module (co-located in the same scripts/ directory)
     scripts_dir = os.path.dirname(os.path.abspath(__file__))
@@ -2582,7 +2582,7 @@ def migrate_action(conn, args):
     spec = importlib.util.spec_from_file_location("migration_runner", runner_path)
     runner = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(runner)
-    db_path = getattr(args, "db_path", None) or DEFAULT_DB_PATH
+    db_path = getattr(args, "db_path", None)
     res = runner.run_pending(db_path, dry_run=bool(getattr(args, "dry_run", False)))
     if res.get("ok") is False:
         err(f"Migration '{res['failed']}' failed: {res['error']}",
@@ -2984,7 +2984,7 @@ def main():
         return
 
     # Connect to database
-    db_path = args.db_path or DEFAULT_DB_PATH
+    db_path = args.db_path
     ensure_db_exists(db_path)
     conn = get_connection(db_path)
 

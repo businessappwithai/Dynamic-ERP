@@ -13,7 +13,6 @@ Idempotent. Dialect-aware. Pairs with migration 018.
 """
 import argparse
 import os
-import sqlite3
 
 DEFAULT_DB_PATH = os.path.join(os.path.expanduser(os.environ.get("ERPCLAW_HOME", "~/.openclaw/erpclaw")), "data.sqlite")
 
@@ -24,43 +23,6 @@ _COLUMN = "is_capex"
 _SQLITE_ADD = "ALTER TABLE asset_maintenance ADD COLUMN is_capex INTEGER NOT NULL DEFAULT 0 CHECK(is_capex IN (0,1))"
 _PG_ADD = "ALTER TABLE asset_maintenance ADD COLUMN IF NOT EXISTS is_capex INTEGER NOT NULL DEFAULT 0 CHECK(is_capex IN (0,1))"
 _BACKFILL = "UPDATE asset_maintenance SET is_capex = 0 WHERE is_capex IS NULL"
-
-
-def _get_dialect():
-    return os.environ.get("ERPCLAW_DB_DIALECT", "sqlite")
-
-
-def _sqlite_has_column(conn, table, column):
-    return any(r[1] == column for r in conn.execute(f"PRAGMA table_info({table})"))
-
-
-def _sqlite_has_table(conn, table):
-    return conn.execute(
-        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)
-    ).fetchone() is not None
-
-
-def _run_sqlite(path):
-    conn = sqlite3.connect(path)
-    try:
-        from erpclaw_lib.db import setup_pragmas
-        setup_pragmas(conn)
-    except ImportError:
-        conn.execute("PRAGMA busy_timeout=5000")
-    if not _sqlite_has_table(conn, _TABLE):
-        print(f"  {_TABLE}: table absent. Nothing to migrate.")
-        conn.close()
-        return
-    if not _sqlite_has_column(conn, _TABLE, _COLUMN):
-        conn.execute(_SQLITE_ADD)
-        print(f"  {_TABLE}.{_COLUMN}: added.")
-    else:
-        print(f"  {_TABLE}.{_COLUMN}: already present.")
-    # Explicit backfill: any pre-existing / NULL row is an opex repair.
-    cur = conn.execute(_BACKFILL)
-    print(f"  {_TABLE}.{_COLUMN}: backfilled {cur.rowcount} NULL row(s) to 0 (opex).")
-    conn.commit()
-    conn.close()
 
 
 def _run_postgres(url):
@@ -78,18 +40,11 @@ def _run_postgres(url):
 
 
 def run_migration(db_path=None):
-    if _get_dialect() == "postgresql":
-        url = os.environ.get("ERPCLAW_DB_URL") or db_path
-        if not url:
-            print("Postgres dialect set but no connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
-            return
-        _run_postgres(url)
+    url = os.environ.get("ERPCLAW_DB_URL") or db_path
+    if not url:
+        print("No Postgres connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
         return
-    path = db_path or os.environ.get("ERPCLAW_DB_PATH", DEFAULT_DB_PATH)
-    if not os.path.exists(path):
-        print(f"Database not found at {path}. Nothing to migrate.")
-        return
-    _run_sqlite(path)
+    _run_postgres(url)
 
 
 if __name__ == "__main__":

@@ -12,7 +12,6 @@ init_schema exactly.
 """
 import argparse
 import os
-import sqlite3
 import uuid
 
 DEFAULT_DB_PATH = os.path.join(os.path.expanduser(os.environ.get("ERPCLAW_HOME", "~/.openclaw/erpclaw")), "data.sqlite")
@@ -42,10 +41,6 @@ _SEED = [
 ]
 
 
-def _get_dialect():
-    return os.environ.get("ERPCLAW_DB_DIALECT", "sqlite")
-
-
 def _seed(execute):
     """Idempotently seed the default dimensions. ``execute(sql, params)`` runs one
     statement; ``?`` placeholders work on SQLite and the Pg ``?``→``%s`` wrapper."""
@@ -60,24 +55,6 @@ def _seed(execute):
                 " is_required_on_account_types_json) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 (str(uuid.uuid4()), key, label, dtype, ref_table, allowed, req),
             )
-
-
-def _run_sqlite(path):
-    conn = sqlite3.connect(path)
-    try:
-        from erpclaw_lib.db import setup_pragmas
-        setup_pragmas(conn)
-    except ImportError:
-        conn.execute("PRAGMA busy_timeout=5000")
-    existed = conn.execute(
-        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='dimension_registry'"
-    ).fetchone() is not None
-    for stmt in _DDL:
-        conn.execute(stmt)
-    _seed(conn.execute)
-    conn.commit()
-    conn.close()
-    print(f"  dimension_registry: {'already present' if existed else 'created'} (+ index, seeds).")
 
 
 def _run_postgres(url):
@@ -99,18 +76,11 @@ def _run_postgres(url):
 
 
 def run_migration(db_path=None):
-    if _get_dialect() == "postgresql":
-        url = os.environ.get("ERPCLAW_DB_URL") or db_path
-        if not url:
-            print("Postgres dialect set but no connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
-            return
-        _run_postgres(url)
+    url = os.environ.get("ERPCLAW_DB_URL") or db_path
+    if not url:
+        print("No Postgres connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
         return
-    path = db_path or os.environ.get("ERPCLAW_DB_PATH", DEFAULT_DB_PATH)
-    if not os.path.exists(path):
-        print(f"Database not found at {path}. Nothing to migrate.")
-        return
-    _run_sqlite(path)
+    _run_postgres(url)
 
 
 if __name__ == "__main__":

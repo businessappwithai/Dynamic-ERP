@@ -21,7 +21,6 @@ Idempotent (DROP IF EXISTS), dialect-aware. Forward-only: these tables are empty
 """
 import argparse
 import os
-import sqlite3
 
 DEFAULT_DB_PATH = os.path.join(os.path.expanduser(os.environ.get("ERPCLAW_HOME", "~/.openclaw/erpclaw")), "data.sqlite")
 
@@ -35,29 +34,6 @@ _DROP_ORDER = [
     "property_setter",
     "user_permission",
 ]
-
-
-def _get_dialect():
-    return os.environ.get("ERPCLAW_DB_DIALECT", "sqlite")
-
-
-def _run_sqlite(path):
-    conn = sqlite3.connect(path)
-    try:
-        from erpclaw_lib.db import setup_pragmas
-        setup_pragmas(conn)
-    except ImportError:
-        conn.execute("PRAGMA busy_timeout=5000")
-    dropped = []
-    for t in _DROP_ORDER:
-        existed = conn.execute(
-            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (t,)).fetchone()
-        conn.execute(f"DROP TABLE IF EXISTS {t}")
-        if existed:
-            dropped.append(t)
-    conn.commit()
-    conn.close()
-    print(f"  dropped: {', '.join(dropped) if dropped else '(none — already absent)'}")
 
 
 def _run_postgres(url):
@@ -74,18 +50,11 @@ def _run_postgres(url):
 
 
 def run_migration(db_path=None):
-    if _get_dialect() == "postgresql":
-        url = os.environ.get("ERPCLAW_DB_URL") or db_path
-        if not url:
-            print("Postgres dialect set but no connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
-            return
-        _run_postgres(url)
+    url = os.environ.get("ERPCLAW_DB_URL") or db_path
+    if not url:
+        print("No Postgres connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
         return
-    path = db_path or os.environ.get("ERPCLAW_DB_PATH", DEFAULT_DB_PATH)
-    if not os.path.exists(path):
-        print(f"Database not found at {path}. Nothing to migrate.")
-        return
-    _run_sqlite(path)
+    _run_postgres(url)
 
 
 if __name__ == "__main__":

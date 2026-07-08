@@ -18,7 +18,6 @@ Usage:
 
 import os
 import sys
-import sqlite3
 import argparse
 from pathlib import Path
 
@@ -4564,77 +4563,12 @@ def _init_db_postgres(db_path: str) -> None:
 def init_db(db_path: str = DEFAULT_DB_PATH) -> None:
     """Initialize the ERPClaw database with all tables.
 
-    SQLite (default): build a fresh file DB via ``sqlite3`` + ``executescript``.
-    PostgreSQL (``ERPCLAW_DB_DIALECT=postgresql``): provision the same schema on
-    the configured Postgres cluster via :func:`_init_db_postgres` (cross-DB
-    add-on F — makes "PostgreSQL fully supported", ADR-0004, true for full-schema
-    provisioning, not just per-construct as add-ons B/C tested).
+    Provisions the full schema on PostgreSQL via :func:`_init_db_postgres`
+    (cross-DB add-on F — makes "PostgreSQL fully supported", ADR-0004, true
+    for full-schema provisioning, not just per-construct as add-ons B/C
+    tested). The engine is Postgres-only; there is no SQLite path.
     """
-    try:
-        from erpclaw_lib.db import get_dialect
-        dialect = get_dialect()
-    except ImportError:
-        dialect = os.environ.get("ERPCLAW_DB_DIALECT", "sqlite")
-    if dialect == "postgresql":
-        _init_db_postgres(db_path)
-        return
-
-    # Ensure the directory exists
-    db_dir = os.path.dirname(db_path)
-    if db_dir:
-        os.makedirs(db_dir, exist_ok=True)
-
-    conn = sqlite3.connect(db_path)
-    try:
-        # Enable WAL mode and foreign keys via centralized setup
-        try:
-            from erpclaw_lib.db import setup_pragmas
-            setup_pragmas(conn)
-        except ImportError:
-            conn.execute("PRAGMA journal_mode = WAL")
-            conn.execute("PRAGMA foreign_keys = ON")
-            conn.execute("PRAGMA busy_timeout = 5000")
-
-        # Execute all DDL blocks in order
-        for skill_name, ddl_sql in ALL_DDL_BLOCKS:
-            conn.executescript(ddl_sql)
-            # Register the schema version for each skill (idempotent)
-            existing = conn.execute(
-                "SELECT 1 FROM schema_version WHERE module = ?", (skill_name,)
-            ).fetchone()
-            if not existing:
-                conn.execute(
-                    """INSERT INTO schema_version (module, version, updated_at)
-                       VALUES (?, 1, datetime('now'))""",
-                    (skill_name,)
-                )
-
-        conn.commit()
-
-        # Seed default roles + M0 registries (shared with the Postgres path).
-        _seed_defaults(conn)
-        conn.commit()
-
-        # Verify: count tables
-        cursor = conn.execute(
-            "SELECT COUNT(*) FROM sqlite_master WHERE type='table'"
-        )
-        table_count = cursor.fetchone()[0]
-
-        cursor = conn.execute(
-            "SELECT COUNT(*) FROM sqlite_master WHERE type='index'"
-        )
-        index_count = cursor.fetchone()[0]
-
-        print(f"ERPClaw database initialized successfully at: {db_path}", file=sys.stderr)
-        print(f"  Tables created: {table_count}", file=sys.stderr)
-        print(f"  Indexes created: {index_count}", file=sys.stderr)
-        print(f"  Skills registered: {len(ALL_DDL_BLOCKS)}", file=sys.stderr)
-        print(f"  Journal mode: WAL", file=sys.stderr)
-        print(f"  Foreign keys: ON", file=sys.stderr)
-
-    finally:
-        conn.close()
+    _init_db_postgres(db_path)
 
 
 if __name__ == "__main__":

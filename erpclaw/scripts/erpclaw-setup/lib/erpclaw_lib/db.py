@@ -1,151 +1,72 @@
 """Database connection helper for ERPClaw.
 
-Provides a standard way to get a database connection with the correct
-connection settings applied for the active dialect:
+Provides a standard way to get a PostgreSQL database connection with the
+correct connection settings applied: a psycopg2 connection with
+``lock_timeout`` / ``statement_timeout`` set and a ``DictCursor`` so rows
+support both positional (``row[0]``) and key (``row['col']``) access
+(matching the row-access style domain code was originally written against).
+The returned wrapper exposes a SQLite-style ``conn.execute(sql, params)``
+API, translating ``?`` placeholders to psycopg2's ``%s`` so existing call
+sites work unchanged.
 
-  - SQLite (default): PRAGMAs (WAL mode, FK enforcement, busy timeout),
-    the ``decimal_sum`` aggregate, and ``sqlite3.Row`` row access.
-  - PostgreSQL (``ERPCLAW_DB_DIALECT=postgresql``): a psycopg2 connection
-    with ``lock_timeout`` / ``statement_timeout`` set and a ``DictCursor``
-    so rows support both positional (``row[0]``) and key (``row['col']``)
-    access — matching ``sqlite3.Row`` semantics. The returned wrapper exposes
-    a SQLite-style ``conn.execute(sql, params)`` API, translating ``?``
-    placeholders to psycopg2's ``%s`` so existing call sites work unchanged.
-
-Dialect is selected by ``ERPCLAW_DB_DIALECT`` (``sqlite`` | ``postgresql``).
 The Postgres connection URL is resolved from the ``db_path`` argument,
 ``ERPCLAW_DB_URL``, or ``ERPCLAW_DB_PATH`` (mirrors the migration runner).
 """
 import os
-import sqlite3
-import stat
 import time
-from decimal import Decimal
 
 from erpclaw_lib.paths import db_default
 
 
-# Default SQLite path, derived from ERPCLAW_HOME (ADR-0017). With ERPCLAW_HOME
-# unset this equals os.path.expanduser("~/.openclaw/erpclaw/data.sqlite") exactly.
-# The ERPCLAW_DB_URL / ERPCLAW_DB_PATH chain below remains the DB-location
-# authority; this is only the default underneath it.
+# Default SQLite path, derived from ERPCLAW_HOME (ADR-0017). No longer used
+# by this module's own connection logic (Postgres-only now), but kept as a
+# public constant: several domain db_query.py modules still import it
+# (some as an unused vestige, at least one — erpclaw-billing — deliberately
+# left untouched by this conversion) and removing it would break those
+# imports. The ERPCLAW_DB_URL / ERPCLAW_DB_PATH chain in _resolve_pg_url()
+# remains the actual DB-location authority.
 DEFAULT_DB_PATH = db_default()
 
 
-def get_dialect():
-    """Return the configured database dialect."""
-    return os.environ.get("ERPCLAW_DB_DIALECT", "sqlite")
-
-
 def db_error_types():
-    """Return DB-API exception classes for the active dialect.
+    """Return DB-API exception classes for PostgreSQL.
 
     Returns a ``(missing_table_excs, db_error_base)`` tuple:
       - ``missing_table_excs``: tuple of exception classes raised when a
         table or relation does not exist. Tolerated on minimal installs
         where an optional table (e.g. an audit/compliance log) has not
         been created yet.
-      - ``db_error_base``: the dialect's PEP 249 base error class, used to
-        catch any *other* database failure so it can be surfaced rather
-        than silently swallowed.
+      - ``db_error_base``: the PEP 249 base error class, used to catch any
+        *other* database failure so it can be surfaced rather than silently
+        swallowed.
 
-    Both sqlite3 and psycopg2 implement the PEP 249 DB-API but expose
-    distinct exception classes, so callers must NOT hardcode ``sqlite3.*``
-    when ``ERPCLAW_DB_DIALECT=postgresql``. On SQLite a missing table raises
-    ``OperationalError`` ("no such table"); on PostgreSQL it raises
-    ``psycopg2.errors.UndefinedTable`` (a ``ProgrammingError``,
-    SQLSTATE 42P01). The missing-table classes subclass the base error
-    class in both drivers, so callers must order their ``except`` clauses
-    most-specific first.
+    On PostgreSQL a missing table raises ``psycopg2.errors.UndefinedTable``
+    (a ``ProgrammingError``, SQLSTATE 42P01). The missing-table class
+    subclasses the base error class, so callers must order their ``except``
+    clauses most-specific first.
     """
-    if get_dialect() == "postgresql":
-        import psycopg2
-        from psycopg2 import errors as _pg_errors
-        return (_pg_errors.UndefinedTable,), psycopg2.Error
-    return (sqlite3.OperationalError,), sqlite3.Error
+    import psycopg2
+    from psycopg2 import errors as _pg_errors
+    return (_pg_errors.UndefinedTable,), psycopg2.Error
 
 
 def setup_pragmas(conn):
-    """Apply vendor-specific connection settings.
+    """Apply PostgreSQL connection settings: lock timeout + statement timeout.
 
-    For SQLite: WAL mode, FK enforcement, busy timeout.
-    For PostgreSQL: lock timeout + statement timeout (via cursor for psycopg2
-      compatibility). ``lock_timeout`` is the direct analogue of SQLite's
-      ``busy_timeout`` (how long to wait for a lock before erroring);
-      ``statement_timeout`` has no SQLite equivalent so it defaults to 0
-      (unlimited), but the statement is still issued per the cross-DB plan.
-      Both are overridable via ``ERPCLAW_PG_LOCK_TIMEOUT`` /
-      ``ERPCLAW_PG_STATEMENT_TIMEOUT``.
-    For MySQL: no equivalent needed (InnoDB handles these).
+    Set via cursor for psycopg2 compatibility. ``lock_timeout`` bounds how
+    long to wait for a lock before erroring; ``statement_timeout`` bounds
+    total statement runtime (defaults to 0/unlimited). Both are overridable
+    via ``ERPCLAW_PG_LOCK_TIMEOUT`` / ``ERPCLAW_PG_STATEMENT_TIMEOUT``.
     """
-    dialect = get_dialect()
-    if dialect == "sqlite":
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA foreign_keys=ON")
-        conn.execute("PRAGMA busy_timeout=5000")
-    elif dialect == "postgresql":
-        lock_timeout = os.environ.get("ERPCLAW_PG_LOCK_TIMEOUT", "5s")
-        statement_timeout = os.environ.get("ERPCLAW_PG_STATEMENT_TIMEOUT", "0")
-        cur = conn.cursor() if hasattr(conn, 'cursor') else conn
-        try:
-            cur.execute("SET lock_timeout = %s", (lock_timeout,))
-            cur.execute("SET statement_timeout = %s", (statement_timeout,))
-        finally:
-            if cur is not conn:
-                cur.close()
-
-
-class _DecimalSum:
-    """Custom SQLite aggregate: SUM using Python Decimal for precision.
-
-    SQLite's built-in SUM uses IEEE 754 float, which can lose precision
-    on financial amounts stored as TEXT. This aggregate sums values using
-    Python's Decimal type and returns the result as TEXT.
-
-    Usage in SQL: decimal_sum(column) instead of SUM(CAST(column AS REAL))
-    """
-
-    def __init__(self):
-        self.total = Decimal("0")
-
-    def step(self, value):
-        if value is not None:
-            self.total += Decimal(str(value))
-
-    def finalize(self):
-        return str(self.total)
-
-
-class ConnectionWrapper:
-    """Wrapper around sqlite3.Connection that allows setting custom attributes.
-
-    Python 3.12+ disallows setting arbitrary attributes on sqlite3.Connection.
-    This wrapper delegates all sqlite3 methods to the underlying connection
-    while allowing custom attributes (e.g., conn.company_id) that ERPClaw
-    skills use for naming series resolution.
-    """
-
-    def __init__(self, conn: sqlite3.Connection):
-        object.__setattr__(self, "_conn", conn)
-
-    def __getattr__(self, name):
-        return getattr(self._conn, name)
-
-    def __setattr__(self, name, value):
-        try:
-            setattr(self._conn, name, value)
-        except AttributeError:
-            object.__setattr__(self, name, value)
-
-    def __enter__(self):
-        self._conn.__enter__()
-        return self
-
-    def __exit__(self, *args):
-        return self._conn.__exit__(*args)
-
-    def __call__(self, *args, **kwargs):
-        return self._conn(*args, **kwargs)
+    lock_timeout = os.environ.get("ERPCLAW_PG_LOCK_TIMEOUT", "5s")
+    statement_timeout = os.environ.get("ERPCLAW_PG_STATEMENT_TIMEOUT", "0")
+    cur = conn.cursor() if hasattr(conn, 'cursor') else conn
+    try:
+        cur.execute("SET lock_timeout = %s", (lock_timeout,))
+        cur.execute("SET statement_timeout = %s", (statement_timeout,))
+    finally:
+        if cur is not conn:
+            cur.close()
 
 
 def _qmark_to_pyformat(sql: str) -> str:
@@ -368,75 +289,47 @@ def _pg_connect_with_retry(psycopg2, url, *, cursor_factory, attempts=4):
 
 
 def get_connection(db_path=None):
-    """Get a database connection with ERPClaw standard settings, dialect-aware.
+    """Get a PostgreSQL database connection with ERPClaw standard settings.
 
-    SQLite (default) applies:
-      - PRAGMA journal_mode=WAL  (concurrent reads during writes)
-      - PRAGMA foreign_keys=ON   (enforce FK constraints)
-      - PRAGMA busy_timeout=5000 (wait 5s on lock contention)
-      - the ``decimal_sum`` aggregate, ``sqlite3.Row`` row access, and a
-        0600 permission bit on freshly-created DB files.
-
-    PostgreSQL (``ERPCLAW_DB_DIALECT=postgresql``) returns a
-    :class:`PgConnectionWrapper` over a psycopg2 connection with a
+    Returns a :class:`PgConnectionWrapper` over a psycopg2 connection with a
     ``DictCursor`` and ``lock_timeout`` / ``statement_timeout`` set. The
-    wrapper exposes the same ``conn.execute(sql, params)`` API, translating
-    ``?`` placeholders to ``%s``.
+    wrapper exposes a SQLite-style ``conn.execute(sql, params)`` API,
+    translating ``?`` placeholders to ``%s``.
 
     Args:
-        db_path: SQLite file path, or a Postgres URL when the dialect is
-                 postgresql. Defaults to ~/.openclaw/erpclaw/data.sqlite
-                 (SQLite) or ERPCLAW_DB_URL / ERPCLAW_DB_PATH (Postgres).
-                 Also checks the ERPCLAW_DB_PATH environment variable.
+        db_path: A Postgres connection URL. Defaults to ``ERPCLAW_DB_URL`` /
+                 ``ERPCLAW_DB_PATH`` when not given.
 
     Returns:
-        ConnectionWrapper (SQLite) or PgConnectionWrapper (PostgreSQL).
+        PgConnectionWrapper.
     """
-    if get_dialect() == "postgresql":
-        import psycopg2
-        from psycopg2.extras import DictCursor
-        url = _resolve_pg_url(db_path)
-        conn = _pg_connect_with_retry(psycopg2, url, cursor_factory=DictCursor)
-        setup_pragmas(conn)
-        # Mirror the SQLite create_aggregate registration: ensure the
-        # decimal_sum() SQL aggregate exists for exact financial sums.
-        _ensure_pg_decimal_sum(conn)
-        # SET lock_timeout/statement_timeout opened an implicit transaction;
-        # commit so the connection is handed back idle, not in-transaction.
-        conn.commit()
-        return PgConnectionWrapper(conn)
-
-    path = db_path or os.environ.get("ERPCLAW_DB_PATH", DEFAULT_DB_PATH)
-    ensure_db_exists(path)
-    is_new = not os.path.exists(path)
-    conn = sqlite3.connect(path)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA foreign_keys=ON")
-    conn.execute("PRAGMA busy_timeout=5000")
-    conn.create_aggregate("decimal_sum", 1, _DecimalSum)
-    if is_new:
-        try:
-            os.chmod(path, stat.S_IRUSR | stat.S_IWUSR)  # 0o600
-        except OSError:
-            pass  # non-fatal on some platforms
-    return ConnectionWrapper(conn)
+    import psycopg2
+    from psycopg2.extras import DictCursor
+    url = _resolve_pg_url(db_path)
+    conn = _pg_connect_with_retry(psycopg2, url, cursor_factory=DictCursor)
+    setup_pragmas(conn)
+    # Ensure the decimal_sum() SQL aggregate exists for exact financial sums.
+    _ensure_pg_decimal_sum(conn)
+    # SET lock_timeout/statement_timeout opened an implicit transaction;
+    # commit so the connection is handed back idle, not in-transaction.
+    conn.commit()
+    return PgConnectionWrapper(conn)
 
 
 def ensure_db_exists(db_path=None) -> str:
-    """Ensure the database directory exists.
+    """No-op path passthrough, kept for call-site compatibility.
 
-    Creates parent directories if needed. Does not create the DB file
-    itself — sqlite3.connect() handles that.
+    Historically created the parent directory for a local SQLite file.
+    Now that the engine is Postgres-only, ``db_path`` (when set) is a
+    connection URL, not a filesystem path, so there is no local directory
+    to create. Every domain's ``main()`` still calls this unconditionally
+    with its resolved ``db_path``, so it's kept as a no-op rather than
+    removed to avoid touching all 16 call sites.
 
     Args:
-        db_path: Path to the database file.
+        db_path: The resolved db_path value (a Postgres URL, or None).
 
     Returns:
-        The resolved database path.
+        db_path, unchanged.
     """
-    path = db_path or DEFAULT_DB_PATH
-    parent = os.path.dirname(path)
-    if parent:
-        os.makedirs(parent, exist_ok=True)
-    return path
+    return db_path

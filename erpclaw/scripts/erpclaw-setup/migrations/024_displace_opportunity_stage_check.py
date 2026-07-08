@@ -45,7 +45,6 @@ Usage:
 """
 import argparse
 import os
-import sqlite3
 import uuid
 
 DEFAULT_DB_PATH = os.path.join(os.path.expanduser(os.environ.get("ERPCLAW_HOME", "~/.openclaw/erpclaw")), "data.sqlite")
@@ -112,149 +111,6 @@ _OPPORTUNITY_INDEXES = [
 ]
 
 
-def _get_dialect():
-    return os.environ.get("ERPCLAW_DB_DIALECT", "sqlite")
-
-
-def _sqlite_has_table(conn, table):
-    return conn.execute(
-        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)
-    ).fetchone() is not None
-
-
-def _sqlite_stage_check_present(conn):
-    row = conn.execute(
-        "SELECT sql FROM sqlite_master WHERE type='table' AND name='opportunity'"
-    ).fetchone()
-    return bool(row) and "stage IN" in (row[0] or "")
-
-
-def _seed_and_backfill_sqlite(conn):
-    """Seed the default pipeline + backfill pipeline_stage_id. Skips if growth
-    tables are absent (foundation-only install). Idempotent."""
-    if not (_sqlite_has_table(conn, "crm_pipeline")
-            and _sqlite_has_table(conn, "crm_pipeline_stage")):
-        return  # foundation-only install: nothing to seed, pipeline_stage_id stays NULL
-
-    # Seed the default pipeline once per business company that has opportunities,
-    # or globally if none — but pipelines are not company-scoped (crm_pipeline has no
-    # company_id; they are catalog rows shared across the install). Seed a single
-    # global default if absent.
-    pipeline_id = _ensure_default_pipeline_sqlite(conn)
-
-    # Backfill: map each NULL pipeline_stage_id opportunity to the default pipeline's
-    # stage whose name matches the legacy stage text.
-    conn.execute(
-        """UPDATE opportunity
-           SET pipeline_stage_id = (
-               SELECT s.id FROM crm_pipeline_stage s
-               WHERE s.crm_pipeline_id = ? AND s.name = opportunity.stage
-           )
-           WHERE pipeline_stage_id IS NULL
-             AND EXISTS (
-               SELECT 1 FROM crm_pipeline_stage s
-               WHERE s.crm_pipeline_id = ? AND s.name = opportunity.stage
-             )""",
-        (pipeline_id, pipeline_id),
-    )
-
-
-def _ensure_default_pipeline_sqlite(conn):
-    """Return the id of the default 'Standard Sales' pipeline, creating it + its 7
-    stages if absent. Idempotent."""
-    row = conn.execute(
-        "SELECT id FROM crm_pipeline WHERE is_default = 1 ORDER BY created_at LIMIT 1"
-    ).fetchone()
-    if row:
-        return row[0]
-    # Fall back to one matching the canonical name (in case is_default got cleared).
-    row = conn.execute(
-        "SELECT id FROM crm_pipeline WHERE name = ? ORDER BY created_at LIMIT 1",
-        (DEFAULT_PIPELINE_NAME,),
-    ).fetchone()
-    if row:
-        return row[0]
-
-    pipeline_id = str(uuid.uuid4())
-    conn.execute(
-        "INSERT INTO crm_pipeline (id, name, description, is_default, is_active) "
-        "VALUES (?, ?, ?, 1, 1)",
-        (pipeline_id, DEFAULT_PIPELINE_NAME,
-         "Default sales pipeline (seeded for backfill of legacy opportunity.stage)"),
-    )
-    for order_no, name, won, lost, prob in DEFAULT_PIPELINE_STAGES:
-        conn.execute(
-            "INSERT INTO crm_pipeline_stage "
-            "(id, crm_pipeline_id, stage_order, name, is_terminal_won, "
-            " is_terminal_lost, default_probability, is_active) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, 1)",
-            (str(uuid.uuid4()), pipeline_id, order_no, name, won, lost, prob),
-        )
-    return pipeline_id
-
-
-def _run_sqlite(path):
-    conn = sqlite3.connect(path)
-    conn.row_factory = sqlite3.Row
-    try:
-        from erpclaw_lib.db import setup_pragmas
-        setup_pragmas(conn)
-    except ImportError:
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA busy_timeout=5000")
-
-    if not _sqlite_stage_check_present(conn):
-        # CHECK already gone (re-run or fresh DB from new init_schema). Ensure the
-        # pipeline_stage_id column exists (defensive) then seed + backfill.
-        if _sqlite_has_table(conn, "opportunity") and not any(
-                r[1] == "pipeline_stage_id" for r in conn.execute("PRAGMA table_info(opportunity)")):
-            conn.execute("ALTER TABLE opportunity ADD COLUMN pipeline_stage_id TEXT")
-        _seed_and_backfill_sqlite(conn)
-        conn.commit()
-        print("  opportunity.stage CHECK already absent; seed + backfill ensured (idempotent).")
-        conn.close()
-        return
-
-    conn.execute("PRAGMA foreign_keys=OFF")  # required during table rebuild
-    # legacy_alter_table=ON keeps inbound FK refs (crm_activity.opportunity_id)
-    # pointing at "opportunity" rather than redirecting to the temp *_f3_old table.
-    conn.execute("PRAGMA legacy_alter_table=ON")
-    try:
-        conn.execute("BEGIN")
-        conn.execute("ALTER TABLE opportunity RENAME TO opportunity_f3_old")
-        conn.execute(_OPPORTUNITY_DDL_NO_CHECK)
-        conn.execute(
-            f"INSERT INTO opportunity ({_OPPORTUNITY_COLS}) "
-            f"SELECT {_OPPORTUNITY_COLS} FROM opportunity_f3_old"
-        )
-        conn.execute("DROP TABLE opportunity_f3_old")
-        for idx in _OPPORTUNITY_INDEXES:
-            conn.execute(idx)
-        _seed_and_backfill_sqlite(conn)
-        conn.execute("COMMIT")
-    except Exception:
-        conn.execute("ROLLBACK")
-        raise
-    finally:
-        conn.execute("PRAGMA legacy_alter_table=OFF")
-        conn.execute("PRAGMA foreign_keys=ON")
-
-    # FK integrity sanity after rebuild.
-    violations = conn.execute("PRAGMA foreign_key_check").fetchall()
-    if violations:
-        conn.close()
-        raise RuntimeError(f"Migration 024 left {len(violations)} FK violations: {violations[:5]}")
-    dangling = conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND sql LIKE '%_f3_old%'"
-    ).fetchall()
-    if dangling:
-        conn.close()
-        raise RuntimeError(f"Migration 024 left dangling FK refs to *_f3_old: {[r[0] for r in dangling]}")
-    n = conn.execute("SELECT COUNT(*) FROM opportunity").fetchone()[0]
-    print(f"  opportunity rebuilt without stage CHECK; {n} rows preserved, FK check clean.")
-    conn.close()
-
-
 def _run_postgres(url):
     import psycopg2
     conn = psycopg2.connect(url)
@@ -314,20 +170,11 @@ def _run_postgres(url):
 
 
 def run_migration(db_path=None):
-    dialect = _get_dialect()
-    if dialect == "postgresql":
-        url = os.environ.get("ERPCLAW_DB_URL") or db_path
-        if not url:
-            print("Postgres dialect set but no connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
-            return
-        _run_postgres(url)
+    url = os.environ.get("ERPCLAW_DB_URL") or db_path
+    if not url:
+        print("No Postgres connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
         return
-
-    path = db_path or os.environ.get("ERPCLAW_DB_PATH", DEFAULT_DB_PATH)
-    if not os.path.exists(path):
-        print(f"Database not found at {path}. Nothing to migrate.")
-        return
-    _run_sqlite(path)
+    _run_postgres(url)
 
 
 if __name__ == "__main__":

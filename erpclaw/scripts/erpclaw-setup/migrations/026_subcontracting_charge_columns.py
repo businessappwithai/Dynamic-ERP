@@ -22,7 +22,6 @@ foundation-only install carries them simply unpopulated.
 """
 import argparse
 import os
-import sqlite3
 
 DEFAULT_DB_PATH = os.path.join(os.path.expanduser(os.environ.get("ERPCLAW_HOME", "~/.openclaw/erpclaw")), "data.sqlite")
 
@@ -32,37 +31,6 @@ _COLUMNS = [
     ("subcontracting_order", "subcontract_charge_rate"),
     ("subcontracting_order", "final_received_at"),
 ]
-
-
-def _get_dialect():
-    return os.environ.get("ERPCLAW_DB_DIALECT", "sqlite")
-
-
-def _sqlite_has_table(conn, table):
-    return conn.execute(
-        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)
-    ).fetchone() is not None
-
-
-def _sqlite_has_column(conn, table, column):
-    return any(r[1] == column for r in conn.execute(f"PRAGMA table_info({table})"))
-
-
-def _run_sqlite(path):
-    conn = sqlite3.connect(path)
-    try:
-        from erpclaw_lib.db import setup_pragmas
-        setup_pragmas(conn)
-    except ImportError:
-        conn.execute("PRAGMA busy_timeout=5000")
-    added = []
-    for table, column in _COLUMNS:
-        if _sqlite_has_table(conn, table) and not _sqlite_has_column(conn, table, column):
-            conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} TEXT")
-            added.append(f"{table}.{column}")
-    conn.commit()
-    conn.close()
-    print(f"  Subcontracting charge columns added: {', '.join(added) if added else '(none — already present)'}")
 
 
 def _run_postgres(url):
@@ -79,18 +47,11 @@ def _run_postgres(url):
 
 
 def run_migration(db_path=None):
-    if _get_dialect() == "postgresql":
-        url = os.environ.get("ERPCLAW_DB_URL") or db_path
-        if not url:
-            print("Postgres dialect set but no connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
-            return
-        _run_postgres(url)
+    url = os.environ.get("ERPCLAW_DB_URL") or db_path
+    if not url:
+        print("No Postgres connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
         return
-    path = db_path or os.environ.get("ERPCLAW_DB_PATH", DEFAULT_DB_PATH)
-    if not os.path.exists(path):
-        print(f"Database not found at {path}. Nothing to migrate.")
-        return
-    _run_sqlite(path)
+    _run_postgres(url)
 
 
 if __name__ == "__main__":

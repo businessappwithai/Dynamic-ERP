@@ -28,7 +28,6 @@ Usage:
 """
 import argparse
 import os
-import sqlite3
 import sys
 
 DEFAULT_DB_PATH = os.path.join(os.path.expanduser(os.environ.get("ERPCLAW_HOME", "~/.openclaw/erpclaw")), "data.sqlite")
@@ -102,92 +101,6 @@ _ACCOUNT_INDEXES = [
 ]
 
 
-def _get_dialect():
-    return os.environ.get("ERPCLAW_DB_DIALECT", "sqlite")
-
-
-def _sqlite_check_present(conn):
-    row = conn.execute(
-        "SELECT sql FROM sqlite_master WHERE type='table' AND name='account'"
-    ).fetchone()
-    return bool(row) and "account_type IN" in (row[0] or "")
-
-
-def _seed_account_types(conn):
-    for at, skill, label in ACCOUNT_TYPE_SEED:
-        existing = conn.execute(
-            "SELECT 1 FROM account_type_registry WHERE account_type = ?", (at,)
-        ).fetchone()
-        if not existing:
-            conn.execute(
-                "INSERT INTO account_type_registry (account_type, skill_name, label) "
-                "VALUES (?, ?, ?)",
-                (at, skill, label),
-            )
-
-
-def _run_sqlite(path):
-    conn = sqlite3.connect(path)
-    conn.row_factory = sqlite3.Row
-    try:
-        from erpclaw_lib.db import setup_pragmas
-        setup_pragmas(conn)
-    except ImportError:
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA busy_timeout=5000")
-
-    if not _sqlite_check_present(conn):
-        # CHECK already gone (re-run or fresh DB from new init_schema); just seed.
-        _seed_account_types(conn)
-        conn.commit()
-        print("  account_type CHECK already absent; registry re-seeded (idempotent).")
-        conn.close()
-        return
-
-    conn.execute("PRAGMA foreign_keys=OFF")  # required during table rebuild
-    # CRITICAL: modern SQLite's ALTER TABLE RENAME rewrites inbound FK references in
-    # OTHER tables (e.g. gl_entry.account_id REFERENCES account) to the new name. Without
-    # legacy mode, "RENAME account -> account_m0_old" would redirect ~18 child tables to
-    # account_m0_old, which we then drop -> dangling FK refs. legacy_alter_table=ON keeps
-    # child references pointing at "account".
-    conn.execute("PRAGMA legacy_alter_table=ON")
-    try:
-        conn.execute("BEGIN")
-        conn.execute("ALTER TABLE account RENAME TO account_m0_old")
-        conn.execute(_ACCOUNT_DDL_NO_CHECK)
-        conn.execute(
-            f"INSERT INTO account ({_ACCOUNT_COLS}) SELECT {_ACCOUNT_COLS} FROM account_m0_old"
-        )
-        conn.execute("DROP TABLE account_m0_old")
-        for idx in _ACCOUNT_INDEXES:
-            conn.execute(idx)
-        _seed_account_types(conn)
-        conn.execute("COMMIT")
-    except Exception:
-        conn.execute("ROLLBACK")
-        raise
-    finally:
-        conn.execute("PRAGMA legacy_alter_table=OFF")
-        conn.execute("PRAGMA foreign_keys=ON")
-
-    # FK integrity sanity after rebuild
-    violations = conn.execute("PRAGMA foreign_key_check").fetchall()
-    if violations:
-        conn.close()
-        raise RuntimeError(f"Migration 003 left {len(violations)} FK violations: {violations[:5]}")
-    # Guard against the RENAME-rewrites-FK trap: no table may reference a dropped
-    # *_m0_old table. (foreign_key_check does NOT catch references to a missing table.)
-    dangling = conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND sql LIKE '%_m0_old%'"
-    ).fetchall()
-    if dangling:
-        conn.close()
-        raise RuntimeError(f"Migration 003 left dangling FK refs to *_m0_old: {[r[0] for r in dangling]}")
-    n = conn.execute("SELECT COUNT(*) FROM account").fetchone()[0]
-    print(f"  account rebuilt without account_type CHECK; {n} rows preserved, FK check clean.")
-    conn.close()
-
-
 def _run_postgres(url):
     import psycopg2
     conn = psycopg2.connect(url)
@@ -209,20 +122,11 @@ def _run_postgres(url):
 
 
 def run_migration(db_path=None):
-    dialect = _get_dialect()
-    if dialect == "postgresql":
-        url = os.environ.get("ERPCLAW_DB_URL") or db_path
-        if not url:
-            print("Postgres dialect set but no connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
-            return
-        _run_postgres(url)
+    url = os.environ.get("ERPCLAW_DB_URL") or db_path
+    if not url:
+        print("No Postgres connection URL (ERPCLAW_DB_URL). Nothing to migrate.")
         return
-
-    path = db_path or os.environ.get("ERPCLAW_DB_PATH", DEFAULT_DB_PATH)
-    if not os.path.exists(path):
-        print(f"Database not found at {path}. Nothing to migrate.")
-        return
-    _run_sqlite(path)
+    _run_postgres(url)
 
 
 if __name__ == "__main__":

@@ -8,8 +8,8 @@ Properties:
   - Idempotent twice over: each migration is individually idempotent (IF NOT
     EXISTS / column-presence guards) AND skipped if already in the ledger as
     'applied'.
-  - Dialect-aware: each migration already branches on get_dialect() for its DDL;
-    the ledger here works on SQLite and Postgres.
+  - PostgreSQL only: the engine no longer supports SQLite; both individual
+    migrations and the ledger here target Postgres exclusively.
   - Bootstrap-safe: on a DB where 001-NNN were applied by hand (not ledgered),
     the first run re-runs them (no-ops) and backfills the ledger.
 
@@ -42,10 +42,6 @@ CREATE TABLE IF NOT EXISTS erpclaw_schema_migration (
 """
 
 
-def _dialect():
-    return os.environ.get("ERPCLAW_DB_DIALECT", "sqlite")
-
-
 def _now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -70,19 +66,10 @@ def _ledger_id(module_name, stem):
 
 
 def _connect(db_path):
-    """Return (connection, placeholder) for the active dialect."""
-    if _dialect() == "postgresql":
-        import psycopg2
-        url = os.environ.get("ERPCLAW_DB_URL") or db_path
-        return psycopg2.connect(url), "%s"
-    import sqlite3
-    conn = sqlite3.connect(db_path)
-    try:
-        from erpclaw_lib.db import setup_pragmas
-        setup_pragmas(conn)
-    except ImportError:
-        conn.execute("PRAGMA busy_timeout=5000")
-    return conn, "?"
+    """Return (connection, placeholder), PostgreSQL only."""
+    import psycopg2
+    url = os.environ.get("ERPCLAW_DB_URL") or db_path
+    return psycopg2.connect(url), "%s"
 
 
 def _applied_ids(db_path):
